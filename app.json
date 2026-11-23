@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "بيعلي – Bi3li",
+    "slug": "bi3li",
+    "scheme": "bi3li",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Bi3li a besoin de vos photos pour les ajouter à vos annonces. / يحتاج بيعلي إلى صورك لإضافتها إلى إعلاناتك.",
+          "cameraPermission": "Bi3li a besoin de l’appareil photo pour photographier vos articles. / يحتاج بيعلي إلى الكاميرا لتصوير سلعك."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#16a34a",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "android": {
+      "package": "net.bi3li.twa",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "net.bi3li.app",
+      "supportsTablet": false
+    },
+    "extra": {
+      "apiUrl": "https://bi3li.net"
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/icon.png",
+      "name": "بيعلي – Bi3li"
+    },
+    "experiments": {
+      "baseUrl": "/app"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    }
+  }
+}

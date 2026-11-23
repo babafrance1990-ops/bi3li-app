@@ -1,0 +1,56 @@
+# Mise à jour de l'appli sans rien télécharger : chaque modification poussée sur « main »
+# part automatiquement vers les téléphones (EAS Update).
+#
+# Première fois seulement : Actions → « Mise à jour » → Run workflow → cocher « setup ».
+# Il crée le projet Expo et enregistre son identifiant dans app.json.
+name: Mise à jour
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['app.json', 'LISEZMOI.md']
+  workflow_dispatch:
+    inputs:
+      setup:
+        description: 'Première configuration (une seule fois)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mise-a-jour
+  cancel-in-progress: false
+
+jobs:
+  mise-a-jour:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Première configuration (projet Expo)
+        if: github.event_name == 'workflow_dispatch' && inputs.setup
+        run: |
+          npx --yes eas-cli@latest init --non-interactive --force
+          npx --yes eas-cli@latest update:configure
+          git config user.name "bi3li-bot"
+          git config user.email "bot@bi3li.net"
+          git add app.json
+          git commit -m "Configuration Expo [skip ci]" || echo "rien à enregistrer"
+          git push
+
+      - name: Publier la mise à jour
+        if: github.event_name == 'push' || !inputs.setup
+        env:
+          MESSAGE: ${{ github.event.head_commit.message || 'Mise à jour manuelle' }}
+        run: npx --yes eas-cli@latest update --branch production --non-interactive --message "$MESSAGE"
