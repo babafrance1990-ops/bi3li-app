@@ -27,7 +27,9 @@ import { cityName, NKC } from '../places';
 import { colors, radius } from '../theme';
 import { MODELS, VEH_ERR } from '../details/vehicles';
 import { ELEC_ERR } from '../details/electronics';
-import { detailAdObject, detailErrors, detailFields, detailsFilled } from '../details';
+import { L3 } from '../details/labels3';
+const T3 = (k, ar) => (ar ? L3[k][1] : L3[k][0]);
+import { detailAdObject, detailErrors, detailFields, detailsFilled, detailsOpenByDefault, detailTitle, l3FromAd } from '../details';
 
 // ---------- Textes du dépôt ----------
 const D = {
@@ -263,7 +265,7 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
   return (
     <>
       <Label rtl={rtl}>{label}</Label>
-      <Field rtl={rtl} value={d[f.k]} keyboardType={numeric ? 'number-pad' : 'default'} maxLength={f.len || (numeric ? 7 : 40)}
+      <Field rtl={rtl} value={d[f.k]} placeholder={f.ph} keyboardType={numeric ? 'number-pad' : 'default'} maxLength={f.len || (numeric ? 7 : 40)}
         onChangeText={(v) => update({ [f.k]: numeric ? digits(v) : v })} />
       {err}
     </>
@@ -308,6 +310,7 @@ function adToDraft(a) {
   ['surface', 'title', 'desc', 'hood', 'near', 'delivNote'].forEach((k) => { d[k] = d[k] == null ? '' : String(d[k]); });
   d.video = a.video || ''; d.voice = a.voice || ''; d.videoUri = ''; d.voiceUri = '';
   d.photos = (a.photos || []).map((url) => ({ key: 'p' + ++photoKey, url, status: 'ok', at: Date.now() }));
+  Object.entries(l3FromAd(a)).forEach(([k, v]) => { if (d0[k] === undefined || d0[k] === '' || (Array.isArray(d0[k]) && !d0[k].length)) d[k] = v; });
   return d;
 }
 
@@ -462,6 +465,7 @@ export default function AdForm({ editAd = null }) {
       else if (d.cat === 'anim' && !d.sub) e.cat = t('errSpecies');
       else if (d.cat === 'auto' && !d.sub) e.cat = lang === 'ar' ? VEH_ERR.errVkind[1] : VEH_ERR.errVkind[0];
       else if ((d.cat === 'phone' || d.cat === 'multi') && !d.sub) e.cat = ELEC_ERR.errDtype[lang === 'ar' ? 1 : 0];
+      else if ((d.cat === 'job' || d.cat === 'serv') && !d.sub) e.cat = T3(d.cat === 'job' ? 'errOffer' : 'errSsub', lang === 'ar');
       if (d.cat === 'immo') {
         if (!d.deal) e.deal = t('eDeal');
         else if (!d.kind || !KINDS[d.deal].includes(d.kind)) e.kind = t('eKind');
@@ -547,7 +551,6 @@ export default function AdForm({ editAd = null }) {
     if (d.sub && SUB_KEY[d.cat]) ad[SUB_KEY[d.cat]] = d.sub; // sous-catégorie : même champ que sur le site
     Object.assign(ad, detailAdObject(d));
     if (d.cat === 'anim') ad.anim = { species: d.sub, count: +digits(d.count) || 1, sex: d.sex, age: d.age, breed: d.breed.trim(), tabaski: !!d.tabaski, delivery: !!d.deliv };
-    if (d.cat === 'immo') ad.estate = { deal: d.deal, kind: d.kind, surface: +digits(d.surface) || 0, eq: [], pub: 'owner' };
     // Copie du formulaire pour pouvoir modifier l'annonce plus tard sur le site (sans la vidéo ni le vocal, trop lourds)
     const { photos, step, voice: _v, voiceUri, video: _vid, videoUri, ...rest } = d;
     ad._d = { ...rest, price: digits(d.price), eq: [], pub: 'owner', stype: 'part' };
@@ -886,9 +889,9 @@ export default function AdForm({ editAd = null }) {
               </Pressable>
               </>
             ) : null}
-            {detailFields(d).length > 0 && (detOpen || detailsFilled(d)) ? (
+            {detailFields(d).length > 0 && (detOpen || detailsOpenByDefault(d) || detailsFilled(d)) ? (
               <View style={s.detBox}>
-                <Label rtl={rtl}>{t(d.cat === 'auto' ? 'vehInfo' : 'elecInfo')}</Label>
+                <Label rtl={rtl}>{detailTitle(d, lang === 'ar')}</Label>
                 {detailFields(d).map((f) => (
                   <VehField key={f.k} f={f} d={d} update={update} lang={lang} rtl={rtl} errors={errors} />
                 ))}

@@ -73,6 +73,15 @@ export function newDraft(last = {}) {
     mcompat: '',
     mcond: '',
     pdual: '', punlock: '', msmart: '', pincl: [],
+    // Immobilier (noms comme sur le site ; deal, kind, surface et sous-catégorie sont à l'étape 1)
+    rooms: '', salons: '', baths: '', floor: '', levels: '', place: '', furnished: '', avance: '', caution: '', dur: '',
+    papers: '', pub: '', comm: '', dimL: '', dimW: '', ilot: '', lot: '', built: '', servic: '', eq: [],
+    // Emploi
+    jcontract: '', jtime: '', jsector: '', jfunc: '', jexp: '', jedu: '', flangs: [],
+    // Services
+    soffer: 'offer', sarea: '', shome: false,
+    // Covoiturage
+    ctype: '', cfrom: '', cto: '', cdate: '', ctime: '', cseats: '', ccar: '', cstops: '', cbags: '', cclim: false, cwomen: false,
   };
 }
 
