@@ -83,6 +83,8 @@ export function newDraft(last = {}) {
     // Mode et beauté
     moitem: '', mopub: '', mosize: '', mofabric: '', mocolor: '', mobrand: '', mometal: '', moweight: '', mocond: '', mohand: false,
     bbrand: '', bcond: '',
+    // Maison et électroménager
+    hitem: '', hcond: '', hbrand: '', hcap: '', hqty: '', hdims: '', hmat: '', hcolor: '', hdeliv: false, hsmall: '',
     // Covoiturage
     ctype: '', cfrom: '', cto: '', cdate: '', ctime: '', cseats: '', ccar: '', cstops: '', cbags: '', cclim: false, cwomen: false,
   };

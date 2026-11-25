@@ -29,7 +29,7 @@ import { MODELS, VEH_ERR } from '../details/vehicles';
 import { ELEC_ERR } from '../details/electronics';
 import { L3 } from '../details/labels3';
 const T3 = (k, ar) => (ar ? L3[k][1] : L3[k][0]);
-import { detailAdObject, detailErrors, detailFields, detailsFilled, detailsOpenByDefault, detailTitle, l3FromAd, l4FromAd } from '../details';
+import { detailAdObject, detailErrors, detailFields, detailsFilled, detailsOpenByDefault, detailTitle, l3FromAd, l4FromAd, l5FromAd } from '../details';
 
 // ---------- Textes du dépôt ----------
 const D = {
@@ -353,7 +353,7 @@ function adToDraft(a) {
   ['surface', 'title', 'desc', 'hood', 'near', 'delivNote'].forEach((k) => { d[k] = d[k] == null ? '' : String(d[k]); });
   d.video = a.video || ''; d.voice = a.voice || ''; d.videoUri = ''; d.voiceUri = '';
   d.photos = (a.photos || []).map((url) => ({ key: 'p' + ++photoKey, url, status: 'ok', at: Date.now() }));
-  Object.entries({ ...l3FromAd(a), ...l4FromAd(a) }).forEach(([k, v]) => { if (d0[k] === undefined || d0[k] === '' || (Array.isArray(d0[k]) && !d0[k].length)) d[k] = v; });
+  Object.entries({ ...l3FromAd(a), ...l4FromAd(a), ...l5FromAd(a) }).forEach(([k, v]) => { if (d0[k] === undefined || d0[k] === '' || (Array.isArray(d0[k]) && !d0[k].length)) d[k] = v; });
   return d;
 }
 
@@ -509,7 +509,8 @@ export default function AdForm({ editAd = null }) {
       else if (d.cat === 'auto' && !d.sub) e.cat = lang === 'ar' ? VEH_ERR.errVkind[1] : VEH_ERR.errVkind[0];
       else if ((d.cat === 'phone' || d.cat === 'multi') && !d.sub) e.cat = ELEC_ERR.errDtype[lang === 'ar' ? 1 : 0];
       else if ((d.cat === 'job' || d.cat === 'serv') && !d.sub) e.cat = T3(d.cat === 'job' ? 'errOffer' : 'errSsub', lang === 'ar');
-      else if ((d.cat === 'mode' || d.cat === 'beaute') && !d.sub) e.cat = T3('errHsub', lang === 'ar');
+      else if ((d.cat === 'mode' || d.cat === 'beaute' || d.cat === 'maison') && !d.sub) e.cat = T3('errHsub', lang === 'ar');
+      else if (d.cat === 'menager' && !d.sub) e.cat = T3('errHitem', lang === 'ar');
       if (d.cat === 'immo') {
         if (!d.deal) e.deal = t('eDeal');
         else if (!d.kind || !KINDS[d.deal].includes(d.kind)) e.kind = t('eKind');
