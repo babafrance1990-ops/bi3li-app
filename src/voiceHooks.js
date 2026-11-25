@@ -20,16 +20,24 @@ export function useVoiceUri(adId, dataUrl) {
   return uri;
 }
 
-// Lecteur : toggle() lance le son depuis le début, ou l'arrête s'il joue
+// Lecteur : toggle() lance le son depuis le début, ou l'arrête s'il joue.
+// Si le fichier n'est pas encore prêt, la lecture démarre dès qu'il l'est (le bouton reste actif).
 export function useVoicePlayer(uri) {
   const player = useAudioPlayer(uri ? { uri } : null);
   const status = useAudioPlayerStatus(player);
-  async function toggle() {
-    if (!uri) return;
-    if (status.playing) { player.pause(); return; }
+  const [want, setWant] = useState(false);
+  async function play() {
     await playbackMode();
     player.seekTo(0);
     player.play();
   }
-  return { toggle, playing: !!status.playing, ready: !!uri };
+  useEffect(() => {
+    if (uri && want) { setWant(false); play(); }
+  }, [uri, want]);
+  function toggle() {
+    if (!uri) { setWant(true); return; }
+    if (status.playing) { player.pause(); return; }
+    play();
+  }
+  return { toggle, playing: !!status.playing || (want && !uri), ready: true };
 }

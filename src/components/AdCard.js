@@ -42,9 +42,9 @@ export default function AdCard({ ad, preview }) {
           ? <Image source={poster} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
           : <View style={[StyleSheet.absoluteFill, s.plain]}><Text style={s.bigIcon}>🎬</Text></View>)}
         {!photo && voiceOnly && (
-          <Pressable onPress={vp.toggle} disabled={!vp.ready} style={[StyleSheet.absoluteFill, s.plain]}>
+          <Pressable onPress={vp.toggle} style={[StyleSheet.absoluteFill, s.plain]}>
             <Text style={s.bigIcon}>{vp.playing ? '⏹' : '🎙️'}</Text>
-            <Text style={s.playHint}>{vp.ready ? (vp.playing ? '' : '▶ ' + t('listenVoice')) : ''}</Text>
+            <Text style={s.playHint}>{vp.playing ? '' : '▶ ' + t('listenVoice')}</Text>
           </Pressable>
         )}
         {!photo && !videoUrl && !voiceOnly && <View style={[StyleSheet.absoluteFill, s.plain]}><Text style={s.bigIcon}>📷</Text></View>}
@@ -56,7 +56,7 @@ export default function AdCard({ ad, preview }) {
           <View style={s.flags}>
             {!!photo && !!ad.video && <Text style={s.flag}>🎬</Text>}
             {!!ad.voice && (
-              <Pressable onPress={vp.toggle} disabled={!vp.ready} hitSlop={8}>
+              <Pressable onPress={vp.toggle} hitSlop={8}>
                 <Text style={[s.flag, vp.playing && s.flagOn]}>{vp.playing ? '⏹' : '🎙️'}</Text>
               </Pressable>
             )}
