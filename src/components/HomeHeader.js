@@ -35,7 +35,7 @@ export default function HomeHeader({ city, onCity }) {
       </View>
 
       {/* Ligne 2 : zone de recherche (ouvre l'onglet Recherche) */}
-      <Pressable onPress={() => router.navigate('/(tabs)/recherche')} style={[s.search, rtl && { flexDirection: 'row-reverse' }]}>
+      <Pressable onPress={() => router.navigate({ pathname: '/(tabs)/recherche', params: { focus: '1' } })} style={[s.search, rtl && { flexDirection: 'row-reverse' }]}>
         <Ionicons name="search-outline" size={22} color={colors.muted} />
         <TextInput
           style={[s.input, rtl && { textAlign: 'right' }]}

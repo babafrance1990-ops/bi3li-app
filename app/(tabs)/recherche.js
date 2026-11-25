@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Keyboard, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { sKey, takePendingSearch, toSaved, fromSaved } from '../../src/alerts';
 import { useAuth } from '../../src/auth';
 import AdCard from '../../src/components/AdCard';
@@ -63,6 +63,15 @@ export default function Recherche() {
     load(false);
     AsyncStorage.getItem(RECENT).then((v) => setRecent(JSON.parse(v || '[]'))).catch(() => {});
   }, []);
+
+  // Ouverte depuis la barre de l'accueil : le clavier s'ouvre tout de suite (pas quand on touche l'onglet)
+  const { focus } = useLocalSearchParams();
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (!focus) return;
+    const id = setTimeout(() => { inputRef.current?.focus(); router.setParams({ focus: undefined }); }, 350);
+    return () => clearTimeout(id);
+  }, [focus]);
 
   function type(v) {
     setQ(v);
@@ -141,7 +150,7 @@ export default function Recherche() {
       <View style={[s.bar, row]}>
         <View style={[s.box, row]}>
           <Text style={{ fontSize: 16 }}>🔍</Text>
-          <TextInput style={[s.input, al]} value={q} onChangeText={type} placeholder={t('ph')} placeholderTextColor={colors.muted}
+          <TextInput ref={inputRef} style={[s.input, al]} value={q} onChangeText={type} placeholder={t('ph')} placeholderTextColor={colors.muted}
             returnKeyType="search" onSubmitEditing={() => { setQuery(q); remember(q); }} autoCorrect={false} />
           {!!q && <Pressable hitSlop={10} onPress={() => { setQ(''); setQuery(''); }}><Text style={{ color: colors.muted, fontSize: 16 }}>✕</Text></Pressable>}
         </View>
