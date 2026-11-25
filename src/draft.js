@@ -17,6 +17,8 @@ export function newDraft(last = {}) {
     deal: '', kind: '', surface: '',
     // Vidéo et message vocal : adresse du serveur (annonce existante) ou fichier sur le téléphone (nouveau)
     video: '', videoUri: '', voice: '', voiceUri: '',
+    // Animaux (espèce = sous-catégorie)
+    count: '1', sex: '', age: '', breed: '', tabaski: false,
   };
 }
 

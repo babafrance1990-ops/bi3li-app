@@ -40,6 +40,9 @@ const D = {
     vidL: 'Vidéo (facultatif, 2 minutes max)', vidCam: '🎥 Filmer', vidGal: '🎞️ Galerie vidéo', vidOk: 'Vidéo ajoutée', vidDel: 'Retirer la vidéo',
     vidHelp: 'Une courte vidéo montre mieux votre article. 20 Mo maximum après allègement.', vidBig: 'Vidéo trop lourde (20 Mo maximum). Essayez une vidéo plus courte.',
     upVid: 'Envoi de la vidéo… {p} %',
+    animInfo: 'Détails de l’animal', species: 'Espèce', count: 'Nombre de têtes', sex: 'Sexe', sx_m: 'Mâle', sx_f: 'Femelle', sx_mix: 'Mâles et femelles',
+    age: 'Âge', ag_0: 'Moins d’1 an', ag_1: '1 à 2 ans', ag_2: '2 à 4 ans', ag_4: 'Plus de 4 ans', breed: 'Race (facultatif)', breedPh: 'Ex. : Touabire, Ladoum',
+    tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
     voiceL: 'Message vocal (facultatif, 1 minute max)', voiceRec: 'Enregistrer un message vocal', voiceStop: 'Arrêter', voiceListen: 'Écouter',
     voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
     voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
@@ -79,6 +82,9 @@ const D = {
     vidL: 'فيديو (اختياري، دقيقتان كحد أقصى)', vidCam: '🎥 تصوير', vidGal: '🎞️ معرض الفيديو', vidOk: 'تمت إضافة الفيديو', vidDel: 'حذف الفيديو',
     vidHelp: 'فيديو قصير يُظهر سلعتك أفضل. 20 ميغابايت كحد أقصى بعد التخفيف.', vidBig: 'الفيديو كبير جداً (20 ميغابايت كحد أقصى). جرّب فيديو أقصر.',
     upVid: 'جارٍ إرسال الفيديو… {p}٪',
+    animInfo: 'تفاصيل الحيوان', species: 'النوع', count: 'عدد الرؤوس', sex: 'الجنس', sx_m: 'ذكر', sx_f: 'أنثى', sx_mix: 'ذكور وإناث',
+    age: 'العمر', ag_0: 'أقل من سنة', ag_1: 'من سنة إلى سنتين', ag_2: 'من 2 إلى 4 سنوات', ag_4: 'أكثر من 4 سنوات', breed: 'السلالة (اختياري)', breedPh: 'مثال: توابير، لادوم',
+    tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
     voiceL: 'رسالة صوتية (اختياري، دقيقة كحد أقصى)', voiceRec: 'سجّل رسالة صوتية', voiceStop: 'إيقاف', voiceListen: 'استمع',
     voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
     voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
@@ -154,6 +160,7 @@ function adToDraft(a) {
   d.nego = !!a.nego; d.hidep = !!a.hidep; d.city = a.city || d.city; d.hood = a.hood || ''; d.near = a.near || '';
   d.deliv = !!a.deliv; d.delivNote = a.delivNote || '';
   if (a.contacts) { d.wa = !!a.contacts.wa; d.call = !!a.contacts.call; d.msg = !!a.contacts.msg; }
+  if (a.anim) { d.count = String(a.anim.count || 1); d.sex = a.anim.sex || ''; d.age = a.anim.age || ''; d.breed = a.anim.breed || ''; d.tabaski = !!a.anim.tabaski; }
   if (a.estate) { d.deal = a.estate.deal || d.deal; d.kind = a.estate.kind || d.kind; d.surface = a.estate.surface ? String(a.estate.surface) : d.surface; }
   ['surface', 'title', 'desc', 'hood', 'near', 'delivNote'].forEach((k) => { d[k] = d[k] == null ? '' : String(d[k]); });
   d.video = a.video || ''; d.voice = a.voice || ''; d.videoUri = ''; d.voiceUri = '';
@@ -305,12 +312,14 @@ export default function AdForm({ editAd = null }) {
     const e = {};
     if (step === 1) {
       if (!d.cat) e.cat = t('eCat');
+      else if (d.cat === 'anim' && !d.sub) e.cat = t('errSpecies');
       if (d.cat === 'immo') {
         if (!d.deal) e.deal = t('eDeal');
         else if (!d.kind || !KINDS[d.deal].includes(d.kind)) e.kind = t('eKind');
       }
     }
     if (step === 2 && d.cat === 'immo' && d.photos.length === 0) e.photos = t('ePhotoImmo');
+    if (step === 2 && d.cat === 'anim' && !(+digits(d.count) > 0)) e.count = t('errCount');
     if (step === 3) {
       // Prix masqué : ni le prix ni l'unité ne sont obligatoires (l'annonce part sans prix)
       if (!d.hidep) {
@@ -387,6 +396,7 @@ export default function AdForm({ editAd = null }) {
       stype: 'part',
     };
     if (d.sub && SUB_KEY[d.cat]) ad[SUB_KEY[d.cat]] = d.sub; // sous-catégorie : même champ que sur le site
+    if (d.cat === 'anim') ad.anim = { species: d.sub, count: +digits(d.count) || 1, sex: d.sex, age: d.age, breed: d.breed.trim(), tabaski: !!d.tabaski, delivery: !!d.deliv };
     if (d.cat === 'immo') ad.estate = { deal: d.deal, kind: d.kind, surface: +digits(d.surface) || 0, eq: [], pub: 'owner' };
     // Copie du formulaire pour pouvoir modifier l'annonce plus tard sur le site (sans la vidéo ni le vocal, trop lourds)
     const { photos, step, voice: _v, voiceUri, video: _vid, videoUri, ...rest } = d;
@@ -569,6 +579,45 @@ export default function AdForm({ editAd = null }) {
             <Text style={[s.h1, al]}>{t('st2')}</Text>
             <Text style={[s.sub, al]}>{t('st2sub')}</Text>
 
+            {d.cat === 'anim' && (
+              <View style={s.detBox}>
+                <Label rtl={rtl}>{t('animInfo')}</Label>
+                <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
+                <View style={[row, { gap: 8 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Label rtl={rtl}>{t('count')}</Label>
+                    <Field rtl={rtl} value={d.count} keyboardType="number-pad" maxLength={4} placeholder="1"
+                      onChangeText={(v) => update({ count: digits(v).slice(0, 4) })} />
+                    <Err errors={errors} rtl={rtl} k="count" />
+                  </View>
+                </View>
+                <Label rtl={rtl}>{t('sex')}</Label>
+                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+                  {['m', 'f', 'mix'].map((x) => (
+                    <Pressable key={x} onPress={() => update({ sex: d.sex === x ? '' : x })} style={[s.chip, d.sex === x && s.chipOn]}>
+                      <Text style={[s.chipTxt, d.sex === x && s.chipTxtOn]}>{t('sx_' + x)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Label rtl={rtl}>{t('age')}</Label>
+                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+                  {['0', '1', '2', '4'].map((x) => (
+                    <Pressable key={x} onPress={() => update({ age: d.age === x ? '' : x })} style={[s.chip, d.age === x && s.chipOn]}>
+                      <Text style={[s.chipTxt, d.age === x && s.chipTxtOn]}>{t('ag_' + x)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Label rtl={rtl}>{t('breed')}</Label>
+                <Field rtl={rtl} value={d.breed} maxLength={30} placeholder={t('breedPh')} onChangeText={(v) => update({ breed: v })} />
+                {d.sub !== 'volaille' && d.sub !== 'autre' && (
+                  <Pressable onPress={() => update({ tabaski: !d.tabaski })} style={[row, { alignItems: 'center', gap: 8 }]}>
+                    <Text style={s.chipTxt}>{d.tabaski ? '☑' : '☐'}</Text>
+                    <Text style={s.chipTxt}>{t('tabaski')}</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+
             <View style={[row, { justifyContent: 'space-between' }]}>
               <Label rtl={rtl}>{t('photos')}</Label>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
@@ -722,6 +771,12 @@ export default function AdForm({ editAd = null }) {
 }
 
 const s = StyleSheet.create({
+  detBox: { backgroundColor: '#EEF5F0', borderRadius: 12, padding: 12, gap: 8, marginBottom: 12 },
+  chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
+  chipOn: { borderColor: colors.primary, backgroundColor: colors.primary + '18' },
+  chipTxt: { color: colors.text, fontWeight: '600' },
+  chipTxtOn: { color: colors.primary, fontWeight: '800' },
+
   head: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.border, gap: 8 },
   stepOf: { color: colors.muted, fontWeight: '700' },
   restart: { color: colors.primaryDark, fontSize: 12, fontWeight: '600' },
