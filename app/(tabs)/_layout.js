@@ -1,12 +1,13 @@
 // Barre d'onglets en bas : Accueil, Recherche, Déposer, Messages, Mon compte
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAlertCount } from '../../src/alerts';
 import { useConvs } from '../../src/chat';
 import { useLang } from '../../src/i18n';
 import { colors } from '../../src/theme';
 
-const icon = (e) => ({ focused }) => <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{e}</Text>;
+// Icônes en traits, comme sur le site (version pleine quand l'onglet est ouvert)
+const icon = (name, outline) => ({ color, focused }) => <Ionicons name={focused ? name : outline} size={24} color={color} />;
 
 export default function TabsLayout() {
   const { t } = useLang();
@@ -14,11 +15,11 @@ export default function TabsLayout() {
   const fresh = useAlertCount();       // pastille sur « Mon compte » : nouvelles annonces de mes alertes
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary, headerTitleAlign: 'center' }}>
-      <Tabs.Screen name="index" options={{ title: t('home'), headerTitle: 'بيعلي – Bi3li', tabBarIcon: icon('🏠') }} />
-      <Tabs.Screen name="recherche" options={{ title: t('search'), tabBarIcon: icon('🔍') }} />
-      <Tabs.Screen name="deposer" options={{ title: t('post'), tabBarIcon: icon('➕') }} />
-      <Tabs.Screen name="messages" options={{ title: t('messages'), tabBarIcon: icon('💬'), tabBarBadge: unread > 0 ? unread : undefined }} />
-      <Tabs.Screen name="compte" options={{ title: t('account'), tabBarIcon: icon('👤'), tabBarBadge: fresh > 0 ? (fresh > 50 ? '50+' : fresh) : undefined, tabBarBadgeStyle: { backgroundColor: '#16a34a' } }} />
+      <Tabs.Screen name="index" options={{ title: t('home'), headerTitle: 'بيعلي – Bi3li', tabBarIcon: icon('home', 'home-outline') }} />
+      <Tabs.Screen name="recherche" options={{ title: t('search'), tabBarIcon: icon('search', 'search-outline') }} />
+      <Tabs.Screen name="deposer" options={{ title: t('post'), tabBarIcon: icon('add-circle', 'add-circle-outline') }} />
+      <Tabs.Screen name="messages" options={{ title: t('messages'), tabBarIcon: icon('chatbubble-ellipses', 'chatbubble-ellipses-outline'), tabBarBadge: unread > 0 ? unread : undefined }} />
+      <Tabs.Screen name="compte" options={{ title: t('account'), tabBarIcon: icon('person-circle', 'person-circle-outline'), tabBarBadge: fresh > 0 ? (fresh > 50 ? '50+' : fresh) : undefined, tabBarBadgeStyle: { backgroundColor: '#0B6B3A' } }} />
     </Tabs>
   );
 }

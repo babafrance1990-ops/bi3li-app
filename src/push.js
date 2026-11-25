@@ -28,7 +28,7 @@ export async function registerPush(lang) {
     if (WEB || !Device.isDevice) return null; // pas sur le web ni sur un simulateur
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
-        name: 'Bi3li', importance: Notifications.AndroidImportance.HIGH, vibrationPattern: [0, 200, 120, 200], lightColor: '#16a34a',
+        name: 'Bi3li', importance: Notifications.AndroidImportance.HIGH, vibrationPattern: [0, 200, 120, 200], lightColor: '#0B6B3A',
       });
     }
     let { status } = await Notifications.getPermissionsAsync();

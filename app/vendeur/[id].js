@@ -31,7 +31,7 @@ const T = {
     wa: 'واتساب المتجر', addr: 'العنوان', hours: 'أوقات العمل', market: 'السوق', deliv: '🚚 التوصيل ممكن', share: 'مشاركة المتجر',
   },
 };
-const Stars = ({ n, size = 14 }) => <Text style={{ fontSize: size, color: '#f59e0b' }}>{'★'.repeat(Math.round(n))}<Text style={{ color: '#d1d5db' }}>{'★'.repeat(5 - Math.round(n))}</Text></Text>;
+const Stars = ({ n, size = 14 }) => <Text style={{ fontSize: size, color: '#F2B632' }}>{'★'.repeat(Math.round(n))}<Text style={{ color: '#E6DFCF' }}>{'★'.repeat(5 - Math.round(n))}</Text></Text>;
 
 export default function Vendeur() {
   const { id } = useLocalSearchParams();
@@ -172,7 +172,7 @@ export default function Vendeur() {
             <View style={[row, { justifyContent: 'center', gap: 6 }]}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <Pressable key={n} hitSlop={6} onPress={() => setRating({ ...rating, stars: n })}>
-                  <Text style={{ fontSize: 38, color: n <= (rating?.stars || 0) ? '#f59e0b' : '#d1d5db' }}>★</Text>
+                  <Text style={{ fontSize: 38, color: n <= (rating?.stars || 0) ? '#F2B632' : '#E6DFCF' }}>★</Text>
                 </Pressable>
               ))}
             </View>
@@ -194,17 +194,17 @@ export default function Vendeur() {
 const s = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radius.l, padding: 14, gap: 12, borderWidth: 1, borderColor: colors.border },
   avatar: { width: 70, height: 70, borderRadius: 35 },
-  avatarEmpty: { backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  avatarEmpty: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   initial: { fontSize: 28, fontWeight: '800', color: colors.primaryDark },
   name: { fontSize: 20, fontWeight: '800', color: colors.text },
   muted: { fontSize: 13, color: colors.muted },
   text: { fontSize: 14, color: colors.text, lineHeight: 21 },
   badges: { flexWrap: 'wrap', gap: 6 },
   badge: { fontSize: 12, fontWeight: '700', color: colors.text, backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4, overflow: 'hidden' },
-  badgeOk: { backgroundColor: '#dcfce7', color: colors.primaryDark },
+  badgeOk: { backgroundColor: '#EEF5F0', color: colors.primaryDark },
   btn: { borderRadius: radius.m, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
   btnMain: { backgroundColor: colors.primary },
-  btnLight: { backgroundColor: '#e8f5ec' },
+  btnLight: { backgroundColor: '#EEF5F0' },
   btnTxt: { color: '#fff', fontWeight: '800', fontSize: 15 },
   link: { color: colors.primaryDark, fontWeight: '700' },
   h: { fontSize: 17, fontWeight: '800', color: colors.text, marginTop: 6 },

@@ -154,7 +154,7 @@ export default function Connexion() {
         <View style={s.waBox}>
           {wa.job.expired ? <Text style={s.hint}>⌛ {F.expired}</Text> : (
             <>
-              <ActivityIndicator color="#25D366" />
+              <ActivityIndicator color="#1E7A45" />
               <Text style={s.hint}>{F.wait}</Text>
               <Text style={{ textAlign: 'center', color: colors.muted }}>{F.from} {'\u2066+222 ' + cleanPhone(phone) + '\u2069'}</Text>
             </>
@@ -192,6 +192,6 @@ const s = StyleSheet.create({
   err: { color: colors.danger, textAlign: 'center' },
   btn: { backgroundColor: colors.primary, borderRadius: radius.m, padding: 16, alignItems: 'center', marginTop: 4 },
   btnTxt: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  waBox: { gap: 10, padding: 14, borderRadius: radius.m, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#25D366', alignItems: 'center' },
+  waBox: { gap: 10, padding: 14, borderRadius: radius.m, backgroundColor: '#EEF5F0', borderWidth: 1, borderColor: '#1E7A45', alignItems: 'center' },
   link: { color: colors.primaryDark, textAlign: 'center', padding: 8, fontWeight: '600' },
 });

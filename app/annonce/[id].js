@@ -8,6 +8,7 @@ import { adCache, api, mediaUrl, priceText } from '../../src/api';
 import { catById } from '../../src/categories';
 import { notify } from '../../src/notify';
 import { useAuth } from '../../src/auth';
+import { Ionicons } from '@expo/vector-icons';
 import BackButton from '../../src/components/BackButton';
 import FavButton from '../../src/components/FavButton';
 import { cityName } from '../../src/places';
@@ -201,7 +202,7 @@ export default function Annonce() {
             <TextInput style={[s.input, align]} value={report?.txt || ''} onChangeText={(v) => setReport({ ...report, txt: v })}
               placeholder={lang === 'ar' ? 'تفاصيل (اختياري)' : 'Détails (facultatif)'} placeholderTextColor={colors.muted} multiline maxLength={250} />
             <View style={{ flexDirection: rtl ? 'row-reverse' : 'row', gap: 8 }}>
-              <Pressable style={[s.sheetBtn, { backgroundColor: '#e8f5ec' }]} onPress={() => setReport(null)}>
+              <Pressable style={[s.sheetBtn, { backgroundColor: '#EEF5F0' }]} onPress={() => setReport(null)}>
                 <Text style={[s.sheetBtnTxt, { color: colors.primaryDark }]}>{lang === 'ar' ? 'إلغاء' : 'Annuler'}</Text>
               </Pressable>
               <Pressable style={[s.sheetBtn, { backgroundColor: colors.danger }, !report?.reason && { opacity: 0.4 }]} disabled={!report?.reason} onPress={sendReport}>
@@ -223,9 +224,9 @@ export default function Annonce() {
         </View>
       ) : ad.status !== 'sold' && !!phone && (
         <View style={[s.bar, { paddingBottom: 10 + insets.bottom }]}>
-          <Pressable style={[s.action, { backgroundColor: colors.whatsapp }]} onPress={whatsapp}><Text style={s.actionTxt}>🟢 {t('whatsapp')}</Text></Pressable>
-          <Pressable style={[s.action, { backgroundColor: colors.primary }]} onPress={call}><Text style={s.actionTxt}>📞 {t('call')}</Text></Pressable>
-          <Pressable style={[s.action, s.actionLight]} onPress={message}><Text style={[s.actionTxt, { color: colors.primaryDark }]}>💬 {t('message')}</Text></Pressable>
+          <Pressable style={[s.action, { backgroundColor: colors.whatsapp }]} onPress={whatsapp}><View style={s.actionRow}><Ionicons name="logo-whatsapp" size={18} color="#fff" /><Text style={s.actionTxt}>{t('whatsapp')}</Text></View></Pressable>
+          <Pressable style={[s.action, { backgroundColor: colors.primary }]} onPress={call}><View style={s.actionRow}><Ionicons name="call-outline" size={18} color="#fff" /><Text style={s.actionTxt}>{t('call')}</Text></View></Pressable>
+          <Pressable style={[s.action, s.actionLight]} onPress={message}><View style={s.actionRow}><Ionicons name="chatbubble-outline" size={18} color={colors.primaryDark} /><Text style={[s.actionTxt, { color: colors.primaryDark }]}>{t('message')}</Text></View></Pressable>
         </View>
       )}
     </View>
@@ -233,7 +234,7 @@ export default function Annonce() {
 }
 
 const s = StyleSheet.create({
-  noPhoto: { backgroundColor: '#eef2ef', alignItems: 'center', justifyContent: 'center' },
+  noPhoto: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   counter: { position: 'absolute', bottom: 10, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10 },
   box: { padding: 16, gap: 6 },
   sold: { alignSelf: 'flex-start', backgroundColor: colors.danger, color: '#fff', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6, fontWeight: '700' },
@@ -262,6 +263,7 @@ const s = StyleSheet.create({
   sellerName: { fontSize: 16, fontWeight: '700', color: colors.text },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: 8, padding: 10, backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.border },
   action: { flex: 1, borderRadius: radius.m, paddingVertical: 13, alignItems: 'center' },
-  actionLight: { backgroundColor: '#e8f5ec' },
+  actionLight: { backgroundColor: '#EEF5F0' },
+  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   actionTxt: { color: '#fff', fontWeight: '800', fontSize: 15 },
 });

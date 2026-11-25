@@ -94,7 +94,7 @@ export default function Profil() {
 const s = StyleSheet.create({
   wrap: { padding: 18, gap: 10, paddingBottom: 40 },
   avatar: { width: 110, height: 110, borderRadius: 55 },
-  avatarEmpty: { backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  avatarEmpty: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   initial: { fontSize: 44, fontWeight: '800', color: colors.primaryDark },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.white },
   chipTxt: { fontWeight: '700', color: colors.text },

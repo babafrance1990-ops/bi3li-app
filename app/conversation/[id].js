@@ -110,7 +110,7 @@ export default function Conversation() {
   const row = { flexDirection: rtl ? 'row-reverse' : 'row' };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#eef3ef' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 44}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#EEF5F0' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 44}>
       <Stack.Screen options={{ title: otherName }} />
 
       {/* Rappel de l'annonce (toucher = ouvrir l'annonce) */}
@@ -147,7 +147,7 @@ export default function Conversation() {
                 <View style={[s.bubble, mine ? s.mine : s.theirs, m.status === 'failed' && { opacity: 0.6 }]}>
                   {img && <Image source={img} style={s.msgImg} contentFit="cover" />}
                   {!!m.txt && <Text style={[s.msgTxt, mine && { color: '#fff' }]}>{m.txt}</Text>}
-                  <Text style={[s.msgTime, mine && { color: '#dcfce7' }]}>
+                  <Text style={[s.msgTime, mine && { color: '#EEF5F0' }]}>
                     {m.status === 'sending' ? t('sending') : shortTime(m.t, lang)}
                     {mine && !m.status && m === lastMine ? (conv.otherRead >= m.t ? '  ✓✓ ' + t('seen') : '  ✓ ' + t('sent')) : ''}
                   </Text>

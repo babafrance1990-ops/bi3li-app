@@ -38,7 +38,7 @@ export default function AdCard({ ad, preview }) {
 
 const s = StyleSheet.create({
   card: { flex: 1, margin: 5, backgroundColor: colors.white, borderRadius: radius.m, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
-  photoBox: { aspectRatio: 1, backgroundColor: '#eef2ef', alignItems: 'center', justifyContent: 'center' },
+  photoBox: { aspectRatio: 1, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   photo: { width: '100%', height: '100%' },
   noPhoto: { fontSize: 32, opacity: 0.4 },
   fav: { position: 'absolute', top: 6, right: 6 },

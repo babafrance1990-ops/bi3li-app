@@ -190,7 +190,7 @@ const s = StyleSheet.create({
   input: { flex: 1, fontSize: 16, paddingVertical: 11, color: colors.text, outlineStyle: 'none' },
   refine: { paddingHorizontal: 12, paddingVertical: 11, borderRadius: radius.l, borderWidth: 1, borderColor: colors.primary },
   refineTxt: { color: colors.primaryDark, fontWeight: '700' },
-  alertBtn: { marginHorizontal: 10, marginBottom: 8, paddingVertical: 11, borderRadius: radius.m, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: '#f0fdf4', alignItems: 'center' },
+  alertBtn: { marginHorizontal: 10, marginBottom: 8, paddingVertical: 11, borderRadius: radius.m, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: '#EEF5F0', alignItems: 'center' },
   alertOn: { backgroundColor: colors.primary },
   alertTxt: { color: colors.primaryDark, fontWeight: '800', fontSize: 15 },
   resRow: { justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10, paddingBottom: 6 },

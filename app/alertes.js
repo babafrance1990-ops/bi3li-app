@@ -127,7 +127,7 @@ export default function Alertes() {
 const s = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radius.m, padding: 12, gap: 12, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
   bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  bellOn: { backgroundColor: '#dcfce7' },
+  bellOn: { backgroundColor: '#EEF5F0' },
   cat: { fontSize: 12, fontWeight: '700' },
   title: { fontSize: 16, fontWeight: '800', color: colors.text },
   status: { fontSize: 13, fontWeight: '700' },

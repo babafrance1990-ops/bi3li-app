@@ -641,7 +641,7 @@ const s = StyleSheet.create({
   foot: { gap: 8, padding: 12, backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.border },
   btnMain: { backgroundColor: colors.primary, borderRadius: radius.m, paddingVertical: 15, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
   btnMainTxt: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  btnLight: { backgroundColor: '#e8f5ec', borderRadius: radius.m, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
+  btnLight: { backgroundColor: '#EEF5F0', borderRadius: radius.m, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
   btnLightTxt: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
   center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14 },
   centerTxt: { fontSize: 16, color: colors.muted, textAlign: 'center' },

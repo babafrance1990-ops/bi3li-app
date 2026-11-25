@@ -17,7 +17,7 @@ export default function VerifyBanner({ style }) {
 }
 
 const s = StyleSheet.create({
-  box: { alignItems: 'center', justifyContent: 'space-between', gap: 10, backgroundColor: '#FFF4D6', borderWidth: 1.5, borderColor: '#8A5A00', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  box: { alignItems: 'center', justifyContent: 'space-between', gap: 10, backgroundColor: '#FDF3DC', borderWidth: 1.5, borderColor: '#8A5A00', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
   txt: { color: '#8A5A00', fontWeight: '800', fontSize: 15, flexShrink: 1 },
-  btn: { color: '#fff', backgroundColor: '#25D366', fontWeight: '800', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14, overflow: 'hidden' },
+  btn: { color: '#fff', backgroundColor: '#1E7A45', fontWeight: '800', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14, overflow: 'hidden' },
 });

@@ -80,7 +80,7 @@ export default function Messages() {
 const s = StyleSheet.create({
   item: { gap: 12, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.border, alignItems: 'center' },
   avatar: { width: 50, height: 50, borderRadius: 25 },
-  avatarEmpty: { backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  avatarEmpty: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   initial: { fontSize: 20, fontWeight: '800', color: colors.primaryDark },
   name: { fontSize: 16, fontWeight: '700', color: colors.text },
   time: { fontSize: 12, color: colors.muted },
