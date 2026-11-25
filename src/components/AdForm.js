@@ -840,10 +840,6 @@ export default function AdForm({ editAd = null }) {
             <Text style={[s.h1, al]}>{t('st3')}</Text>
             <Text style={[s.sub, al]}>{t('st3sub')}</Text>
 
-            <Label rtl={rtl}>{t('price')}</Label>
-            <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
-            <Err errors={errors} rtl={rtl} k="price" />
-            {d.hidep && <Text style={[s.help, al]}>{t('priceOpt')}</Text>}
             <Label rtl={rtl}>{t('unit')}</Label>
             <View style={[s.chips, row]}>
               <Chip on={d.punit === 'new'} label={t('unitNew')} onPress={() => update({ punit: 'new' })} />
@@ -852,6 +848,10 @@ export default function AdForm({ editAd = null }) {
             <Err errors={errors} rtl={rtl} k="punit" />
             {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
             {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
+            <Label rtl={rtl}>{t('price')}</Label>
+            <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
+            <Err errors={errors} rtl={rtl} k="price" />
+            {d.hidep && <Text style={[s.help, al]}>{t('priceOpt')}</Text>}
             <Toggle rtl={rtl} label={t('nego')} value={d.nego} onChange={(v) => update({ nego: v })} />
             <Toggle rtl={rtl} label={t('hidep')} value={d.hidep} onChange={(v) => { update({ hidep: v }); setErrors({}); }} />
 
