@@ -85,6 +85,8 @@ export function newDraft(last = {}) {
     bbrand: '', bcond: '',
     // Maison et électroménager
     hitem: '', hcond: '', hbrand: '', hcap: '', hqty: '', hdims: '', hmat: '', hcolor: '', hdeliv: false, hsmall: '',
+    // Enfants, alimentation, matériaux
+    fitem: '', fage: '', fgender: '', fsize: '', fcond: '', foffer: '', frole: '', fsched: '', fexp: '', qbrand: '', qcond: '',
     // Covoiturage
     ctype: '', cfrom: '', cto: '', cdate: '', ctime: '', cseats: '', ccar: '', cstops: '', cbags: '', cclim: false, cwomen: false,
   };
