@@ -1,9 +1,8 @@
 // Point de départ de l'application : langue, compte, navigation
-import { useRef } from 'react';
-import { Animated, Dimensions, PanResponder, View } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { View } from 'react-native';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import BackButton from '../src/components/BackButton';
 import HomeButton from '../src/components/HomeButton';
 import { AuthProvider } from '../src/auth';
@@ -11,38 +10,16 @@ import { LangProvider, useLang } from '../src/i18n';
 import { usePushNavigation } from '../src/push';
 import { colors } from '../src/theme';
 
-const W = Dimensions.get('window').width;
-
-// En arabe, le retour se fait en glissant depuis le bord droit : la page suit le doigt
-function EdgeBack({ x }) {
-  const insets = useSafeAreaInsets();
-  const pan = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-    onPanResponderMove: (_, g) => { if (g.dx < 0) x.setValue(Math.max(g.dx, -W)); },
-    onPanResponderRelease: (_, g) => {
-      if (g.dx < -60 && router.canGoBack()) {
-        Animated.timing(x, { toValue: -W, duration: 150, useNativeDriver: true }).start(() => { router.back(); x.setValue(0); });
-      } else Animated.spring(x, { toValue: 0, useNativeDriver: true }).start();
-    },
-    onPanResponderTerminate: () => Animated.spring(x, { toValue: 0, useNativeDriver: true }).start(),
-  })).current;
-  return (
-    <View {...pan.panHandlers} pointerEvents="box-only"
-      style={{ position: 'absolute', right: 0, top: insets.top + 50, bottom: 0, width: 26 }} />
-  );
-}
-
 // Navigation : en arabe, retour à droite (flèche vers la droite), accueil à gauche
+// Le retour en glissant est celui du système (depuis le bord gauche) : la page suit le doigt
+// et la page précédente apparaît dessous, comme WhatsApp
 function Nav() {
   const { rtl } = useLang();
-  const x = useRef(new Animated.Value(0)).current; // position de l'écran pendant le glissement
   const headerExtra = rtl
     ? { headerLeft: () => <HomeButton />, headerRight: () => <BackButton /> }
     : { headerRight: () => <HomeButton /> };
   return (
     <View style={{ flex: 1 }}>
-      <Animated.View style={{ flex: 1, transform: [{ translateX: x }] }}>
       <Stack screenOptions={{
         headerShown: true,
         headerTintColor: colors.primaryDark,
@@ -63,8 +40,6 @@ function Nav() {
         <Stack.Screen name="boutique" options={{ title: '' }} />
         <Stack.Screen name="modifier/[id]" options={{ title: '' }} />
       </Stack>
-      </Animated.View>
-      {rtl && <EdgeBack x={x} />}
     </View>
   );
 }
