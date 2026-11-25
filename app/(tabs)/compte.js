@@ -51,6 +51,10 @@ export default function Compte() {
         </Pressable>
       )}
 
+      <Pressable style={[s.light, s.big]} onPress={() => router.push('/boutiques')}>
+        <Text style={[s.lightTxt, { fontSize: 17 }]}>🏬 {lang === 'ar' ? 'المتاجر' : 'Boutiques'}</Text>
+      </Pressable>
+
       <Pressable style={[s.light, s.big]} onPress={() => router.push('/vus')}>
         <Text style={[s.lightTxt, { fontSize: 17 }]}>👁 {lang === 'ar' ? 'شاهدتها مؤخراً' : 'Vus récemment'}</Text>
       </Pressable>
