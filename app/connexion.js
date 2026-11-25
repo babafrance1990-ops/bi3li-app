@@ -18,7 +18,6 @@ export default function Connexion() {
   const L = rtl
     ? { name: 'اسمك', code: 'الرمز السري (4 أرقام)', code2: 'أعد كتابة الرمز' }
     : { name: 'Votre nom', code: 'Code secret (4 chiffres)', code2: 'Confirmez le code' };
-  const createOk = name.trim().length > 0 && code.length === 4 && code2.length === 4;
   const { login, register, signInWith } = useAuth();
   const [step, setStep] = useState('phone'); // phone | login | create
   const [phone, setPhone] = useState('');
@@ -29,6 +28,7 @@ export default function Connexion() {
   const [busy, setBusy] = useState(false);
   const [support, setSupport] = useState('');
   const [newPin, setNewPin] = useState(null); // { a, b } : choix d'un nouveau code après « code oublié »
+  const createOk = name.trim().length > 0 && code.length === 4 && code2.length === 4; // bouton « créer » actif seulement si tout est bon
   const { lang } = useLang();
   const F = lang === 'ar'
     ? { forgotWa: 'استرجاع حسابي عبر واتساب', wait: 'في انتظار رسالتك على واتساب…', from: 'أرسل الرسالة من واتساب الرقم', again: 'فتح واتساب مرة أخرى', cancel: 'إلغاء', expired: 'انتهت صلاحية الرمز. أعد المحاولة.', noWa: 'لا يوجد واتساب على هذا الرقم؟ راسل فريق بيعلي', npT: 'اختر رمزك السري الجديد', np1: 'الرمز الجديد', np2: 'أكّد الرمز', npSave: 'حفظ رمزي الجديد', npLater: 'لاحقاً', tooMany: 'طلبات كثيرة. أعد المحاولة بعد ساعة.' }
