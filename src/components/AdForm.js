@@ -42,7 +42,7 @@ const D = {
     upVid: 'Envoi de la vidéo… {p} %',
     animInfo: 'Détails de l’animal', species: 'Espèce', count: 'Nombre de têtes', sex: 'Sexe', sx_m: 'Mâle', sx_f: 'Femelle', sx_mix: 'Mâles et femelles',
     age: 'Âge', ag_0: 'Moins d’1 an', ag_1: '1 à 2 ans', ag_2: '2 à 4 ans', ag_4: 'Plus de 4 ans', breed: 'Race (facultatif)', breedPh: 'Ex. : Touabire, Ladoum',
-    tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
+    addDet: 'Ajouter des détails (facultatif)', tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
     voiceL: 'Message vocal (facultatif, 1 minute max)', voiceRec: 'Enregistrer un message vocal', voiceStop: 'Arrêter', voiceListen: 'Écouter',
     voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
     voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
@@ -84,7 +84,7 @@ const D = {
     upVid: 'جارٍ إرسال الفيديو… {p}٪',
     animInfo: 'تفاصيل الحيوان', species: 'النوع', count: 'عدد الرؤوس', sex: 'الجنس', sx_m: 'ذكر', sx_f: 'أنثى', sx_mix: 'ذكور وإناث',
     age: 'العمر', ag_0: 'أقل من سنة', ag_1: 'من سنة إلى سنتين', ag_2: 'من 2 إلى 4 سنوات', ag_4: 'أكثر من 4 سنوات', breed: 'السلالة (اختياري)', breedPh: 'مثال: توابير، لادوم',
-    tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
+    addDet: 'إضافة تفاصيل (اختياري)', tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
     voiceL: 'رسالة صوتية (اختياري، دقيقة كحد أقصى)', voiceRec: 'سجّل رسالة صوتية', voiceStop: 'إيقاف', voiceListen: 'استمع',
     voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
     voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
@@ -197,6 +197,7 @@ export default function AdForm({ editAd = null }) {
   const [restored, setRestored] = useState(false);
   const [errors, setErrors] = useState({});
   const [subStage, setSubStage] = useState(false); // vrai : on choisit la sous-catégorie (après la catégorie)
+  const [detOpen, setDetOpen] = useState(false); // détails de catégorie (fin de l'étape 3, comme sur le site)
   const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
   const [busy, setBusy] = useState('');     // texte du bouton pendant la publication
   const [cityOpen, setCityOpen] = useState(false);
@@ -323,7 +324,7 @@ export default function AdForm({ editAd = null }) {
       }
     }
     if (step === 2 && d.cat === 'immo' && d.photos.length === 0) e.photos = t('ePhotoImmo');
-    if (step === 2 && d.cat === 'anim' && !(+digits(d.count) > 0)) e.count = t('errCount');
+    if (step === 3 && d.cat === 'anim' && !(+digits(d.count) > 0)) e.count = t('errCount');
     if (step === 3) {
       // Prix masqué : ni le prix ni l'unité ne sont obligatoires (l'annonce part sans prix)
       if (!d.hidep) {
@@ -583,45 +584,6 @@ export default function AdForm({ editAd = null }) {
             <Text style={[s.h1, al]}>{t('st2')}</Text>
             <Text style={[s.sub, al]}>{t('st2sub')}</Text>
 
-            {d.cat === 'anim' && (
-              <View style={s.detBox}>
-                <Label rtl={rtl}>{t('animInfo')}</Label>
-                <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
-                <View style={[row, { gap: 8 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Label rtl={rtl}>{t('count')}</Label>
-                    <Field rtl={rtl} value={d.count} keyboardType="number-pad" maxLength={4} placeholder="1"
-                      onChangeText={(v) => update({ count: digits(v).slice(0, 4) })} />
-                    <Err errors={errors} rtl={rtl} k="count" />
-                  </View>
-                </View>
-                <Label rtl={rtl}>{t('sex')}</Label>
-                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
-                  {['m', 'f', 'mix'].map((x) => (
-                    <Pressable key={x} onPress={() => update({ sex: d.sex === x ? '' : x })} style={[s.chip, d.sex === x && s.chipOn]}>
-                      <Text style={[s.chipTxt, d.sex === x && s.chipTxtOn]}>{t('sx_' + x)}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-                <Label rtl={rtl}>{t('age')}</Label>
-                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
-                  {['0', '1', '2', '4'].map((x) => (
-                    <Pressable key={x} onPress={() => update({ age: d.age === x ? '' : x })} style={[s.chip, d.age === x && s.chipOn]}>
-                      <Text style={[s.chipTxt, d.age === x && s.chipTxtOn]}>{t('ag_' + x)}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-                <Label rtl={rtl}>{t('breed')}</Label>
-                <Field rtl={rtl} value={d.breed} maxLength={30} placeholder={t('breedPh')} onChangeText={(v) => update({ breed: v })} />
-                {d.sub !== 'volaille' && d.sub !== 'autre' && (
-                  <Pressable onPress={() => update({ tabaski: !d.tabaski })} style={[row, { alignItems: 'center', gap: 8 }]}>
-                    <Text style={s.chipTxt}>{d.tabaski ? '☑' : '☐'}</Text>
-                    <Text style={s.chipTxt}>{t('tabaski')}</Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
-
             <View style={[row, { justifyContent: 'space-between' }]}>
               <Label rtl={rtl}>{t('photos')}</Label>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
@@ -748,6 +710,49 @@ export default function AdForm({ editAd = null }) {
                 city: d.city, hood: d.hood, photos: d.photos.map((p) => p.uri || p.url).filter(Boolean),
               }} />
             </View>
+
+            {d.cat === 'anim' && (detOpen || d.count !== '1' || d.sex || d.age || d.breed || d.tabaski) ? (
+              <View style={s.detBox}>
+                <Label rtl={rtl}>{t('animInfo')}</Label>
+                <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
+                <View style={[row, { gap: 8 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Label rtl={rtl}>{t('count')}</Label>
+                    <Field rtl={rtl} value={d.count} keyboardType="number-pad" maxLength={4} placeholder="1"
+                      onChangeText={(v) => update({ count: digits(v).slice(0, 4) })} />
+                    <Err errors={errors} rtl={rtl} k="count" />
+                  </View>
+                </View>
+                <Label rtl={rtl}>{t('sex')}</Label>
+                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+                  {['m', 'f', 'mix'].map((x) => (
+                    <Pressable key={x} onPress={() => update({ sex: d.sex === x ? '' : x })} style={[s.chip, d.sex === x && s.chipOn]}>
+                      <Text style={[s.chipTxt, d.sex === x && s.chipTxtOn]}>{t('sx_' + x)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Label rtl={rtl}>{t('age')}</Label>
+                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+                  {['0', '1', '2', '4'].map((x) => (
+                    <Pressable key={x} onPress={() => update({ age: d.age === x ? '' : x })} style={[s.chip, d.age === x && s.chipOn]}>
+                      <Text style={[s.chipTxt, d.age === x && s.chipTxtOn]}>{t('ag_' + x)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Label rtl={rtl}>{t('breed')}</Label>
+                <Field rtl={rtl} value={d.breed} maxLength={30} placeholder={t('breedPh')} onChangeText={(v) => update({ breed: v })} />
+                {d.sub !== 'volaille' && d.sub !== 'autre' && (
+                  <Pressable onPress={() => update({ tabaski: !d.tabaski })} style={[row, { alignItems: 'center', gap: 8 }]}>
+                    <Text style={s.chipTxt}>{d.tabaski ? '☑' : '☐'}</Text>
+                    <Text style={s.chipTxt}>{t('tabaski')}</Text>
+                  </Pressable>
+                )}
+              </View>
+            ) : d.cat === 'anim' ? (
+              <Pressable onPress={() => setDetOpen(true)} style={s.moreBtn}>
+                <Text style={s.moreTxt}>+ {t('addDet')}</Text>
+              </Pressable>
+            ) : null}
           </>
         )}
       </ScrollView>
