@@ -181,8 +181,8 @@ export default function Annonce() {
           />
           {/* Retour : flèche en haut, toujours visible (sinon glisser l'image vers le bas) */}
           <Pressable onPress={() => { zoomed.current = false; setViewer(null); }} hitSlop={12}
-            style={[s.back, { top: insets.top + 8 }, rtl ? { right: 12 } : { left: 12 }]}>
-            <Text style={s.backTxt}>{rtl ? '›' : '‹'}  {lang === 'ar' ? 'رجوع' : 'Retour'}</Text>
+            style={[s.back, { top: insets.top + 8 }, rtl ? { right: 14 } : { left: 14 }]}>
+            <Text style={s.backTxt}>{rtl ? '›' : '‹'}</Text>
           </Pressable>
           {photos.length > 1 && <Text style={[s.viewerCount, { bottom: insets.bottom + 20 }]}>{(viewerIdx ?? viewer ?? 0) + 1} / {photos.length}</Text>}
         </View>
@@ -247,8 +247,8 @@ const s = StyleSheet.create({
   avatarEmpty: { backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   link: { color: colors.primaryDark, fontWeight: '700', marginTop: 8 },
   report: { color: colors.muted, fontSize: 13, textDecorationLine: 'underline' },
-  back: { position: 'absolute', zIndex: 10, elevation: 10, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)' },
-  backTxt: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  back: { position: 'absolute', zIndex: 10, elevation: 10, width: 42, height: 42, borderRadius: 21, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  backTxt: { color: '#111', fontSize: 30, lineHeight: 34, fontWeight: '600' },
   viewerCount: { position: 'absolute', alignSelf: 'center', color: '#fff', fontWeight: '700', backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 12, paddingVertical: 3, borderRadius: 10 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 20 },
   sheet: { backgroundColor: colors.white, borderRadius: radius.l, padding: 18, gap: 10 },
