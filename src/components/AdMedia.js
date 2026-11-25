@@ -29,7 +29,7 @@ export function AdVideo({ url, width, label }) {
       ) : (
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setStarted(true)}>
           {poster && <Image source={poster} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />}
-          <View style={styles.centre}>
+          <View style={styles.playWrap}>
             <View style={styles.play}><Text style={styles.playTxt}>▶</Text></View>
           </View>
           <Text style={styles.tag}>🎬 {label}</Text>
@@ -62,7 +62,8 @@ function VoicePlayer({ uri, label }) {
 
 const styles = StyleSheet.create({
   video: { backgroundColor: '#2b2b2b', overflow: 'hidden' },
-  centre: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  // Bouton ▶ au centre : position calculée (moitié de la taille), sans dépendre du conteneur
+  playWrap: { position: 'absolute', top: '50%', left: '50%', width: 64, height: 64, marginLeft: -32, marginTop: -32 },
   play: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   playTxt: { color: '#fff', fontSize: 26, marginLeft: 4 },
   tag: { position: 'absolute', bottom: 10, left: 10, color: '#fff', backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden', fontWeight: '700' },
