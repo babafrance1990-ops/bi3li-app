@@ -1,8 +1,9 @@
 // Ouvrir / modifier ma boutique (vitrine) — mêmes champs et mêmes textes que le site.
 // Enregistrée dans le compte (PUT /api/me { shop }) : nom, marché, présentation, adresse, horaires, WhatsApp, livraison, agence.
 // Le logo de la boutique = la photo du compte. Le serveur met à jour le nom de boutique sur toutes mes annonces.
-import { useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
 import { api, mediaUrl } from '../src/api';
@@ -31,6 +32,9 @@ const T = {
     closeQ: 'Fermer votre boutique ? Vos annonces restent en ligne, à votre nom.', closed: 'Boutique fermée.',
     errName: 'Écrivez le nom de la boutique.', errWa: 'Le numéro WhatsApp doit avoir 8 chiffres.', err: 'Enregistrement impossible. Vérifiez votre connexion.',
     perm: 'Autorisez l’accès aux photos dans les réglages du téléphone.', login: 'Connectez-vous pour ouvrir une boutique.',
+    complete: 'Boutique complète à {p} %', moreInfo: 'Plus d’informations', lessInfo: 'Masquer les informations',
+    preview: 'Aperçu de ma boutique', previewClose: 'Fermer l’aperçu', verifyAsk: 'Demander la vérification', verifyMsg: 'Bonjour, je demande la vérification de ma boutique « {n} » ({p}).',
+    previewAddr: 'Adresse', previewHours: 'Horaires', previewWa: 'WhatsApp', previewDeliv: 'Livraison', previewMarket: 'Marché',
   },
   ar: {
     createT: 'افتح متجري', editT: 'متجري', free: 'مجاني خلال فترة الإطلاق.',
@@ -48,6 +52,9 @@ const T = {
     closeQ: 'هل تريد إغلاق متجرك؟ تبقى إعلاناتك منشورة باسمك.', closed: 'تم إغلاق المتجر.',
     errName: 'اكتب اسم المتجر.', errWa: 'رقم واتساب يجب أن يكون 8 أرقام.', err: 'تعذّر الحفظ. تحقق من الاتصال.',
     perm: 'اسمح بالوصول إلى الصور من إعدادات الهاتف.', login: 'سجّل الدخول لفتح متجر.',
+    complete: 'اكتمال المتجر: {p} %', moreInfo: 'معلومات إضافية', lessInfo: 'إخفاء المعلومات',
+    preview: 'معاينة متجري', previewClose: 'إغلاق المعاينة', verifyAsk: 'طلب التوثيق', verifyMsg: 'السلام عليكم، أطلب توثيق متجري « {n} » ({p}).',
+    previewAddr: 'العنوان', previewHours: 'أوقات العمل', previewWa: 'واتساب', previewDeliv: 'التوصيل', previewMarket: 'السوق',
   },
 };
 const digits = (v) => String(v || '').replace(/\D/g, '');
@@ -64,6 +71,10 @@ export default function Boutique() {
   const [photo, setPhoto] = useState(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(null); // 'created' | 'saved'
+  const [more, setMore] = useState(() => !!(old && (old.desc || old.addr || old.hours || old.wa || old.deliv || old.agency)));
+  const [preview, setPreview] = useState(false);
+  const [support, setSupport] = useState('');
+  useEffect(() => { api.config().then((c) => setSupport(c.support || '')).catch(() => {}); }, []);
   const set = (patch) => setF((x) => ({ ...x, ...patch }));
   const al = rtl ? { textAlign: 'right' } : null;
   const row = { flexDirection: rtl ? 'row-reverse' : 'row' };
@@ -74,6 +85,17 @@ export default function Boutique() {
   const renamed = old?.verified && (f.name.trim() !== old.name || f.agency !== !!old.agency);
   const link = shop?.slug ? 'https://bi3li.net/?b=' + shop.slug : null;
   const logo = photo?.uri || (user.avatar ? mediaUrl(user.avatar) : null);
+  // Liste de contrôle : ce qui rend la boutique complète
+  const checks = [
+    { ok: !!logo, fr: 'Logo ou photo', ar: 'شعار أو صورة' },
+    { ok: !!f.desc.trim(), fr: 'Présentation', ar: 'تعريف بالمتجر' },
+    { ok: !!f.addr.trim(), fr: 'Adresse', ar: 'العنوان' },
+    { ok: !!f.hours.trim(), fr: 'Horaires', ar: 'أوقات العمل' },
+    { ok: !!f.wa, fr: 'Numéro WhatsApp de la boutique', ar: 'رقم واتساب المتجر' },
+  ];
+  const pct = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
+  const shareWa = () => Linking.openURL('https://wa.me/?text=' + encodeURIComponent('🏪 ' + (old?.name || f.name) + (link ? '\n' + link : '')));
+  const askVerify = () => Linking.openURL('https://wa.me/222' + digits(support).slice(-8) + '?text=' + encodeURIComponent(t('verifyMsg').replace('{n}', old?.name || f.name).replace('{p}', user.phone)));
 
   async function choose() {
     try { const [p] = await pickPhotos('library', 1); if (p) setPhoto(p); } catch (e) { if (e.message === 'permission') notify(t('perm')); }
@@ -138,6 +160,26 @@ export default function Boutique() {
         ? <Text style={[s.badge, s.badgeOk]}>{t('verified')}</Text>
         : <Text style={[s.badge, al]}>⏳ {t('pending')}</Text>)}
 
+      <View style={s.progress}>
+        <Text style={[s.progTitle, al]}>{t('complete').replace('{p}', pct)}</Text>
+        <View style={s.progBar}><View style={[s.progFill, { width: pct + '%' }]} /></View>
+        {checks.map((c) => (
+          <View key={c.fr} style={[s.progRow, row]}>
+            <Ionicons name={c.ok ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={c.ok ? colors.primary : colors.muted} />
+            <Text style={[s.progItem, al]}>{lang === 'ar' ? c.ar : c.fr}</Text>
+          </View>
+        ))}
+      </View>
+
+      {old && link && (
+        <Pressable style={[s.btn, { backgroundColor: colors.whatsapp, marginTop: 4 }]} onPress={shareWa}>
+          <WaLabel style={s.btnTxt}>{t('share')}</WaLabel>
+        </Pressable>
+      )}
+      {old && !old.verified && !!digits(support) && (
+        <Pressable style={s.btnLight} onPress={askVerify}><Text style={s.btnLightTxt}>{t('verifyAsk')}</Text></Pressable>
+      )}
+
       <Text style={[s.label, al]}>{t('logo')}</Text>
       <View style={[row, { alignItems: 'center', gap: 14 }]}>
         {logo ? <Image source={logo} style={s.logo} contentFit="cover" /> : <View style={[s.logo, s.logoEmpty]}><Text style={{ fontSize: 30 }}>🏪</Text></View>}
@@ -151,6 +193,12 @@ export default function Boutique() {
       <Text style={[s.label, al]}>{t('market')}</Text>
       <TextInput style={[s.input, al]} value={f.market} onChangeText={(v) => set({ market: v })} placeholder={t('marketPh')} placeholderTextColor={colors.muted} maxLength={100} />
 
+      <Pressable style={[s.moreBtn, row]} onPress={() => setMore(!more)}>
+        <Text style={s.moreTxt}>{more ? t('lessInfo') : t('moreInfo')}</Text>
+        <Ionicons name={more ? 'chevron-up' : 'chevron-down'} size={18} color={colors.primaryDark} />
+      </Pressable>
+      {more && (
+        <>
       <Text style={[s.label, al]}>{t('desc')}</Text>
       <TextInput style={[s.input, al, { minHeight: 90, textAlignVertical: 'top' }]} value={f.desc} onChangeText={(v) => set({ desc: v })} placeholder={t('descPh')} placeholderTextColor={colors.muted} multiline maxLength={400} />
 
@@ -178,9 +226,14 @@ export default function Boutique() {
       </View>
       {f.agency && <Text style={[s.help, al]}>{t('agencyHelp')}</Text>}
 
+        </>
+      )}
+
       <Pressable style={[s.btn, busy && { opacity: 0.6 }]} disabled={busy} onPress={save}>
         {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.btnTxt}>{old ? t('save') : '🏪 ' + t('create')}</Text>}
       </Pressable>
+
+      <Pressable style={s.btnLight} onPress={() => setPreview(true)}><Text style={s.btnLightTxt}>{t('preview')}</Text></Pressable>
 
       {old && (
         <>
@@ -188,6 +241,23 @@ export default function Boutique() {
           <Pressable onPress={closeShop}><Text style={[s.link, { color: colors.danger }]}>{t('close')}</Text></Pressable>
         </>
       )}
+
+      <Modal visible={preview} animationType="slide" onRequestClose={() => setPreview(false)}>
+        <ScrollView contentContainerStyle={s.wrap}>
+          <Pressable onPress={() => setPreview(false)}><Text style={s.link}>{t('previewClose')}</Text></Pressable>
+          <View style={s.prevCard}>
+            {logo ? <Image source={logo} style={s.prevLogo} contentFit="cover" /> : null}
+            <Text style={[s.h, al]}>{f.name || '—'}</Text>
+            {!!f.market && <Text style={[s.p, al]}>{t('previewMarket')} : {f.market}</Text>}
+            {!!f.desc && <Text style={[s.p, al]}>{f.desc}</Text>}
+            {!!f.addr && <Text style={[s.p, al]}>{t('previewAddr')} : {f.addr}</Text>}
+            {!!f.hours && <Text style={[s.p, al]}>{t('previewHours')} : {f.hours}</Text>}
+            <Text style={[s.p, al]}>{t('previewWa')} : {digits(f.wa) || digits(user.phone)}</Text>
+            {f.deliv && <Text style={[s.p, al]}>{t('previewDeliv')} : {f.delivNote || '✓'}</Text>}
+            {old?.verified && <Text style={[s.badge, s.badgeOk]}>{t('verified')}</Text>}
+          </View>
+        </ScrollView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -215,4 +285,14 @@ const s = StyleSheet.create({
   btnLight: { backgroundColor: '#EEF5F0', borderRadius: radius.m, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   btnLightTxt: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
   link: { color: colors.primaryDark, fontWeight: '700', textAlign: 'center', padding: 12 },
+  progress: { backgroundColor: colors.white, borderRadius: radius.m, borderWidth: 1, borderColor: colors.border, padding: 12, gap: 6, marginTop: 8 },
+  progTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+  progBar: { height: 8, borderRadius: 4, backgroundColor: '#EEF5F0', overflow: 'hidden' },
+  progFill: { height: 8, backgroundColor: colors.primary },
+  progRow: { alignItems: 'center', gap: 8 },
+  progItem: { fontSize: 14, color: colors.text, flex: 1 },
+  moreBtn: { alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
+  moreTxt: { fontSize: 15, fontWeight: '700', color: colors.primaryDark },
+  prevCard: { backgroundColor: colors.white, borderRadius: radius.l, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 8, marginTop: 8 },
+  prevLogo: { width: 80, height: 80, borderRadius: 14 },
 });
