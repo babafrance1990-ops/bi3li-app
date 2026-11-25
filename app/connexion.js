@@ -100,9 +100,9 @@ export default function Connexion() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.white }}>
       {/* Défilement : quand le clavier est ouvert, on peut toujours atteindre le bouton et les messages */}
       <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
-        contentContainerStyle={[s.wrap, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40, flexGrow: 1 }]}>
+        contentContainerStyle={[s.wrap, { paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40, flexGrow: 1, justifyContent: step === 'phone' ? 'center' : 'flex-start' }]}>
       {/* Retour : flèche à droite en arabe (vers la droite), à gauche en français */}
-      <View style={[s.top, rtl && { flexDirection: 'row-reverse' }]}>
+      <View style={[s.top, rtl && { flexDirection: 'row-reverse' }, { position: 'absolute', top: insets.top + 8, left: 24, right: 24, zIndex: 1 }]}>
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} hitSlop={12} style={s.back}>
           <Text style={s.backTxt}>{rtl ? '›' : '‹'}</Text>
         </Pressable>
