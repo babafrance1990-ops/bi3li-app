@@ -12,6 +12,7 @@ import { adCache, api, mediaUrl, priceText } from '../api';
 import { invalidateAds } from '../store';
 import { useAuth } from '../auth';
 import { CATEGORIES, catById } from '../categories';
+import { SUB_KEY, subsOf } from '../subcategories';
 import AdCard from './AdCard';
 import CityPicker from './CityPicker';
 import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
@@ -127,6 +128,7 @@ function adToDraft(a) {
   const pick = Object.fromEntries(Object.keys(base).filter((k) => d0[k] !== undefined && d0[k] !== null).map((k) => [k, d0[k]]));
   const d = { ...base, ...pick, step: 1 };
   d.cat = a.cat; d.title = a.title || ''; d.desc = a.desc || '';
+  d.sub = (SUB_KEY[a.cat] && a[SUB_KEY[a.cat]]) || d0.sub || '';
   d.punit = a.punit === 'old' ? 'old' : 'new';
   d.price = String(a.punit === 'old' ? a.priceOld || a.price * 10 : a.price || '');
   d.nego = !!a.nego; d.hidep = !!a.hidep; d.city = a.city || d.city; d.hood = a.hood || ''; d.near = a.near || '';
@@ -341,6 +343,7 @@ export default function AdForm({ editAd = null }) {
       contacts: { wa: !!d.wa, call: !!d.call, msg: !!d.msg },
       stype: 'part',
     };
+    if (d.sub && SUB_KEY[d.cat]) ad[SUB_KEY[d.cat]] = d.sub; // sous-catégorie : même champ que sur le site
     if (d.cat === 'immo') ad.estate = { deal: d.deal, kind: d.kind, surface: +digits(d.surface) || 0, eq: [], pub: 'owner' };
     if (d.cat === 'auto') {
       const car = { brand: d.brand.trim(), model: d.model.trim() };
@@ -434,7 +437,7 @@ export default function AdForm({ editAd = null }) {
               {CATEGORIES.map((c) => {
                 const on = d.cat === c.id;
                 return (
-                  <Pressable key={c.id} onPress={() => { update({ cat: c.id }); setErrors({}); }}
+                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); }}
                     style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
                     <Text style={{ fontSize: 26 }}>{c.icon}</Text>
                     <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
@@ -443,6 +446,18 @@ export default function AdForm({ editAd = null }) {
               })}
             </View>
             <Err errors={errors} rtl={rtl} k="cat" />
+
+            {subsOf(d.cat).length > 0 && (
+              <>
+                <Label rtl={rtl}>{lang === 'ar' ? 'النوع (اختياري)' : 'Sous-catégorie (facultatif)'}</Label>
+                <View style={[s.chips, row]}>
+                  {subsOf(d.cat).map((x) => (
+                    <Chip key={x.id} on={d.sub === x.id} label={x[lang]} color={CATEGORIES.find((c) => c.id === d.cat)?.c}
+                      onPress={() => update({ sub: d.sub === x.id ? '' : x.id })} />
+                  ))}
+                </View>
+              </>
+            )}
 
             {d.cat === 'immo' && (
               <>
