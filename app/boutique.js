@@ -34,6 +34,7 @@ const T = {
     perm: 'Autorisez l’accès aux photos dans les réglages du téléphone.', login: 'Connectez-vous pour ouvrir une boutique.',
     complete: 'Boutique complète à {p} %', moreInfo: 'Plus d’informations', lessInfo: 'Masquer les informations',
     preview: 'Aperçu de ma boutique', previewClose: 'Fermer l’aperçu', verifyAsk: 'Demander la vérification', verifyMsg: 'Bonjour, je demande la vérification de ma boutique « {n} » ({p}).',
+    adsT: 'Annonces de ma boutique', myAds: 'Voir mes annonces', addAd: 'Ajouter une annonce à ma boutique',
     previewAddr: 'Adresse', previewHours: 'Horaires', previewWa: 'WhatsApp', previewDeliv: 'Livraison', previewMarket: 'Marché',
   },
   ar: {
@@ -54,6 +55,7 @@ const T = {
     perm: 'اسمح بالوصول إلى الصور من إعدادات الهاتف.', login: 'سجّل الدخول لفتح متجر.',
     complete: 'اكتمال المتجر: {p} %', moreInfo: 'معلومات إضافية', lessInfo: 'إخفاء المعلومات',
     preview: 'معاينة متجري', previewClose: 'إغلاق المعاينة', verifyAsk: 'طلب التوثيق', verifyMsg: 'السلام عليكم، أطلب توثيق متجري « {n} » ({p}).',
+    adsT: 'إعلانات متجري', myAds: 'عرض إعلاناتي', addAd: 'إضافة إعلان لمتجري',
     previewAddr: 'العنوان', previewHours: 'أوقات العمل', previewWa: 'واتساب', previewDeliv: 'التوصيل', previewMarket: 'السوق',
   },
 };
@@ -233,6 +235,14 @@ export default function Boutique() {
         {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.btnTxt}>{old ? t('save') : '🏪 ' + t('create')}</Text>}
       </Pressable>
 
+      {old && (
+        <View style={s.adsBox}>
+          <Text style={[s.label, al]}>{t('adsT')}</Text>
+          <Pressable style={s.btnLight} onPress={() => router.push('/mes-annonces')}><Text style={s.btnLightTxt}>{t('myAds')}</Text></Pressable>
+          <Pressable style={s.btn} onPress={() => router.navigate('/(tabs)/deposer')}><Text style={s.btnTxt}>{t('addAd')}</Text></Pressable>
+        </View>
+      )}
+
       <Pressable style={s.btnLight} onPress={() => setPreview(true)}><Text style={s.btnLightTxt}>{t('preview')}</Text></Pressable>
 
       {old && (
@@ -295,4 +305,5 @@ const s = StyleSheet.create({
   moreTxt: { fontSize: 15, fontWeight: '700', color: colors.primaryDark },
   prevCard: { backgroundColor: colors.white, borderRadius: radius.l, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 8, marginTop: 8 },
   prevLogo: { width: 80, height: 80, borderRadius: 14 },
+  adsBox: { gap: 4, marginTop: 14, padding: 12, borderRadius: radius.m, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
 });
