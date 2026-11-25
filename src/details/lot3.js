@@ -118,8 +118,8 @@ function tripFields(d) {
   const offer = d.ctype === 'offer';
   f.push({ k: 'cfrom', label: lab('cfrom'), type: 'chips', opts: CITIES, req: true });
   f.push({ k: 'cto', label: lab('cto'), type: 'chips', opts: CITIES, req: true });
-  f.push({ k: 'cdate', label: lab('cdate'), type: 'text', len: 10, ph: 'AAAA-MM-JJ', req: true });
-  f.push({ k: 'ctime', label: lab('ctime'), type: 'text', len: 5, ph: '08:00', req: offer });
+  f.push({ k: 'cdate', label: lab('cdate'), type: 'date', req: true });
+  f.push({ k: 'ctime', label: lab('ctime'), type: 'time', req: offer });
   f.push({ k: 'cseats', label: lab(offer ? 'cseats' : 'cseatsD'), type: 'chips', opts: plainOpts(1, 8), req: true });
   if (offer) f.push({ k: 'ccar', label: lab('ccar'), type: 'text', len: 40, ph: T('ccarPh') });
   f.push({ k: 'cstops', label: lab('cstops'), type: 'text', len: 60, ph: T('cstopsPh') });

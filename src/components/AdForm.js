@@ -177,6 +177,11 @@ const PickSheet = ({ value, options, placeholder, title, onPick, rtl, ar, extra 
   );
 };
 
+const MONTHS = [['janvier', 'يناير'], ['février', 'فبراير'], ['mars', 'مارس'], ['avril', 'أبريل'], ['mai', 'مايو'], ['juin', 'يونيو'],
+  ['juillet', 'يوليو'], ['août', 'أغسطس'], ['septembre', 'سبتمبر'], ['octobre', 'أكتوبر'], ['novembre', 'نوفمبر'], ['décembre', 'ديسمبر']];
+const pad2 = (n) => String(n).padStart(2, '0');
+const range = (from, to, f = (i) => String(i)) => Array.from({ length: to - from + 1 }, (_, i) => ({ v: f(from + i), fr: f(from + i), ar: f(from + i) }));
+
 // Champ d'un véhicule (liste de choix, texte, nombre ou case à cocher)
 const VehField = ({ f, d, update, lang, rtl, errors }) => {
   const ar = lang === 'ar';
@@ -256,6 +261,43 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
               </Pressable>
             );
           })}
+        </View>
+        {err}
+      </>
+    );
+  }
+  if (f.type === 'date') {
+    // Date : jour, mois et année à choisir dans des listes (pas de saisie au clavier)
+    const [y, m, dd] = (d[f.k] || '').split('-');
+    const now = new Date();
+    const set = (part, v) => {
+      const cur = { y: y || String(now.getFullYear()), m: m || pad2(now.getMonth() + 1), d: dd || pad2(now.getDate()) };
+      cur[part] = part === 'y' ? v : pad2(v);
+      update({ [f.k]: cur.y + '-' + cur.m + '-' + cur.d });
+    };
+    const ph = ar ? 'اختر' : 'Choisir';
+    return (
+      <>
+        <Label rtl={rtl}>{label}</Label>
+        <View style={[row, { gap: 8 }]}>
+          <View style={{ flex: 1 }}><PickSheet value={dd ? String(+dd) : ''} options={range(1, 31)} placeholder={ar ? 'اليوم' : 'Jour'} title={label} rtl={rtl} ar={ar} onPick={(v) => set('d', v)} /></View>
+          <View style={{ flex: 2 }}><PickSheet value={m ? String(+m) : ''} options={MONTHS.map((x, i) => ({ v: String(i + 1), fr: x[0], ar: x[1] }))} placeholder={ar ? 'الشهر' : 'Mois'} title={label} rtl={rtl} ar={ar} onPick={(v) => set('m', v)} /></View>
+          <View style={{ flex: 1.3 }}><PickSheet value={y || ''} options={range(now.getFullYear(), now.getFullYear() + 1)} placeholder={ar ? 'السنة' : 'Année'} title={label} rtl={rtl} ar={ar} onPick={(v) => set('y', v)} /></View>
+        </View>
+        {err}
+      </>
+    );
+  }
+  if (f.type === 'time') {
+    // Heure : heure et minutes (par pas de 5) dans des listes
+    const [hh, mm] = (d[f.k] || '').split(':');
+    const set = (part, v) => update({ [f.k]: part === 'h' ? pad2(v) + ':' + (mm || '00') : (hh || '08') + ':' + pad2(v) });
+    return (
+      <>
+        <Label rtl={rtl}>{label}</Label>
+        <View style={[row, { gap: 8 }]}>
+          <View style={{ flex: 1 }}><PickSheet value={hh || ''} options={range(0, 23, pad2)} placeholder={ar ? 'الساعة' : 'Heure'} title={label} rtl={rtl} ar={ar} onPick={(v) => set('h', v)} /></View>
+          <View style={{ flex: 1 }}><PickSheet value={mm || ''} options={range(0, 11, (i) => pad2(i * 5))} placeholder={ar ? 'الدقيقة' : 'Minute'} title={label} rtl={rtl} ar={ar} onPick={(v) => set('m', v)} /></View>
         </View>
         {err}
       </>
