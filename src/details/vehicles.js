@@ -8,6 +8,24 @@ export const VBRANDS = {
   moto: ['Yamaha', 'Honda', 'Suzuki', 'TVS', 'Bajaj', 'Haojue', 'KTM', 'Autre'],
 };
 
+// Modèles de voiture par marque, comme sur le site
+export const MODELS = {
+  "Toyota": ["Hilux", "Land Cruiser", "Land Cruiser VX", "Land Cruiser TX", "Prado", "Prado TX", "Prado VX", "Corolla", "Corolla LE", "Corolla S", "Corolla SE", "Camry", "Yaris", "RAV4", "Fortuner", "Avensis", "Highlander", "4Runner", "Hiace", "Rush"],
+  "Hyundai": ["Accent", "Elantra", "Tucson", "Santa Fe", "i10", "i20", "Creta", "Sonata", "H-1"],
+  "Mercedes": ["Classe C", "Classe E", "Classe S", "Classe A", "190", "ML / GLE", "GLK / GLC", "Sprinter", "Vito"],
+  "Nissan": ["Navara", "Patrol", "X-Trail", "Sunny", "Qashqai", "Pathfinder", "Hardbody", "Urvan"],
+  "Kia": ["Picanto", "Rio", "Cerato", "Sportage", "Sorento", "K2700"],
+  "Peugeot": ["206", "207", "208", "301", "307", "308", "406", "407", "508", "3008", "Partner", "Boxer"],
+  "Renault": ["Clio", "Logan", "Symbol", "Megane", "Duster", "Kangoo", "Master"],
+  "Mitsubishi": ["Pajero", "L200", "Lancer", "Outlander", "Canter"],
+  "Ford": ["Ranger", "Focus", "Fiesta", "Explorer", "Escape", "Transit"],
+  "Suzuki": ["Swift", "Alto", "Celerio", "Jimny", "Vitara", "Grand Vitara"],
+  "Land Rover": ["Range Rover", "Range Rover Sport", "Evoque", "Discovery", "Defender"],
+  "Volkswagen": ["Golf", "Polo", "Passat", "Jetta", "Tiguan", "Touareg"],
+  "Honda": ["Civic", "Accord", "CR-V", "Fit / Jazz"],
+  "Isuzu": ["D-Max", "NPR", "Trooper"],
+};
+
 // Libellés (fr / ar) des valeurs de liste, comme sur le site
 const L = {
   vtype: { berline: ['Berline', 'سيدان'], suv: ['4x4 / SUV', 'دفع رباعي'], pickup: ['Pick-up', 'بيك أب'], citadine: ['Citadine', 'سيارة صغيرة'], utilitaire: ['Utilitaire', 'سيارة نفعية'], monospace: ['Monospace', 'ميني فان'] },
@@ -63,7 +81,7 @@ export function hasVehDetails(d) {
 export function vehicleFields(kind) {
   if (kind === 'car') return [
     { k: 'brand', label: LABEL.brand, type: 'chips', opts: plain(CAR_BRANDS), req: true, err: 'errBrand' },
-    { k: 'model', label: LABEL.model, type: 'text' },
+    { k: 'model', label: LABEL.model, type: 'model' },
     { k: 'vtype', label: LABEL.vtype, type: 'chips', opts: ch(L.vtype) },
     { k: 'color', label: LABEL.color, type: 'chips', opts: ch(L.color) },
     { k: 'seats', label: LABEL.seats, type: 'chips', opts: plain(SEATS) },

@@ -48,6 +48,7 @@ export function newDraft(last = {}) {
     vhours: '',
     vcond: '',
     vhome: false, vdriver: false,
+    modelOther: false, // modèle de voiture saisi à la main (« Autre modèle »)
   };
 }
 

@@ -25,7 +25,7 @@ import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
 import VoiceRecorder from './VoiceRecorder';
 import { cityName, NKC } from '../places';
 import { colors, radius } from '../theme';
-import { VEH_ERR, hasVehDetails, vehicleAdObject, vehicleErrors, vehicleFields } from '../details/vehicles';
+import { MODELS, VEH_ERR, hasVehDetails, vehicleAdObject, vehicleErrors, vehicleFields } from '../details/vehicles';
 
 // ---------- Textes du dépôt ----------
 const D = {
@@ -148,6 +148,35 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
       </Pressable>
     );
   }
+  if (f.type === 'model') {
+    // Modèles de la marque choisie, ou saisie libre (« Autre modèle », ou marque sans liste)
+    const list = MODELS[d.brand] || [];
+    const other = !!d.modelOther || (!!d.model && !list.includes(d.model));
+    return (
+      <>
+        <Label rtl={rtl}>{label}</Label>
+        {!d.brand ? (
+          <Text style={[s.help, al]}>{ar ? 'اختر الماركة أولاً' : 'Choisissez d’abord la marque'}</Text>
+        ) : list.length ? (
+          <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+            {[...list, '__other'].map((m) => {
+              const isOther = m === '__other';
+              const on = isOther ? other : !other && d.model === m;
+              return (
+                <Pressable key={m} onPress={() => update(isOther ? { model: '', modelOther: true } : { model: m, modelOther: false })} style={[s.chip, on && s.chipOn]}>
+                  <Text style={[s.chipTxt, on && s.chipTxtOn]}>{isOther ? (ar ? 'موديل آخر (أكتبه)' : 'Autre modèle (je l’écris)') : m}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+        {(other || (!!d.brand && !list.length)) && (
+          <Field rtl={rtl} value={d.model} maxLength={30} placeholder={ar ? 'مثال: هايلكس' : 'Ex. : Hilux'} onChangeText={(v) => update({ model: v })} style={{ marginTop: 8 }} />
+        )}
+        {err}
+      </>
+    );
+  }
   if (f.type === 'chips') {
     return (
       <>
@@ -155,8 +184,10 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
         <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
           {f.opts.map((o) => {
             const on = d[f.k] === o.v;
+            // Changer de marque efface le modèle, comme sur le site
+            const press = () => update(f.k === 'brand' ? { brand: on ? '' : o.v, model: '', modelOther: false } : { [f.k]: on ? '' : o.v });
             return (
-              <Pressable key={o.v} onPress={() => update({ [f.k]: on ? '' : o.v })} style={[s.chip, on && s.chipOn]}>
+              <Pressable key={o.v} onPress={press} style={[s.chip, on && s.chipOn]}>
                 <Text style={[s.chipTxt, on && s.chipTxtOn]}>{ar ? o.ar : o.fr}</Text>
               </Pressable>
             );
