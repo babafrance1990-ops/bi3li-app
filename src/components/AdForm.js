@@ -367,8 +367,9 @@ function mergeAd(orig, ad) {
   return out;
 }
 
-export default function AdForm({ editAd = null }) {
+export default function AdForm({ editAd = null, adminTarget = null }) {
   const editing = !!editAd;
+  const admin = !!adminTarget; // publication pour un autre compte (administrateur) : rien n'est gardé comme brouillon
   const { user } = useAuth();
   const { lang, rtl } = useLang();
   const t = (k, v = {}) => Object.entries(v).reduce((s, [a, b]) => s.replace('{' + a + '}', b), D[lang][k] ?? k);
@@ -399,7 +400,7 @@ export default function AdForm({ editAd = null }) {
   // Mise à jour du brouillon (+ sauvegarde sur le téléphone)
   const update = (patch) => setD((prev) => {
     const n = typeof patch === 'function' ? patch(prev) : { ...prev, ...patch };
-    if (!editing) saveDraft(n); // en modification, rien n'est gardé comme brouillon
+    if (!editing && !admin) saveDraft(n); // en modification, rien n'est gardé comme brouillon
     return n;
   });
   const setPhoto = (key, patch) => update((p) => ({ ...p, photos: p.photos.map((x) => (x.key === key ? { ...x, ...patch } : x)) }));
@@ -427,6 +428,7 @@ export default function AdForm({ editAd = null }) {
 
   useEffect(() => {
     if (editing) { setD(adToDraft(editAd)); return; }
+    if (admin) { setD({ ...newDraft(), wa: true, call: true }); return; }
     loadDraft().then(({ draft, restored: r }) => {
       draft.photos = draft.photos.map((p) => ({ ...p, key: p.key || 'p' + ++photoKey }));
       setD(draft);
@@ -651,6 +653,15 @@ export default function AdForm({ editAd = null }) {
         adCache.set(saved.id, saved);
         invalidateAds();
         setDone(saved);
+        return;
+      }
+      if (admin) {
+        const ad = buildAd(list, video, voice);
+        const r = adminTarget.kind === 'prospect'
+          ? await api.adminProspectPublish(adminTarget.id, ad)
+          : await api.adminPublish({ phone: adminTarget.phone, name: adminTarget.name, verify: adminTarget.verify, ad });
+        invalidateAds();
+        adminTarget.onDone?.(r);
         return;
       }
       const r = await api.publish(buildAd(list, video, voice));

@@ -116,6 +116,14 @@ export const api = {
   adminRole: (id, role) => request('/api/admin/users/' + id + '/role', { method: 'POST', body: { role } }), // '' ou 'recruiter'
   adminBlock: (id, blocked) => request('/api/admin/users/' + id + '/block', { method: 'POST', body: { blocked } }),
   adminPassword: (id, password) => request('/api/admin/users/' + id + '/password', { method: 'POST', body: { password } }), // 4 chiffres
+  adminLookup: (phone) => request('/api/admin/lookup?phone=' + cleanPhone(phone)), // → { user } ou { user: null }
+  adminPublish: ({ phone, name, verify, ad }) => request('/api/admin/publish', { method: 'POST', body: { phone: cleanPhone(phone), name, verify: !!verify, ad } }), // → { ad, pass?, phone, name, verified }
+  adminProspects: () => request('/api/admin/prospects'), // → { prospects, posted }
+  adminAddProspect: (body) => request('/api/admin/prospects', { method: 'POST', body }), // { phone, name, src, note, item, txt, thumb, photos }
+  adminUpdateProspect: (id, body) => request('/api/admin/prospects/' + id, { method: 'PUT', body }), // { status } ou { contacted: true } ou { nowa } ou { name, phone, item }
+  adminDeleteProspect: (id) => request('/api/admin/prospects/' + id, { method: 'DELETE' }),
+  adminVerifyProspect: (id) => request('/api/admin/prospects/' + id + '/verify', { method: 'POST' }),
+  adminProspectPublish: (id, ad) => request('/api/admin/prospects/' + id + '/publish', { method: 'POST', body: { ad } }), // → { ad, prospect }
 };
 
 // Adresse complète d'une photo (/api/media/ID → https://bi3li.net/api/media/ID)

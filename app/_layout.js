@@ -45,6 +45,8 @@ function Nav() {
         <Stack.Screen name="admin/reports" options={{ title: '' }} />
         <Stack.Screen name="admin/users" options={{ title: '' }} />
         <Stack.Screen name="admin/shops" options={{ title: '' }} />
+        <Stack.Screen name="admin/recruit" options={{ title: '' }} />
+        <Stack.Screen name="admin/publish" options={{ title: '' }} />
       </Stack>
     </View>
   );

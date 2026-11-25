@@ -34,6 +34,8 @@ export default function Admin() {
     { label: t('reportsBtn') + (nRep ? ' (' + nRep + ')' : ''), path: '/admin/reports', icon: '🚩' },
     { label: t('usersBtn'), path: '/admin/users', icon: '👥' },
     { label: t('shopsBtn'), path: '/admin/shops', icon: '🏪' },
+    { label: t('recruitBtn'), path: '/admin/recruit', icon: '🤝' },
+    { label: t('publishBtn'), path: '/admin/publish', icon: '📝' },
   ];
 
   return (

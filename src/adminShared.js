@@ -4,7 +4,7 @@ import { api } from './api';
 export const ADMIN_T = {
   fr: {
     title: 'Administration', total: 'Inscrits', new24: 'Nouveaux (24 h)', online: 'En ligne', ads24: 'Annonces (24 h)', msgs24: 'Messages (24 h)',
-    reportsBtn: 'Signalements', usersBtn: 'Utilisateurs', shopsBtn: 'Boutiques', open: 'Ouvrir',
+    reportsBtn: 'Signalements', usersBtn: 'Utilisateurs', shopsBtn: 'Boutiques', open: 'Ouvrir', recruitBtn: 'Recruter des vendeurs', publishBtn: 'Publier pour un numéro',
     reports: 'Signalements', noReports: 'Aucun signalement.', repN: '{n} signalement(s)', delAd: 'Supprimer l’annonce', ignore: 'Ignorer',
     confirmDel: 'Supprimer cette annonce ?', confirmBlock: 'Bloquer cet utilisateur ?', cancel: 'Annuler', block: 'Bloquer', unblock: 'Débloquer',
     search: 'Rechercher par numéro', verified: 'Vérifié', verify: 'Vérifier', unverify: 'Retirer la vérification', blocked: 'Bloqué',
@@ -15,7 +15,7 @@ export const ADMIN_T = {
   },
   ar: {
     title: 'الإدارة', total: 'المسجّلون', new24: 'جدد (24 ساعة)', online: 'متصلون', ads24: 'إعلانات (24 ساعة)', msgs24: 'رسائل (24 ساعة)',
-    reportsBtn: 'البلاغات', usersBtn: 'المستخدمون', shopsBtn: 'المتاجر', open: 'فتح',
+    reportsBtn: 'البلاغات', usersBtn: 'المستخدمون', shopsBtn: 'المتاجر', open: 'فتح', recruitBtn: 'جلب البائعين', publishBtn: 'النشر لرقم بائع',
     reports: 'البلاغات', noReports: 'لا توجد بلاغات.', repN: 'بلاغات: {n}', delAd: 'حذف الإعلان', ignore: 'تجاهل',
     confirmDel: 'حذف هذا الإعلان؟', confirmBlock: 'حظر هذا المستخدم؟', cancel: 'إلغاء', block: 'حظر', unblock: 'إلغاء الحظر',
     search: 'ابحث بالرقم', verified: 'موثّق', verify: 'توثيق', unverify: 'إلغاء التوثيق', blocked: 'محظور',
