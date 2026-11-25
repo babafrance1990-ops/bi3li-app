@@ -378,6 +378,7 @@ export default function AdForm({ editAd = null }) {
   const { lang, rtl } = useLang();
   const t = (k, v = {}) => Object.entries(v).reduce((s, [a, b]) => s.replace('{' + a + '}', b), D[lang][k] ?? k);
   const L = lang === 'ar' ? 1 : 0;
+  const ar = lang === 'ar';
 
   const [d, setD] = useState(null);         // brouillon
   const [restored, setRestored] = useState(false);
