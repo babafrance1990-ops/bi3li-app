@@ -52,7 +52,7 @@ export default function Home() {
       keyExtractor={(a) => a.id}
       renderItem={({ item }) => <AdCard ad={item} />}
       contentContainerStyle={{ padding: 5, paddingBottom: 30 }}
-      ListHeaderComponent={<><VerifyBanner style={{ marginHorizontal: 5, marginTop: 6 }} /><CategoryBar value={cat} onChange={setCat} /></>}
+      ListHeaderComponent={<><VerifyBanner style={{ marginHorizontal: 5, marginTop: 6 }} /><CategoryBar grid value={cat} onChange={setCat} /></>}
       onEndReached={() => more && !error && load(false)}
       onEndReachedThreshold={0.6}
       refreshControl={<RefreshControl refreshing={refreshing} colors={[colors.primary]} onRefresh={() => { setRefreshing(true); load(true); }} />}
