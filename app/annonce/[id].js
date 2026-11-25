@@ -1,6 +1,6 @@
 // Fiche annonce : galerie qui défile, prix, lieu, description, vendeur, boutons WhatsApp / Appeler / Message
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, Linking, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, FlatList, Linking, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,15 +43,30 @@ export default function Annonce() {
   const [seller, setSeller] = useState(null);
   const [index, setIndex] = useState(0);
   const zoomed = useRef(false);                     // vrai quand la photo est zoomée : pas de fermeture par glissement
-  // Glisser l'image vers le bas (sans zoom) ferme la photo, comme sur le site
-  // Glisser depuis le bord de l'écran (gauche ou droite) ferme aussi la photo, comme le retour sur le site
+  // Glisser l'image vers le bas (sans zoom) : la photo suit le doigt puis se ferme, comme sur le site
+  // Glisser depuis le bord de l'écran (gauche ou droite) ferme aussi la photo
+  const drag = useRef(new Animated.Value(0)).current;
+  const closeViewer = () => {
+    Animated.timing(drag, { toValue: H, duration: 180, useNativeDriver: true }).start(() => {
+      drag.setValue(0); zoomed.current = false; setViewer(null);
+    });
+  };
   const swipe = useRef(PanResponder.create({
-    onMoveShouldSetPanResponderCapture: (_, g) => (g.x0 < 30 || g.x0 > W - 30) && Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy),
-    onMoveShouldSetPanResponder: (_, g) => !zoomed.current && g.dy > 15 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
+    // capture : passe avant le défilement de la photo (sinon la photo bloque le glissement)
+    onMoveShouldSetPanResponderCapture: (_, g) => {
+      if (zoomed.current) return false;
+      const vertical = g.dy > 10 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5;
+      const edge = (g.x0 < 30 || g.x0 > W - 30) && Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy);
+      return vertical || edge;
+    },
+    onPanResponderMove: (_, g) => { if (!zoomed.current && g.dy > 0) drag.setValue(g.dy); },
     onPanResponderRelease: (_, g) => {
       const fromEdge = g.x0 < 30 || g.x0 > W - 30;
-      if ((g.dy > 120 && !zoomed.current) || (fromEdge && Math.abs(g.dx) > 70)) { zoomed.current = false; setViewer(null); }
+      const close = ((g.dy > 120 || (g.dy > 40 && g.vy > 0.5)) && !zoomed.current) || (fromEdge && Math.abs(g.dx) > 70);
+      if (close) closeViewer();
+      else Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start();
     },
+    onPanResponderTerminate: () => Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start(),
   })).current;
 
   // Annonce ouverte directement (lien, page rechargée) : on la cherche dans la liste complète
@@ -172,7 +187,7 @@ export default function Annonce() {
 
       {/* Photos en plein écran (toucher une photo) : on fait défiler, on peut zoomer avec deux doigts sur iPhone */}
       <Modal visible={viewer !== null} transparent={false} animationType="fade" onRequestClose={() => { zoomed.current = false; setViewer(null); }}>
-        <View style={{ flex: 1, backgroundColor: '#000' }} {...swipe.panHandlers}>
+        <Animated.View style={{ flex: 1, backgroundColor: '#000', transform: [{ translateY: drag }], opacity: drag.interpolate({ inputRange: [0, H], outputRange: [1, 0.3] }) }} {...swipe.panHandlers}>
           <FlatList
             data={photos} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
             initialScrollIndex={viewer || 0} getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
@@ -192,7 +207,7 @@ export default function Annonce() {
             <Text style={s.backTxt}>{rtl ? '›' : '‹'}</Text>
           </Pressable>
           {photos.length > 1 && <Text style={[s.viewerCount, { bottom: insets.bottom + 20 }]}>{(viewerIdx ?? viewer ?? 0) + 1} / {photos.length}</Text>}
-        </View>
+        </Animated.View>
       </Modal>
 
       {/* Signaler l'annonce */}
