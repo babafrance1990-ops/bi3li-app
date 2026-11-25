@@ -10,6 +10,7 @@ import { useAuth } from '../src/auth';
 import { useLang } from '../src/i18n';
 import { useWaJob } from '../src/wa';
 import { colors, radius } from '../src/theme';
+import WaLabel from '../src/components/WaLabel';
 
 // Champ de code secret à 4 chiffres : bouton œil pour afficher ou cacher les chiffres
 function PinInput({ inputRef, style, ...props }) {
@@ -167,7 +168,7 @@ export default function Connexion() {
 
       {step === 'login' && !wa.job && (
         <Pressable onPress={() => wa.start('reset', phone)}>
-          <Text style={s.link}>🟢 {t('forgot')} — {F.forgotWa}</Text>
+          <WaLabel style={s.link} color={colors.whatsapp}>{t('forgot')} — {F.forgotWa}</WaLabel>
         </Pressable>
       )}
       {!!wa.error && <Text style={s.err}>{wa.error === 'too_many' ? F.tooMany : t('netErr')}</Text>}

@@ -7,6 +7,7 @@ import { useLang } from '../src/i18n';
 import { invalidateAds } from '../src/store';
 import { colors, radius } from '../src/theme';
 import { useWaJob } from '../src/wa';
+import WaLabel from '../src/components/WaLabel';
 
 const T = {
   fr: {
@@ -64,7 +65,7 @@ export default function Verifier() {
               <Text style={[s.h, { textAlign: 'center' }]}>{t('wait')}</Text>
               <Text style={[s.p, { textAlign: 'center' }]}>{t('from', { p: '⁦+222 ' + user.phone + '⁩' })}</Text>
               <Text style={s.code}>{t('code', { c: wa.job.code })}</Text>
-              <Pressable style={s.btnWa} onPress={wa.reopen}><Text style={s.btnTxt}>🟢 {t('again')}</Text></Pressable>
+              <Pressable style={s.btnWa} onPress={wa.reopen}><WaLabel style={s.btnTxt}>{t('again')}</WaLabel></Pressable>
               <Pressable onPress={wa.cancel}><Text style={s.link}>{t('cancel')}</Text></Pressable>
             </>
           )}
@@ -82,7 +83,7 @@ export default function Verifier() {
             ))}
           </View>
           {!!wa.error && <Text style={[s.err, al]}>{t('e_' + wa.error) !== 'e_' + wa.error ? t('e_' + wa.error) : t('e_net')}</Text>}
-          <Pressable style={s.btnWa} onPress={() => wa.start('verify')}><Text style={s.btnTxt}>🟢 {t('btn')}</Text></Pressable>
+          <Pressable style={s.btnWa} onPress={() => wa.start('verify')}><WaLabel style={s.btnTxt}>{t('btn')}</WaLabel></Pressable>
         </>
       )}
     </ScrollView>

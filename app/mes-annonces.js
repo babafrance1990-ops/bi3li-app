@@ -11,6 +11,7 @@ import { notify } from '../src/notify';
 import { cityName } from '../src/places';
 import { getAllAds, invalidateAds } from '../src/store';
 import { colors, radius } from '../src/theme';
+import WaLabel from '../src/components/WaLabel';
 
 const T = {
   fr: {
@@ -135,7 +136,7 @@ export default function MesAnnonces() {
                   <Pressable style={s.btn} onPress={() => router.push('/modifier/' + a.id)}><Text style={s.btnTxt}>✏️ {t('edit')}</Text></Pressable>
                   {a.status !== 'sold' && <Btn a={a} kind="sold" label={'✅ ' + t('markSold')} />}
                   {a.status !== 'sold' && <Btn a={a} kind="bump" label={'⬆️ ' + t('bump')} />}
-                  {a.status !== 'sold' && <Pressable style={s.btn} onPress={() => share(a)}><Text style={s.btnTxt}>🟢 {t('share')}</Text></Pressable>}
+                  {a.status !== 'sold' && <Pressable style={s.btn} onPress={() => share(a)}><WaLabel style={s.btnTxt}>{t('share')}</WaLabel></Pressable>}
                   <Btn a={a} kind="del" label={'🗑 ' + t('del')} color={colors.danger} />
                 </View>
               </View>

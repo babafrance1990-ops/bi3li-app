@@ -320,9 +320,10 @@ const Chip = ({ on, label, onPress, color }) => (
 );
 const Field = ({ rtl, style, ...props }) => <TextInput placeholderTextColor={colors.muted} {...props} style={[s.input, alignOf(rtl), style]} />;
 // Choix à cocher : un cadre avec la case et le libellé
-const Toggle = ({ label, value, onChange, rtl }) => (
+const Toggle = ({ label, icon, value, onChange, rtl }) => (
   <Pressable onPress={() => onChange(!value)} style={[s.checkRow, rowOf(rtl)]}>
     <Ionicons name={value ? 'checkbox' : 'square-outline'} size={26} color={value ? colors.primary : colors.muted} />
+    {!!icon && <Ionicons name={icon} size={22} color={colors.whatsapp} />}
     <Text style={[s.checkTxt, alignOf(rtl)]}>{label}</Text>
   </Pressable>
 );
@@ -851,7 +852,7 @@ export default function AdForm({ editAd = null }) {
             {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
             {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
             <Toggle rtl={rtl} label={t('nego')} value={d.nego} onChange={(v) => update({ nego: v })} />
-            <Toggle rtl={rtl} label={'🙈 ' + t('hidep')} value={d.hidep} onChange={(v) => { update({ hidep: v }); setErrors({}); }} />
+            <Toggle rtl={rtl} label={t('hidep')} value={d.hidep} onChange={(v) => { update({ hidep: v }); setErrors({}); }} />
 
             <Label rtl={rtl}>{t('city')}</Label>
             <PickSheet value={d.city} options={CITY_OPTS} placeholder={ar ? 'اختر المدينة' : 'Choisir la ville'} title={t('city')} rtl={rtl} ar={ar}
@@ -875,7 +876,7 @@ export default function AdForm({ editAd = null }) {
             {d.deliv && <Field rtl={rtl} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
 
             <Text style={[s.label, al]}>{t('contactAt')} <Text style={{ color: colors.primaryDark }}>{user.phone}</Text></Text>
-            <Toggle rtl={rtl} label={'🟢 ' + t('wa')} value={d.wa} onChange={(v) => update({ wa: v })} />
+            <Toggle rtl={rtl} label={t('wa')} icon="logo-whatsapp" value={d.wa} onChange={(v) => update({ wa: v })} />
             <Toggle rtl={rtl} label={'📞 ' + t('call')} value={d.call} onChange={(v) => update({ call: v })} />
             <Err errors={errors} rtl={rtl} k="contact" />
 

@@ -12,6 +12,7 @@ import { notify } from '../src/notify';
 import { pickPhotos, preparePhoto } from '../src/photos';
 import { invalidateAds } from '../src/store';
 import { colors, radius } from '../src/theme';
+import WaLabel from '../src/components/WaLabel';
 
 const T = {
   fr: {
@@ -112,7 +113,7 @@ export default function Boutique() {
         {link && (
           <Pressable style={[s.btn, { backgroundColor: colors.whatsapp, alignSelf: 'stretch' }]}
             onPress={() => Linking.openURL('https://wa.me/?text=' + encodeURIComponent('🏪 ' + shop.name + '\n' + link))}>
-            <Text style={s.btnTxt}>🟢 {t('share')}</Text>
+            <WaLabel style={s.btnTxt}>{t('share')}</WaLabel>
           </Pressable>
         )}
         <Pressable style={[s.btnLight, { alignSelf: 'stretch' }]} onPress={() => router.replace('/vendeur/' + user.id)}>

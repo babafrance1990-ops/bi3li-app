@@ -12,6 +12,7 @@ import { notify } from '../../src/notify';
 import { cityName } from '../../src/places';
 import { getAllAds } from '../../src/store';
 import { colors, radius } from '../../src/theme';
+import WaLabel from '../../src/components/WaLabel';
 
 const T = {
   fr: {
@@ -113,7 +114,7 @@ export default function Vendeur() {
             </Pressable>
             {shop?.wa && (
               <Pressable style={[s.btn, { backgroundColor: colors.whatsapp }]} onPress={() => Linking.openURL('https://wa.me/222' + shop.wa)}>
-                <Text style={s.btnTxt}>🟢 {t('wa')}</Text>
+                <WaLabel style={s.btnTxt}>{t('wa')}</WaLabel>
               </Pressable>
             )}
             {u.canReview && (
