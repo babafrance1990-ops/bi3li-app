@@ -189,13 +189,14 @@ export default function Annonce() {
       <Modal visible={viewer !== null} transparent={false} animationType="fade" onRequestClose={() => { zoomed.current = false; setViewer(null); }}>
         <Animated.View style={{ flex: 1, backgroundColor: '#000', transform: [{ translateY: drag }], opacity: drag.interpolate({ inputRange: [0, H], outputRange: [1, 0.3] }) }} {...swipe.panHandlers}>
           <FlatList
-            data={photos} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+            data={photos} horizontal pagingEnabled showsHorizontalScrollIndicator={false} alwaysBounceVertical={false}
             initialScrollIndex={viewer || 0} getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
             keyExtractor={(u, i) => 'v' + i}
             onMomentumScrollEnd={(e) => setViewerIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
             renderItem={({ item }) => (
               <ScrollView style={{ width: W }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
                 maximumZoomScale={4} minimumZoomScale={1} centerContent showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}
+                alwaysBounceVertical={false}
                 scrollEventThrottle={16} onScroll={(e) => { zoomed.current = e.nativeEvent.zoomScale > 1.01; }}>
                 <Image source={item} style={{ width: W, height: H * 0.8 }} contentFit="contain" />
               </ScrollView>
