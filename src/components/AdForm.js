@@ -56,7 +56,7 @@ const D = {
     voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
     voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
     moreMed: 'Ajouter une vidéo ou un message vocal (facultatif)',
-    voiceBig: 'Message vocal trop long : 1 minute maximum.', priceOpt: 'Prix masqué : le prix n’est plus obligatoire.',
+    voiceBig: 'Message vocal trop long : 1 minute maximum.', priceOpt: 'Prix masqué : le prix ne s’affichera pas sur la carte de l’annonce, et il n’est plus obligatoire.',
     title: 'Titre (facultatif)', titleHelp: 'Laissez vide : un titre sera écrit automatiquement.', desc: 'Description',
     descPh: 'État, couleur, quartier, raison de la vente…',
     price: 'Prix', unit: 'Monnaie', unitNew: 'Nouvelle ouguiya (MRU)', unitOld: 'Ancienne ouguiya',
@@ -99,7 +99,7 @@ const D = {
     voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
     voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
     moreMed: 'إضافة فيديو أو رسالة صوتية (اختياري)',
-    voiceBig: 'الرسالة طويلة جداً: دقيقة واحدة كحد أقصى.', priceOpt: 'السعر مخفي: لم يعد السعر إلزامياً.',
+    voiceBig: 'الرسالة طويلة جداً: دقيقة واحدة كحد أقصى.', priceOpt: 'السعر مخفي: لن يظهر السعر على بطاقة الإعلان، ولم يعد إلزامياً.',
     title: 'العنوان (اختياري)', titleHelp: 'اتركه فارغاً: سنكتب عنواناً تلقائياً.', desc: 'الوصف',
     descPh: 'الحالة، اللون، الحي، سبب البيع…',
     price: 'السعر', unit: 'العملة', unitNew: 'الأوقية الجديدة', unitOld: 'الأوقية القديمة',
@@ -851,9 +851,9 @@ export default function AdForm({ editAd = null }) {
             <Label rtl={rtl}>{t('price')}</Label>
             <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
             <Err errors={errors} rtl={rtl} k="price" />
-            {d.hidep && <Text style={[s.help, al]}>{t('priceOpt')}</Text>}
             <Toggle rtl={rtl} label={t('nego')} value={d.nego} onChange={(v) => update({ nego: v })} />
             <Toggle rtl={rtl} label={t('hidep')} value={d.hidep} onChange={(v) => { update({ hidep: v }); setErrors({}); }} />
+            {d.hidep && <Text style={[s.help, al]}>{t('priceOpt')}</Text>}
 
             <Label rtl={rtl}>{t('city')}</Label>
             <PickSheet value={d.city} options={CITY_OPTS} placeholder={ar ? 'اختر المدينة' : 'Choisir la ville'} title={t('city')} rtl={rtl} ar={ar}
