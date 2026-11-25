@@ -15,7 +15,7 @@ export default function TabsLayout() {
   const { unread } = useConvs(20000); // pastille rouge sur « Messages »
   const fresh = useAlertCount();       // pastille sur « Mon compte » : nouvelles annonces de mes alertes
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary, headerTitleAlign: 'center', sceneStyle: { backgroundColor: colors.bg } }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary, headerTitleAlign: 'center', sceneStyle: { backgroundColor: colors.bg }, headerTransparent: false, headerStyle: { backgroundColor: colors.white } }}>
       <Tabs.Screen name="index" options={{ title: t('home'), headerShown: false, tabBarIcon: icon('home', 'home-outline') }} />
       <Tabs.Screen name="recherche" options={{ title: t('search'), tabBarIcon: icon('search', 'search-outline') }} />
       <Tabs.Screen name="deposer" options={{ title: t('post'), tabBarIcon: icon('add-circle', 'add-circle-outline'), tabBarButton: (props) => <AddTabButton {...props} /> }} />

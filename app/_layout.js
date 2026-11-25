@@ -22,6 +22,8 @@ function Nav() {
     <View style={{ flex: 1 }}>
       <Stack screenOptions={{
         headerShown: true,
+        headerTransparent: false, // en-tête opaque : le contenu commence sous l'en-tête (pas sous la barre d'état)
+        headerStyle: { backgroundColor: colors.white },
         headerTintColor: colors.primaryDark,
         headerBackButtonDisplayMode: 'minimal', // seulement la flèche, sans le nom de l'écran précédent « (tabs) »
         contentStyle: { backgroundColor: colors.bg },
