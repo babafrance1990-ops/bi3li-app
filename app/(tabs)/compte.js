@@ -51,6 +51,14 @@ export default function Compte() {
         </Pressable>
       )}
 
+      <Pressable style={[s.light, s.big]} onPress={() => router.push('/vus')}>
+        <Text style={[s.lightTxt, { fontSize: 17 }]}>👁 {lang === 'ar' ? 'شاهدتها مؤخراً' : 'Vus récemment'}</Text>
+      </Pressable>
+
+      <Pressable style={[s.light, s.big]} onPress={() => router.push('/about')}>
+        <Text style={[s.lightTxt, { fontSize: 17 }]}>ℹ️ {lang === 'ar' ? 'عن بيعلي' : 'À propos de Bi3li'}</Text>
+      </Pressable>
+
       {user?.admin && (
         <Pressable style={[s.light, s.big]} onPress={() => router.push('/admin')}>
           <Text style={[s.lightTxt, { fontSize: 17 }]}>🛡️ {lang === 'ar' ? 'الإدارة' : 'Administration'}</Text>

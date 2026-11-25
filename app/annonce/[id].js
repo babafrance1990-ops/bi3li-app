@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { adCache, api, mediaUrl, priceText } from '../../src/api';
 import { catById } from '../../src/categories';
 import { notify } from '../../src/notify';
+import { rememberSeen } from '../../src/seen';
 import { useAuth } from '../../src/auth';
 import { Ionicons } from '@expo/vector-icons';
 import BackButton from '../../src/components/BackButton';
@@ -40,6 +41,7 @@ export default function Annonce() {
   const [viewerIdx, setViewerIdx] = useState(null);
   const [report, setReport] = useState(null);       // { reason, txt } pendant un signalement
   const [ad, setAd] = useState(() => adCache.get(id));
+  useEffect(() => { if (ad) rememberSeen(ad); }, [ad?.id]);
   const [missing, setMissing] = useState(false);
   const [seller, setSeller] = useState(null);
   const [index, setIndex] = useState(0);
