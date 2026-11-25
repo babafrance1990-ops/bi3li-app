@@ -12,13 +12,14 @@ import { colors, radius } from '../../src/theme';
 
 export default function Compte() {
   const { user, ready, logout } = useAuth();
-  const { t, lang, setLang, rtl } = useLang();
+  const { t, lang, rtl } = useLang(); // la langue se change sur l'accueil (en haut)
   const align = rtl ? { textAlign: 'right' } : null;
   const fresh = useAlertCount();
   const nAlerts = (user?.searches || []).length;
 
   return (
-    <View style={s.wrap}>
+    // sans compte : le bouton de connexion est au milieu de l'écran
+    <View style={[s.wrap, !user && { justifyContent: 'center' }]}>
       {!ready ? null : user ? (
         <View style={s.card}>
           {user.avatar ? <Image source={mediaUrl(user.avatar)} style={[s.avatar, { alignSelf: rtl ? 'flex-end' : 'flex-start' }]} /> : null}
@@ -70,10 +71,6 @@ export default function Compte() {
           </Text>
         </Pressable>
       )}
-
-      <Pressable style={s.light} onPress={() => setLang(lang === 'ar' ? 'fr' : 'ar')}>
-        <Text style={s.lightTxt}>🌐 {t('lang')}</Text>
-      </Pressable>
 
       {user && (
         <Pressable style={s.light} onPress={logout}>

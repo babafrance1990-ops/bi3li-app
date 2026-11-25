@@ -6,7 +6,8 @@ import { WILAYAS } from '../places';
 import { useLang } from '../i18n';
 import { colors, radius } from '../theme';
 
-export default function CityPicker({ visible, value, onPick, onClose }) {
+// onAll (facultatif) : ligne « Toutes les villes » en haut de la liste
+export default function CityPicker({ visible, value, onPick, onClose, onAll }) {
   const { lang, rtl } = useLang();
   const insets = useSafeAreaInsets();
   const [q, setQ] = useState('');
@@ -28,6 +29,13 @@ export default function CityPicker({ visible, value, onPick, onClose }) {
           <TextInput style={[s.search, align]} value={q} onChangeText={setQ} placeholder={lang === 'ar' ? 'ابحث عن مدينة' : 'Chercher une ville'} />
           <Pressable onPress={onClose} hitSlop={10}><Text style={s.close}>✕</Text></Pressable>
         </View>
+        {onAll && (
+          <Pressable style={s.row} onPress={() => { onAll(); setQ(''); }}>
+            <Text style={[s.city, align, !value && { color: colors.primaryDark, fontWeight: '800' }]}>
+              {!value ? '✓ ' : ''}{lang === 'ar' ? 'كل المدن' : 'Toutes les villes'}
+            </Text>
+          </Pressable>
+        )}
         <SectionList
           sections={sections}
           keyExtractor={([fr]) => fr}

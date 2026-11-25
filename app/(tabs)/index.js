@@ -4,6 +4,8 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Tex
 import { api } from '../../src/api';
 import AdCard from '../../src/components/AdCard';
 import CategoryBar from '../../src/components/CategoryBar';
+import CityPicker from '../../src/components/CityPicker';
+import HomeHeader from '../../src/components/HomeHeader';
 import VerifyBanner from '../../src/components/VerifyBanner';
 import { useLang } from '../../src/i18n';
 import { colors } from '../../src/theme';
@@ -16,6 +18,8 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
   const [cat, setCat] = useState(null);
+  const [city, setCity] = useState(null);       // ville choisie dans l'en-tête (null = toutes)
+  const [pickCity, setPickCity] = useState(false);
 
   const load = useCallback(async (reset) => {
     if (loading) return;
@@ -35,10 +39,14 @@ export default function Home() {
 
   useEffect(() => { load(true); }, []);
 
-  const shown = useMemo(() => (cat ? ads.filter((a) => a.cat === cat) : ads), [ads, cat]);
+  const shown = useMemo(() => ads.filter((a) => (!cat || a.cat === cat) && (!city || a.city === city)), [ads, cat, city]);
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <HomeHeader city={city} onCity={() => setPickCity(true)} />
+    <CityPicker visible={pickCity} value={city} onPick={(c) => { setCity(c); setPickCity(false); }} onAll={() => { setCity(null); setPickCity(false); }} onClose={() => setPickCity(false)} />
     <FlatList
+      style={{ flex: 1 }}
       data={shown}
       numColumns={2}
       keyExtractor={(a) => a.id}
@@ -58,6 +66,7 @@ export default function Home() {
         ) : null
       }
     />
+    </View>
   );
 }
 
