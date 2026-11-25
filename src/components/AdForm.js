@@ -197,16 +197,10 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
     return (
       <>
         <Label rtl={rtl}>{label}</Label>
-        <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
-          {f.opts.map((o) => {
-            const on = sel.includes(o.v);
-            return (
-              <Pressable key={o.v} onPress={() => update({ [f.k]: on ? sel.filter((x) => x !== o.v) : [...sel, o.v] })} style={[s.chip, on && s.chipOn]}>
-                <Text style={[s.chipTxt, on && s.chipTxtOn]}>{ar ? o.ar : o.fr}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {f.opts.map((o) => {
+          const on = sel.includes(o.v);
+          return <Toggle key={o.v} rtl={rtl} label={ar ? o.ar : o.fr} value={on} onChange={() => update({ [f.k]: on ? sel.filter((x) => x !== o.v) : [...sel, o.v] })} />;
+        })}
       </>
     );
   }
@@ -320,10 +314,10 @@ const Chip = ({ on, label, onPress, color }) => (
 );
 const Field = ({ rtl, style, ...props }) => <TextInput placeholderTextColor={colors.muted} {...props} style={[s.input, alignOf(rtl), style]} />;
 // Choix à cocher : un cadre avec la case et le libellé
-const Toggle = ({ label, icon, value, onChange, rtl }) => (
+const Toggle = ({ label, icon, iconColor = colors.whatsapp, value, onChange, rtl }) => (
   <Pressable onPress={() => onChange(!value)} style={[s.checkRow, rowOf(rtl)]}>
     <Ionicons name={value ? 'checkbox' : 'square-outline'} size={26} color={value ? colors.primary : colors.muted} />
-    {!!icon && <Ionicons name={icon} size={22} color={colors.whatsapp} />}
+    {!!icon && <Ionicons name={icon} size={22} color={iconColor} />}
     <Text style={[s.checkTxt, alignOf(rtl)]}>{label}</Text>
   </Pressable>
 );
@@ -878,7 +872,7 @@ export default function AdForm({ editAd = null }) {
 
             <Text style={[s.label, al]}>{t('contactAt')} <Text style={{ color: colors.primaryDark }}>{user.phone}</Text></Text>
             <Toggle rtl={rtl} label={t('wa')} icon="logo-whatsapp" value={d.wa} onChange={(v) => update({ wa: v })} />
-            <Toggle rtl={rtl} label={'📞 ' + t('call')} value={d.call} onChange={(v) => update({ call: v })} />
+            <Toggle rtl={rtl} label={t('call')} icon="call-outline" iconColor={colors.primary} value={d.call} onChange={(v) => update({ call: v })} />
             <Err errors={errors} rtl={rtl} k="contact" />
 
             <Label rtl={rtl}>{t('preview')}</Label>
