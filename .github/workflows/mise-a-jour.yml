@@ -46,8 +46,7 @@ jobs:
           git config user.name "bi3li-bot"
           git config user.email "bot@bi3li.net"
           git add app.json
-          git commit -m "Configuration Expo [skip ci]" || echo "rien à enregistrer"
-          git push
+          if git diff --cached --quiet; then echo "app.json déjà configuré"; else git commit -m "Configuration Expo [skip ci]" && git push; fi
 
       - name: Publier la mise à jour
         if: github.event_name == 'push' || !inputs.setup
