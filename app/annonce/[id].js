@@ -10,6 +10,7 @@ import { notify } from '../../src/notify';
 import { useAuth } from '../../src/auth';
 import { Ionicons } from '@expo/vector-icons';
 import BackButton from '../../src/components/BackButton';
+import HomeButton from '../../src/components/HomeButton';
 import FavButton from '../../src/components/FavButton';
 import { cityName } from '../../src/places';
 import { getAllAds } from '../../src/store';
@@ -43,9 +44,14 @@ export default function Annonce() {
   const [index, setIndex] = useState(0);
   const zoomed = useRef(false);                     // vrai quand la photo est zoomée : pas de fermeture par glissement
   // Glisser l'image vers le bas (sans zoom) ferme la photo, comme sur le site
+  // Glisser depuis le bord de l'écran (gauche ou droite) ferme aussi la photo, comme le retour sur le site
   const swipe = useRef(PanResponder.create({
+    onMoveShouldSetPanResponderCapture: (_, g) => (g.x0 < 30 || g.x0 > W - 30) && Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy),
     onMoveShouldSetPanResponder: (_, g) => !zoomed.current && g.dy > 15 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
-    onPanResponderRelease: (_, g) => { if (g.dy > 120) { zoomed.current = false; setViewer(null); } },
+    onPanResponderRelease: (_, g) => {
+      const fromEdge = g.x0 < 30 || g.x0 > W - 30;
+      if ((g.dy > 120 && !zoomed.current) || (fromEdge && Math.abs(g.dx) > 70)) { zoomed.current = false; setViewer(null); }
+    },
   })).current;
 
   // Annonce ouverte directement (lien, page rechargée) : on la cherche dans la liste complète
@@ -103,9 +109,9 @@ export default function Annonce() {
     <View style={{ flex: 1, backgroundColor: colors.white }}>
       <Stack.Screen options={{
         title: cat ? cat[lang] : '',
-        // en arabe : favori à gauche, retour à droite ; en français : favori à droite, retour natif à gauche
-        headerLeft: rtl ? () => <FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /> : undefined,
-        headerRight: rtl ? () => <BackButton /> : () => <FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} />,
+        // en arabe : accueil + favori à gauche, retour à droite ; en français : favori + accueil à droite
+        headerLeft: rtl ? () => (<View style={{ flexDirection: 'row', alignItems: 'center' }}><HomeButton /><FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /></View>) : undefined,
+        headerRight: rtl ? () => <BackButton /> : () => (<View style={{ flexDirection: 'row', alignItems: 'center' }}><FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /><HomeButton /></View>),
       }} />
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
         {photos.length > 0 ? (

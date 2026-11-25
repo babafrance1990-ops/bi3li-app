@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAlertCount } from '../../src/alerts';
 import { useConvs } from '../../src/chat';
+import HeaderBrand from '../../src/components/HeaderBrand';
 import { useLang } from '../../src/i18n';
 import { colors } from '../../src/theme';
 
@@ -15,7 +16,7 @@ export default function TabsLayout() {
   const fresh = useAlertCount();       // pastille sur « Mon compte » : nouvelles annonces de mes alertes
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary, headerTitleAlign: 'center' }}>
-      <Tabs.Screen name="index" options={{ title: t('home'), headerTitle: 'بيعلي – Bi3li', tabBarIcon: icon('home', 'home-outline') }} />
+      <Tabs.Screen name="index" options={{ title: t('home'), headerTitle: () => <HeaderBrand />, tabBarIcon: icon('home', 'home-outline') }} />
       <Tabs.Screen name="recherche" options={{ title: t('search'), tabBarIcon: icon('search', 'search-outline') }} />
       <Tabs.Screen name="deposer" options={{ title: t('post'), tabBarIcon: icon('add-circle', 'add-circle-outline') }} />
       <Tabs.Screen name="messages" options={{ title: t('messages'), tabBarIcon: icon('chatbubble-ellipses', 'chatbubble-ellipses-outline'), tabBarBadge: unread > 0 ? unread : undefined }} />
