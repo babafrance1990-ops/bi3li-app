@@ -43,6 +43,7 @@ const D = {
     voiceL: 'Message vocal (facultatif, 1 minute max)', voiceRec: 'Enregistrer un message vocal', voiceStop: 'Arrêter', voiceListen: 'Écouter',
     voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
     voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
+    moreMed: 'Ajouter une vidéo ou un message vocal (facultatif)',
     voiceBig: 'Message vocal trop long : 1 minute maximum.', priceOpt: 'Prix masqué : le prix n’est plus obligatoire.',
     title: 'Titre (facultatif)', titleHelp: 'Laissez vide : un titre sera écrit automatiquement.', desc: 'Description',
     descPh: 'État, couleur, quartier, raison de la vente…',
@@ -81,6 +82,7 @@ const D = {
     voiceL: 'رسالة صوتية (اختياري، دقيقة كحد أقصى)', voiceRec: 'سجّل رسالة صوتية', voiceStop: 'إيقاف', voiceListen: 'استمع',
     voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
     voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
+    moreMed: 'إضافة فيديو أو رسالة صوتية (اختياري)',
     voiceBig: 'الرسالة طويلة جداً: دقيقة واحدة كحد أقصى.', priceOpt: 'السعر مخفي: لم يعد السعر إلزامياً.',
     title: 'العنوان (اختياري)', titleHelp: 'اتركه فارغاً: سنكتب عنواناً تلقائياً.', desc: 'الوصف',
     descPh: 'الحالة، اللون، الحي، سبب البيع…',
@@ -188,6 +190,7 @@ export default function AdForm({ editAd = null }) {
   const [restored, setRestored] = useState(false);
   const [errors, setErrors] = useState({});
   const [subStage, setSubStage] = useState(false); // vrai : on choisit la sous-catégorie (après la catégorie)
+  const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
   const [busy, setBusy] = useState('');     // texte du bouton pendant la publication
   const [cityOpen, setCityOpen] = useState(false);
   const [done, setDone] = useState(null);   // annonce publiée
@@ -320,6 +323,9 @@ export default function AdForm({ editAd = null }) {
     return Object.keys(e).length === 0;
   }
 
+  // Catégories qui ont un écran de choix : sous-catégories, ou vente/location + type pour l'immobilier
+  const hasSub = (c) => c === 'immo' || subsOf(c).length > 0;
+
   // Choisir une sous-catégorie (ou « Tous ») : on reste sur la grille, le choix est entouré ; « Suivant » passe à l'étape 2
   function pickSub(id) { update({ sub: id }); }
 
@@ -334,7 +340,10 @@ export default function AdForm({ editAd = null }) {
   }
 
   function go(step) {
-    if (step > d.step && !check(d.step)) return;
+    if (step > d.step && !check(d.step)) {
+      if (d.step === 1 && d.cat === 'immo') setSubStage(true); // il manque vente/location ou le type : on les montre
+      return;
+    }
     setErrors({});
     update({ step });
     scroll.current?.scrollTo({ y: 0, animated: false });
@@ -481,35 +490,57 @@ export default function AdForm({ editAd = null }) {
           <>
             <Text style={[s.h1, al]}>{t('st1')}</Text>
             <Text style={[s.sub, al]}>{t('st1sub')}</Text>
-            {subStage && subsOf(d.cat).length > 0 ? (
-              /* Après la catégorie : choix de la sous-catégorie, avec les mêmes dessins que sur le site */
+            {subStage && hasSub(d.cat) ? (
               <>
                 <Pressable onPress={() => setSubStage(false)} hitSlop={10} style={[s.backRow, row]}>
                   <Text style={s.backTxt}>{rtl ? '›' : '‹'}  {lang === 'ar' ? 'الفئات' : 'Catégories'}</Text>
                 </Pressable>
                 <Label rtl={rtl}>{(CATEGORIES.find((c) => c.id === d.cat) || {})[lang]}</Label>
-                <View style={[s.grid, row]}>
-                  <Pressable onPress={() => pickSub('')} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
-                    <View style={s.allIcon}><Ionicons name="grid-outline" size={30} color={colors.primaryDark} /></View>
-                    <Text style={[s.catTxt, !d.sub && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{lang === 'ar' ? 'الكل' : 'Tous'}</Text>
-                  </Pressable>
-                  {subsOf(d.cat).map((x) => {
-                    const on = d.sub === x.id;
-                    return (
-                      <Pressable key={x.id} onPress={() => pickSub(x.id)} style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
-                        <SubArt cat={d.cat} sub={x.id} size={52} />
-                        <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                {d.cat === 'immo' ? (
+                  /* Immobilier : vente ou location, puis le type de bien (ce sont ses sous-catégories) */
+                  <>
+                    <Label rtl={rtl}>{t('deal')}</Label>
+                    <View style={[s.chips, row]}>
+                      <Chip on={d.deal === 'sale'} label={t('sale')} onPress={() => update({ deal: 'sale', kind: KINDS.sale.includes(d.kind) ? d.kind : '' })} />
+                      <Chip on={d.deal === 'rent'} label={t('rent')} onPress={() => update({ deal: 'rent', kind: KINDS.rent.includes(d.kind) ? d.kind : '' })} />
+                    </View>
+                    <Err errors={errors} rtl={rtl} k="deal" />
+                    {!!d.deal && (
+                      <>
+                        <Label rtl={rtl}>{t('kind')}</Label>
+                        <View style={[s.chips, row]}>
+                          {KINDS[d.deal].map((k) => <Chip key={k} on={d.kind === k} label={KIND_L[k][L]} onPress={() => { update({ kind: k }); setErrors({}); }} />)}
+                        </View>
+                        <Err errors={errors} rtl={rtl} k="kind" />
+                        <Field rtl={rtl} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  /* Après la catégorie : choix de la sous-catégorie, avec les mêmes dessins que sur le site */
+                  <View style={[s.grid, row]}>
+                    <Pressable onPress={() => pickSub('')} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                      <View style={s.allIcon}><Ionicons name="grid-outline" size={30} color={colors.primaryDark} /></View>
+                      <Text style={[s.catTxt, !d.sub && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{lang === 'ar' ? 'الكل' : 'Tous'}</Text>
+                    </Pressable>
+                    {subsOf(d.cat).map((x) => {
+                      const on = d.sub === x.id;
+                      return (
+                        <Pressable key={x.id} onPress={() => pickSub(x.id)} style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                          <SubArt cat={d.cat} sub={x.id} size={52} />
+                          <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
               </>
             ) : (
             <View style={[s.grid, row]}>
               {CATEGORIES.map((c) => {
                 const on = d.cat === c.id;
                 return (
-                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); setSubStage(subsOf(c.id).length > 0); }}
+                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); setSubStage(hasSub(c.id)); }}
                     style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
                     <CatArt cat={c.id} size={52} />
                     <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
@@ -519,36 +550,16 @@ export default function AdForm({ editAd = null }) {
             </View>
             )}
             <Err errors={errors} rtl={rtl} k="cat" />
-            {!subStage && subsOf(d.cat).length > 0 && (
+            {!subStage && hasSub(d.cat) && (
               <Pressable onPress={() => setSubStage(true)} style={[s.subLine, row]}>
                 <Text style={[s.subLineTxt, { color: colors.primaryDark }]}>
-                  {d.sub ? (lang === 'ar' ? '✓ النوع: ' : '✓ Type : ') + (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang] : (lang === 'ar' ? 'اختر النوع (اختياري)' : 'Choisir le type (facultatif)')}
+                  {d.cat === 'immo'
+                    ? (d.kind ? '✓ ' + KIND_L[d.kind][L] + ' · ' + (d.deal === 'rent' ? t('rent') : t('sale')) : (lang === 'ar' ? 'اختر البيع أو الإيجار ونوع العقار' : 'Choisir vente ou location et le type'))
+                    : d.sub ? (lang === 'ar' ? '✓ النوع: ' : '✓ Type : ') + (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang] : (lang === 'ar' ? 'اختر النوع (اختياري)' : 'Choisir le type (facultatif)')}
                   {'  ›'}
                 </Text>
               </Pressable>
             )}
-
-            {d.cat === 'immo' && (
-              <>
-                <Label rtl={rtl}>{t('deal')}</Label>
-                <View style={[s.chips, row]}>
-                  <Chip on={d.deal === 'sale'} label={t('sale')} onPress={() => update({ deal: 'sale', kind: KINDS.sale.includes(d.kind) ? d.kind : '' })} />
-                  <Chip on={d.deal === 'rent'} label={t('rent')} onPress={() => update({ deal: 'rent', kind: KINDS.rent.includes(d.kind) ? d.kind : '' })} />
-                </View>
-                <Err errors={errors} rtl={rtl} k="deal" />
-                {!!d.deal && (
-                  <>
-                    <Label rtl={rtl}>{t('kind')}</Label>
-                    <View style={[s.chips, row]}>
-                      {KINDS[d.deal].map((k) => <Chip key={k} on={d.kind === k} label={KIND_L[k][L]} onPress={() => update({ kind: k })} />)}
-                    </View>
-                    <Err errors={errors} rtl={rtl} k="kind" />
-                    <Field rtl={rtl} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
-                  </>
-                )}
-              </>
-            )}
-
           </>
         )}
 
@@ -583,26 +594,6 @@ export default function AdForm({ editAd = null }) {
             )}
             <Err errors={errors} rtl={rtl} k="photos" />
 
-            {/* Vidéo et message vocal facultatifs, comme sur le site */}
-            <Label rtl={rtl}>{t('vidL')}</Label>
-            {d.videoUri || d.video ? (
-              <View style={[s.mediaRow, row]}>
-                <Text style={s.mediaOk}>🎬 {t('vidOk')}</Text>
-                <Pressable hitSlop={8} onPress={() => update({ videoUri: '', video: '' })}><Text style={s.linkDanger}>{t('vidDel')}</Text></Pressable>
-              </View>
-            ) : (
-              <View style={[row, { gap: 8 }]}>
-                <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('camera')}><Text style={s.btnLightTxt}>{t('vidCam')}</Text></Pressable>
-                <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('library')}><Text style={s.btnLightTxt}>{t('vidGal')}</Text></Pressable>
-              </View>
-            )}
-            <Text style={[s.help, al]}>{t('vidHelp')}</Text>
-
-            <Label rtl={rtl}>{t('voiceL')}</Label>
-            <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice}
-              onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
-              onRemove={() => update({ voiceUri: '', voice: '' })} />
-
             <Label rtl={rtl}>{t('title')}</Label>
             <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
             <Text style={[s.help, al]}>{t('titleHelp')}</Text>
@@ -610,6 +601,34 @@ export default function AdForm({ editAd = null }) {
             <Label rtl={rtl}>{t('desc')}</Label>
             <Field rtl={rtl} value={d.desc} onChangeText={(v) => update({ desc: v })} placeholder={t('descPh')} multiline
               style={{ minHeight: 120, textAlignVertical: 'top' }} maxLength={3000} />
+
+            {(moreOpen || d.videoUri || d.video || d.voiceUri || d.voice) ? (
+              <>
+              <Label rtl={rtl}>{t('vidL')}</Label>
+              {d.videoUri || d.video ? (
+                <View style={[s.mediaRow, row]}>
+                  <Text style={s.mediaOk}>🎬 {t('vidOk')}</Text>
+                  <Pressable hitSlop={8} onPress={() => update({ videoUri: '', video: '' })}><Text style={s.linkDanger}>{t('vidDel')}</Text></Pressable>
+                </View>
+              ) : (
+                <View style={[row, { gap: 8 }]}>
+                  <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('camera')}><Text style={s.btnLightTxt}>{t('vidCam')}</Text></Pressable>
+                  <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('library')}><Text style={s.btnLightTxt}>{t('vidGal')}</Text></Pressable>
+                </View>
+              )}
+              <Text style={[s.help, al]}>{t('vidHelp')}</Text>
+
+              <Label rtl={rtl}>{t('voiceL')}</Label>
+              <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice}
+                onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
+                onRemove={() => update({ voiceUri: '', voice: '' })} />
+              </>
+            ) : (
+              <Pressable onPress={() => setMoreOpen(true)} style={s.moreBtn}>
+                <Text style={s.moreTxt}>+ {t('moreMed')}</Text>
+              </Pressable>
+            )}
+
           </>
         )}
 
@@ -737,6 +756,8 @@ const s = StyleSheet.create({
   del: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   delTxt: { color: '#fff', fontSize: 12, fontWeight: '800' },
   toggle: { alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
+  moreBtn: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primary, borderRadius: radius.m, padding: 14, alignItems: 'center', backgroundColor: '#EEF5F0', marginTop: 6 },
+  moreTxt: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
   mediaRow: { alignItems: 'center', justifyContent: 'space-between', gap: 12, backgroundColor: '#EEF5F0', borderRadius: radius.m, padding: 12 },
   mediaOk: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
   linkDanger: { color: colors.danger, fontWeight: '700' },
