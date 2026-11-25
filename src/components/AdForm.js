@@ -25,6 +25,7 @@ import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
 import VoiceRecorder from './VoiceRecorder';
 import { cityName, NKC } from '../places';
 import { colors, radius } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
 
 // ---------- Textes du dépôt ----------
 const D = {
@@ -284,15 +285,19 @@ export default function AdForm({ editAd = null }) {
         <Text style={{ fontSize: 56 }}>✅</Text>
         <Text style={s.okT}>{t('okT')}</Text>
         <Text style={s.centerTxt}>{t('okS')}</Text>
-        <Pressable style={[s.btnMain, { backgroundColor: colors.whatsapp }]}
+        {/* Trois boutons de même taille, chacun d'une couleur : WhatsApp, voir, publier un autre */}
+        <Pressable style={[s.okBtn, { backgroundColor: '#25D366' }]}
           onPress={() => Linking.openURL('https://wa.me/?text=' + encodeURIComponent(done.title + '\n' + priceText(done, lang) + '\n' + link))}>
-          <Text style={s.btnMainTxt}>🟢 {t('share')}</Text>
+          <Ionicons name="logo-whatsapp" size={24} color="#fff" />
+          <Text style={[s.okBtnTxt, { color: '#fff' }]}>{t('share')}</Text>
         </Pressable>
-        <Pressable style={s.btnLight} onPress={() => { adCache.set(done.id, done); router.push('/annonce/' + done.id); }}>
-          <Text style={s.btnLightTxt}>{t('see')}</Text>
+        <Pressable style={[s.okBtn, { backgroundColor: colors.primary }]} onPress={() => { adCache.set(done.id, done); router.push('/annonce/' + done.id); }}>
+          <Ionicons name="eye-outline" size={22} color="#fff" />
+          <Text style={[s.okBtnTxt, { color: '#fff' }]}>{t('see')}</Text>
         </Pressable>
-        <Pressable style={s.btnLight} onPress={() => setDone(null)}>
-          <Text style={s.btnLightTxt}>➕ {t('another')}</Text>
+        <Pressable style={[s.okBtn, { backgroundColor: '#F0B93A' }]} onPress={() => setDone(null)}>
+          <Ionicons name="add-circle-outline" size={22} color={colors.primaryDark} />
+          <Text style={[s.okBtnTxt, { color: colors.primaryDark }]}>{t('another')}</Text>
         </Pressable>
       </ScrollView>
     );
@@ -688,7 +693,7 @@ export default function AdForm({ editAd = null }) {
             <Text style={[s.sub, al]}>{t('st3sub')}</Text>
 
             <Label rtl={rtl}>{t('price')}</Label>
-            <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700' }} />
+            <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
             <Err errors={errors} rtl={rtl} k="price" />
             {d.hidep && <Text style={[s.help, al]}>{t('priceOpt')}</Text>}
             <Label rtl={rtl}>{t('unit')}</Label>
@@ -820,6 +825,8 @@ const s = StyleSheet.create({
   foot: { gap: 8, padding: 12, backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.border },
   btnMain: { backgroundColor: colors.primary, borderRadius: radius.m, paddingVertical: 15, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
   btnMainTxt: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  okBtn: { width: '100%', height: 56, borderRadius: radius.m, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10 },
+  okBtnTxt: { fontSize: 17, fontWeight: '800' },
   btnLight: { backgroundColor: '#EEF5F0', borderRadius: radius.m, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
   btnLightTxt: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
   center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14 },
