@@ -15,8 +15,8 @@ export function newDraft(last = {}) {
     wa: last.wa ?? true, call: last.call ?? true, msg: last.msg ?? false,
     // Immobilier
     deal: '', kind: '', surface: '',
-    // Véhicules
-    brand: '', model: '', year: '', km: '',
+    // Vidéo et message vocal : adresse du serveur (annonce existante) ou fichier sur le téléphone (nouveau)
+    video: '', videoUri: '', voice: '', voiceUri: '',
   };
 }
 

@@ -21,6 +21,8 @@ import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
 import { useLang } from '../i18n';
 import { notify } from '../notify';
 import { MAX_PHOTOS, pickPhotos, uploadPhoto } from '../photos';
+import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
+import VoiceRecorder from './VoiceRecorder';
 import { cityName, NKC } from '../places';
 import { colors, radius } from '../theme';
 
@@ -32,9 +34,16 @@ const D = {
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
     deal: 'Vente ou location ?', sale: 'Vente', rent: 'Location', kind: 'Type de bien', surface: 'Surface (m², facultatif)',
-    car: 'Détails du véhicule (facultatif)', brand: 'Marque (ex. Toyota)', model: 'Modèle (ex. Corolla)', year: 'Année', km: 'Kilométrage',
     photos: 'Photos', photosN: '{n} / 6', gallery: '🖼️ Galerie', camera: '📷 Appareil photo', main: 'Principale',
     photoErr: 'Échec — toucher pour réessayer', perm: 'Autorisez l’accès aux photos dans les réglages du téléphone.',
+    permAv: 'Autorisez l’accès à la caméra, aux photos ou au micro dans les réglages du téléphone.',
+    vidL: 'Vidéo (facultatif, 2 minutes max)', vidCam: '🎥 Filmer', vidGal: '🎞️ Galerie vidéo', vidOk: 'Vidéo ajoutée', vidDel: 'Retirer la vidéo',
+    vidHelp: 'Une courte vidéo montre mieux votre article. 20 Mo maximum après allègement.', vidBig: 'Vidéo trop lourde (20 Mo maximum). Essayez une vidéo plus courte.',
+    upVid: 'Envoi de la vidéo… {p} %',
+    voiceL: 'Message vocal (facultatif, 1 minute max)', voiceRec: 'Enregistrer un message vocal', voiceStop: 'Arrêter', voiceListen: 'Écouter',
+    voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
+    voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
+    voiceBig: 'Message vocal trop long : 1 minute maximum.', priceOpt: 'Prix masqué : le prix n’est plus obligatoire.',
     title: 'Titre (facultatif)', titleHelp: 'Laissez vide : un titre sera écrit automatiquement.', desc: 'Description',
     descPh: 'État, couleur, quartier, raison de la vente…',
     price: 'Prix', unit: 'Monnaie', unitNew: 'Nouvelle ouguiya (MRU)', unitOld: 'Ancienne ouguiya',
@@ -63,9 +72,16 @@ const D = {
     st2: 'الصور والوصف', st2sub: 'أضف صوراً حقيقية: تجذب مشترين أكثر.',
     st3: 'السعر والمكان', st3sub: 'راجع إعلانك ثم انشره.',
     deal: 'بيع أم إيجار؟', sale: 'بيع', rent: 'إيجار', kind: 'نوع العقار', surface: 'المساحة (م²، اختياري)',
-    car: 'تفاصيل المركبة (اختياري)', brand: 'الماركة (مثلاً تويوتا)', model: 'الموديل (مثلاً كورولا)', year: 'السنة', km: 'عدد الكيلومترات',
     photos: 'الصور', photosN: '{n} / 6', gallery: '🖼️ المعرض', camera: '📷 الكاميرا', main: 'الرئيسية',
     photoErr: 'فشل — اضغط لإعادة المحاولة', perm: 'اسمح بالوصول إلى الصور من إعدادات الهاتف.',
+    permAv: 'اسمح بالوصول إلى الكاميرا أو الصور أو الميكروفون من إعدادات الهاتف.',
+    vidL: 'فيديو (اختياري، دقيقتان كحد أقصى)', vidCam: '🎥 تصوير', vidGal: '🎞️ معرض الفيديو', vidOk: 'تمت إضافة الفيديو', vidDel: 'حذف الفيديو',
+    vidHelp: 'فيديو قصير يُظهر سلعتك أفضل. 20 ميغابايت كحد أقصى بعد التخفيف.', vidBig: 'الفيديو كبير جداً (20 ميغابايت كحد أقصى). جرّب فيديو أقصر.',
+    upVid: 'جارٍ إرسال الفيديو… {p}٪',
+    voiceL: 'رسالة صوتية (اختياري، دقيقة كحد أقصى)', voiceRec: 'سجّل رسالة صوتية', voiceStop: 'إيقاف', voiceListen: 'استمع',
+    voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
+    voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
+    voiceBig: 'الرسالة طويلة جداً: دقيقة واحدة كحد أقصى.', priceOpt: 'السعر مخفي: لم يعد السعر إلزامياً.',
     title: 'العنوان (اختياري)', titleHelp: 'اتركه فارغاً: سنكتب عنواناً تلقائياً.', desc: 'الوصف',
     descPh: 'الحالة، اللون، الحي، سبب البيع…',
     price: 'السعر', unit: 'العملة', unitNew: 'الأوقية الجديدة', unitOld: 'الأوقية القديمة',
@@ -137,8 +153,8 @@ function adToDraft(a) {
   d.deliv = !!a.deliv; d.delivNote = a.delivNote || '';
   if (a.contacts) { d.wa = !!a.contacts.wa; d.call = !!a.contacts.call; d.msg = !!a.contacts.msg; }
   if (a.estate) { d.deal = a.estate.deal || d.deal; d.kind = a.estate.kind || d.kind; d.surface = a.estate.surface ? String(a.estate.surface) : d.surface; }
-  if (a.car) { ['brand', 'model'].forEach((k) => { if (a.car[k]) d[k] = a.car[k]; }); if (a.car.year) d.year = String(a.car.year); if (a.car.km) d.km = String(a.car.km); }
-  ['brand', 'model', 'year', 'km', 'surface', 'title', 'desc', 'hood', 'near', 'delivNote'].forEach((k) => { d[k] = d[k] == null ? '' : String(d[k]); });
+  ['surface', 'title', 'desc', 'hood', 'near', 'delivNote'].forEach((k) => { d[k] = d[k] == null ? '' : String(d[k]); });
+  d.video = a.video || ''; d.voice = a.voice || ''; d.videoUri = ''; d.voiceUri = '';
   d.photos = (a.photos || []).map((url) => ({ key: 'p' + ++photoKey, url, status: 'ok', at: Date.now() }));
   return d;
 }
@@ -276,8 +292,6 @@ export default function AdForm({ editAd = null }) {
   function autoTitle() {
     const c = catById(d.cat);
     if (d.cat === 'immo' && d.kind) return KIND_L[d.kind][L] + ' ' + (d.deal === 'rent' ? t('rent') : t('sale')).toLowerCase();
-    const car = [d.brand, d.model, d.year].map((x) => String(x || '').trim()).filter(Boolean).join(' ');
-    if (car) return car;
     const first = d.desc.trim().split('\n')[0];
     if (first) return first.length > 60 ? first.slice(0, 57) + '…' : first;
     return c ? c[lang] : '';
@@ -295,16 +309,29 @@ export default function AdForm({ editAd = null }) {
     }
     if (step === 2 && d.cat === 'immo' && d.photos.length === 0) e.photos = t('ePhotoImmo');
     if (step === 3) {
-      if (!d.hidep && !(+digits(d.price) > 0)) e.price = t('ePrice'); // prix masqué : le prix devient facultatif
-      if (d.punit !== 'old' && d.punit !== 'new') e.punit = t('eUnit');
+      // Prix masqué : ni le prix ni l'unité ne sont obligatoires (l'annonce part sans prix)
+      if (!d.hidep) {
+        if (!(+digits(d.price) > 0)) e.price = t('ePrice');
+        if (d.punit !== 'old' && d.punit !== 'new') e.punit = t('eUnit');
+      }
       if (!d.wa && !d.call) e.contact = t('eContact');
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  // Choisir une sous-catégorie (ou « Tous ») passe directement à l'étape suivante
-  function pickSub(id) { setSubStage(false); update({ sub: id }); go(2); }
+  // Choisir une sous-catégorie (ou « Tous ») : on reste sur la grille, le choix est entouré ; « Suivant » passe à l'étape 2
+  function pickSub(id) { update({ sub: id }); }
+
+  // Vidéo : caméra ou galerie → fichier gardé sur le téléphone, envoyé à la publication
+  async function addVideo(source) {
+    try {
+      const v = await pickVideo(source);
+      if (v) update({ videoUri: v.uri, video: '' });
+    } catch (e) {
+      if (e.code === 'permission') notify(t('permAv'));
+    }
+  }
 
   function go(step) {
     if (step > d.step && !check(d.step)) return;
@@ -335,7 +362,7 @@ export default function AdForm({ editAd = null }) {
   });
 
   // ---------- Construction de l'annonce (même format que le site) ----------
-  function buildAd(photoUrls) {
+  function buildAd(photoUrls, video, voice) {
     const p = +digits(d.price);
     const ad = {
       punit: d.punit === 'old' ? 'old' : 'new',
@@ -346,21 +373,15 @@ export default function AdForm({ editAd = null }) {
       city: d.city, hood: d.hood.trim(), near: d.near.trim(),
       nego: !!d.nego, hidep: !!d.hidep, deliv: !!d.deliv, delivNote: d.deliv ? d.delivNote.trim() : '',
       desc: d.desc.trim(), photos: photoUrls,
+      video: video || '', voice: voice || '', // vidéo et message vocal, comme sur le site (vide = rien)
       contacts: { wa: !!d.wa, call: !!d.call, msg: !!d.msg },
       stype: 'part',
     };
     if (d.sub && SUB_KEY[d.cat]) ad[SUB_KEY[d.cat]] = d.sub; // sous-catégorie : même champ que sur le site
     if (d.cat === 'immo') ad.estate = { deal: d.deal, kind: d.kind, surface: +digits(d.surface) || 0, eq: [], pub: 'owner' };
-    if (d.cat === 'auto') {
-      const car = { brand: d.brand.trim(), model: d.model.trim() };
-      if (/^\d{4}$/.test(digits(d.year))) car.year = +digits(d.year);
-      if (digits(d.km)) car.km = +digits(d.km);
-      Object.keys(car).forEach((k) => car[k] === '' && delete car[k]);
-      ad.car = car;
-    }
-    // Copie du formulaire pour pouvoir modifier l'annonce plus tard sur le site
-    const { photos, step, ...rest } = d;
-    ad._d = { ...rest, price: digits(d.price), eq: [], pub: 'owner', vkind: d.cat === 'auto' ? 'car' : undefined, stype: 'part' };
+    // Copie du formulaire pour pouvoir modifier l'annonce plus tard sur le site (sans la vidéo ni le vocal, trop lourds)
+    const { photos, step, voice: _v, voiceUri, video: _vid, videoUri, ...rest } = d;
+    ad._d = { ...rest, price: digits(d.price), eq: [], pub: 'owner', stype: 'part' };
     return ad;
   }
 
@@ -380,18 +401,39 @@ export default function AdForm({ editAd = null }) {
       const list = d.photos.map((p) => urls.current[p.key] || p.url);
       if (list.some((u) => !u)) { setBusy(''); notify(t('upFail')); return; }
 
-      // 2) annonce
+      // 2) vidéo (envoyée par morceaux) et message vocal (déjà sur le téléphone)
+      let video = d.video || '';
+      if (d.videoUri) {
+        setBusy(t('upVid', { p: 0 }));
+        try {
+          video = await uploadVideo(d.videoUri, (p) => setBusy(t('upVid', { p })));
+        } catch (e) {
+          if (e.code === 'big') { notify(t('vidBig')); return; }
+          throw e;
+        }
+      }
+      let voice = d.voice || '';
+      if (d.voiceUri) {
+        try {
+          voice = await voiceDataUrl(d.voiceUri);
+        } catch (e) {
+          if (e.code === 'voiceBig') { notify(t('voiceBig')); return; }
+          throw e;
+        }
+      }
+
+      // 3) annonce
       setBusy(t('upSave'));
       if (editing) {
         setBusy(t('saving'));
-        const r = await api.updateAd(editAd.id, mergeAd(editAd, buildAd(list)));
+        const r = await api.updateAd(editAd.id, mergeAd(editAd, buildAd(list, video, voice)));
         const saved = { ...editAd, ...r.ad };
         adCache.set(saved.id, saved);
         invalidateAds();
         setDone(saved);
         return;
       }
-      const r = await api.publish(buildAd(list));
+      const r = await api.publish(buildAd(list, video, voice));
       invalidateAds();
       saveLast(d);
       await clearDraft();
@@ -507,17 +549,6 @@ export default function AdForm({ editAd = null }) {
               </>
             )}
 
-            {d.cat === 'auto' && (
-              <>
-                <Label rtl={rtl}>{t('car')}</Label>
-                <Field rtl={rtl} value={d.brand} onChangeText={(v) => update({ brand: v })} placeholder={t('brand')} maxLength={30} />
-                <Field rtl={rtl} value={d.model} onChangeText={(v) => update({ model: v })} placeholder={t('model')} maxLength={30} />
-                <View style={[row, { gap: 8 }]}>
-                  <Field rtl={rtl} style={{ flex: 1 }} value={d.year} onChangeText={(v) => update({ year: digits(v).slice(0, 4) })} placeholder={t('year')} keyboardType="number-pad" />
-                  <Field rtl={rtl} style={{ flex: 1 }} value={d.km} onChangeText={(v) => update({ km: digits(v) })} placeholder={t('km')} keyboardType="number-pad" />
-                </View>
-              </>
-            )}
           </>
         )}
 
@@ -552,6 +583,26 @@ export default function AdForm({ editAd = null }) {
             )}
             <Err errors={errors} rtl={rtl} k="photos" />
 
+            {/* Vidéo et message vocal facultatifs, comme sur le site */}
+            <Label rtl={rtl}>{t('vidL')}</Label>
+            {d.videoUri || d.video ? (
+              <View style={[s.mediaRow, row]}>
+                <Text style={s.mediaOk}>🎬 {t('vidOk')}</Text>
+                <Pressable hitSlop={8} onPress={() => update({ videoUri: '', video: '' })}><Text style={s.linkDanger}>{t('vidDel')}</Text></Pressable>
+              </View>
+            ) : (
+              <View style={[row, { gap: 8 }]}>
+                <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('camera')}><Text style={s.btnLightTxt}>{t('vidCam')}</Text></Pressable>
+                <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('library')}><Text style={s.btnLightTxt}>{t('vidGal')}</Text></Pressable>
+              </View>
+            )}
+            <Text style={[s.help, al]}>{t('vidHelp')}</Text>
+
+            <Label rtl={rtl}>{t('voiceL')}</Label>
+            <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice}
+              onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
+              onRemove={() => update({ voiceUri: '', voice: '' })} />
+
             <Label rtl={rtl}>{t('title')}</Label>
             <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
             <Text style={[s.help, al]}>{t('titleHelp')}</Text>
@@ -571,6 +622,7 @@ export default function AdForm({ editAd = null }) {
             <Label rtl={rtl}>{t('price')}</Label>
             <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700' }} />
             <Err errors={errors} rtl={rtl} k="price" />
+            {d.hidep && <Text style={[s.help, al]}>{t('priceOpt')}</Text>}
             <Label rtl={rtl}>{t('unit')}</Label>
             <View style={[s.chips, row]}>
               <Chip on={d.punit === 'new'} label={t('unitNew')} onPress={() => update({ punit: 'new' })} />
@@ -580,7 +632,7 @@ export default function AdForm({ editAd = null }) {
             {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
             {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
             <Toggle rtl={rtl} label={t('nego')} value={d.nego} onChange={(v) => update({ nego: v })} />
-            <Toggle rtl={rtl} label={'🙈 ' + t('hidep')} value={d.hidep} onChange={(v) => update({ hidep: v })} />
+            <Toggle rtl={rtl} label={'🙈 ' + t('hidep')} value={d.hidep} onChange={(v) => { update({ hidep: v }); setErrors({}); }} />
 
             <Label rtl={rtl}>{t('city')}</Label>
             <Pressable style={[s.input, row, { justifyContent: 'space-between' }]} onPress={() => setCityOpen(true)}>
@@ -685,6 +737,9 @@ const s = StyleSheet.create({
   del: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   delTxt: { color: '#fff', fontSize: 12, fontWeight: '800' },
   toggle: { alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
+  mediaRow: { alignItems: 'center', justifyContent: 'space-between', gap: 12, backgroundColor: '#EEF5F0', borderRadius: radius.m, padding: 12 },
+  mediaOk: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
+  linkDanger: { color: colors.danger, fontWeight: '700' },
   toggleTxt: { fontSize: 15, color: colors.text, flex: 1 },
   foot: { gap: 8, padding: 12, backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.border },
   btnMain: { backgroundColor: colors.primary, borderRadius: radius.m, paddingVertical: 15, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },

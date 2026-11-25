@@ -76,6 +76,17 @@ export const api = {
   // Erreurs possibles : limit (300 photos/jour), bad_image, too_big, invalid, too_many (60 annonces/jour), verify_needed (+limit)
   uploadMedia: (img) => request('/api/media', { method: 'POST', body: { img } }),
   publish: (ad) => request('/api/ads', { method: 'POST', body: { ad } }),
+  // Vidéo d'annonce (comme le site) : on annonce la taille → { id, n, chunk }, puis on envoie les morceaux un par un
+  videoStart: (mime, size) => request('/api/videos', { method: 'POST', body: { mime, size } }),
+  videoChunk: async (id, i, bytes) => {
+    const token = await getToken();
+    const res = await fetch(API_URL + '/api/videos/' + id + '/' + i, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/octet-stream', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      body: bytes,
+    });
+    if (!res.ok) { const e = new Error('netErr'); e.code = 'netErr'; throw e; }
+  },
 
   // Mes annonces : modifier → { ad } ; vendu ; remonter (1 fois tous les 7 jours, erreur too_soon + next) ; supprimer ; statistiques
   updateAd: (id, ad) => request('/api/ads/' + id, { method: 'PUT', body: { ad } }),
