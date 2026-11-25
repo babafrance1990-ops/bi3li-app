@@ -28,7 +28,6 @@ export default function Connexion() {
   const [busy, setBusy] = useState(false);
   const [support, setSupport] = useState('');
   const [newPin, setNewPin] = useState(null); // { a, b } : choix d'un nouveau code après « code oublié »
-  const createOk = name.trim().length > 0 && code.length === 4 && code2.length === 4; // bouton « créer » actif seulement si tout est bon
   const { lang } = useLang();
   const F = lang === 'ar'
     ? { forgotWa: 'استرجاع حسابي عبر واتساب', wait: 'في انتظار رسالتك على واتساب…', from: 'أرسل الرسالة من واتساب الرقم', again: 'فتح واتساب مرة أخرى', cancel: 'إلغاء', expired: 'انتهت صلاحية الرمز. أعد المحاولة.', noWa: 'لا يوجد واتساب على هذا الرقم؟ راسل فريق بيعلي', npT: 'اختر رمزك السري الجديد', np1: 'الرمز الجديد', np2: 'أكّد الرمز', npSave: 'حفظ رمزي الجديد', npLater: 'لاحقاً', tooMany: 'طلبات كثيرة. أعد المحاولة بعد ساعة.' }
@@ -67,6 +66,7 @@ export default function Connexion() {
   const onCreate = () => run(async () => {
     if (!name.trim()) throw { code: 'name' };
     if (!/^\d{4}$/.test(code)) throw { code: 'pin_format' };
+    if (!/^\d{4}$/.test(code2)) throw { code: 'pin_format' }; // confirmation incomplète : message clair
     if (code !== code2) { setErr(t('errSame')); return; }
     await register(phone, code, name.trim());
     router.replace('/verifier'); // comme le site : proposer tout de suite de vérifier le numéro
@@ -135,7 +135,7 @@ export default function Connexion() {
 
       {!!err && <Text style={s.err}>{err}</Text>}
 
-      <Pressable disabled={busy || (step === 'create' && !createOk)} style={[s.btn, (busy || (step === 'create' && !createOk)) && { opacity: 0.5 }]}
+      <Pressable disabled={busy} style={[s.btn, busy && { opacity: 0.6 }]}
         onPress={step === 'phone' ? onPhone : step === 'login' ? onLogin : onCreate}>
         {busy ? <ActivityIndicator color="#fff" /> :
           <Text style={s.btnTxt}>{step === 'phone' ? t('next') : step === 'login' ? t('enter') : t('create')}</Text>}
