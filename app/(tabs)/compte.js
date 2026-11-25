@@ -51,6 +51,12 @@ export default function Compte() {
         </Pressable>
       )}
 
+      {user?.admin && (
+        <Pressable style={[s.light, s.big]} onPress={() => router.push('/admin')}>
+          <Text style={[s.lightTxt, { fontSize: 17 }]}>🛡️ {lang === 'ar' ? 'الإدارة' : 'Administration'}</Text>
+        </Pressable>
+      )}
+
       {user && (
         <Pressable style={[s.light, s.big]} onPress={() => router.push('/mes-annonces')}>
           <Text style={[s.lightTxt, { fontSize: 17 }]}>📋 {lang === 'ar' ? 'إعلاناتي' : 'Mes annonces'}</Text>

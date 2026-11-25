@@ -105,6 +105,17 @@ export const api = {
   openConv: (adId) => request('/api/convs', { method: 'POST', body: { adId } }), // → { id } ; erreur own_ad
   sendMsg: (id, txt, img) => request('/api/convs/' + id + '/messages', { method: 'POST', body: { txt, img } }), // → { ok, t, img }
   readConv: (id) => request('/api/convs/' + id + '/read', { method: 'POST' }),
+
+  // Administration (compte administrateur) : mêmes routes que le site
+  adminOverview: () => request('/api/admin/overview'), // → { counts, reports: [{ adId, title, n, last, reasons, ownerName, ownerPhone }] }
+  adminUsers: (q = '') => request('/api/admin/users?q=' + encodeURIComponent(q)), // → { users: [{ id, name, phone, ads, since, blocked, verified, role }] }
+  adminShops: () => request('/api/admin/shops'), // → { shops: [{ id, name, phone, ads, shop: { name, verified } }] }
+  adminDismissReport: (adId) => request('/api/admin/reports/' + adId, { method: 'DELETE' }),
+  adminVerify: (id, verified) => request('/api/admin/users/' + id + '/verify', { method: 'POST', body: { verified } }),
+  adminShopVerify: (id, verified) => request('/api/admin/users/' + id + '/shopverify', { method: 'POST', body: { verified } }),
+  adminRole: (id, role) => request('/api/admin/users/' + id + '/role', { method: 'POST', body: { role } }), // '' ou 'recruiter'
+  adminBlock: (id, blocked) => request('/api/admin/users/' + id + '/block', { method: 'POST', body: { blocked } }),
+  adminPassword: (id, password) => request('/api/admin/users/' + id + '/password', { method: 'POST', body: { password } }), // 4 chiffres
 };
 
 // Adresse complète d'une photo (/api/media/ID → https://bi3li.net/api/media/ID)

@@ -41,6 +41,7 @@ function Nav() {
         <Stack.Screen name="verifier" options={{ title: '' }} />
         <Stack.Screen name="boutique" options={{ title: '' }} />
         <Stack.Screen name="modifier/[id]" options={{ title: '' }} />
+        <Stack.Screen name="admin" options={{ title: '' }} />
       </Stack>
     </View>
   );
