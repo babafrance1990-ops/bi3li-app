@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { getInfoAsync } from 'expo-file-system/legacy';
 import { playbackMode } from '../voiceHooks';
 import { colors } from '../theme';
 
@@ -14,13 +15,19 @@ export default function VoicePlayer({ uri, dark, compact, mime }) {
   const [want, setWant] = useState(false);
   const [barW, setBarW] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [size, setSize] = useState(null);
+  // Échec = la durée reste à zéro : le fichier n'a pas pu être chargé (même si le bouton a changé d'état)
+  useEffect(() => {
+    if (!failed || !uri) return;
+    getInfoAsync(uri).then((i) => setSize(i.exists ? i.size : -1)).catch(() => setSize(-1));
+  }, [failed, uri]);
   // Si le son ne démarre pas (format non lu par ce téléphone), on le signale au lieu de rester muet
   useEffect(() => {
     if (!uri || !want) return undefined;
-    const id = setTimeout(() => { const l = live.current; if (!l.playing && !(l.duration > 0)) setFailed(true); }, 3000);
+    const id = setTimeout(() => { if (!(live.current.duration > 0)) setFailed(true); }, 3000);
     return () => clearTimeout(id);
   }, [uri, want]);
-  useEffect(() => { if (st.playing || st.duration > 0) setFailed(false); }, [st.playing, st.duration]);
+  useEffect(() => { if (st.duration > 0) { setFailed(false); setSize(null); } }, [st.duration]);
   const live = useRef(st);
   live.current = st; // état le plus récent, lu par les minuteries
   const cur = st.currentTime || 0;
@@ -40,7 +47,7 @@ export default function VoicePlayer({ uri, dark, compact, mime }) {
     if (!uri) { setWant(true); return; }
     if (st.playing) { player.pause(); return; }
     play();
-    setTimeout(() => { const l = live.current; if (!l.playing && !(l.duration > 0)) setFailed(true); }, 3000);
+    setTimeout(() => { if (!(live.current.duration > 0)) setFailed(true); }, 3000);
   }
   function skip(sec) {
     if (!uri) return;
@@ -61,7 +68,7 @@ export default function VoicePlayer({ uri, dark, compact, mime }) {
   if (failed) {
     return (
       <View style={[s.row, compact && s.rowC]}>
-        <Text style={[s.warn, { color: ink }]}>⚠️ Vocal non lisible sur ce téléphone{mime ? ' (' + mime + ')' : ''}</Text>
+        <Text style={[s.warn, { color: ink }]}>⚠️ Vocal non lisible{mime ? ' (' + mime + ')' : ''}{size !== null ? ' · fichier : ' + (size < 0 ? 'introuvable' : size + ' octets') : ''}</Text>
       </View>
     );
   }
