@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { adCache, mediaUrl, priceText } from '../api';
 import { videoPoster } from '../videoPoster';
+import { useVoicePlayer, useVoiceUri } from '../voiceHooks';
 import { useLang } from '../i18n';
 import { cityName } from '../places';
 import FavButton from './FavButton';
@@ -16,6 +17,8 @@ export default function AdCard({ ad, preview }) {
   // Sans photo : la vidéo (image prise dans la vidéo) ou le message vocal remplacent la photo
   const videoUrl = !photo && ad.video ? mediaUrl(ad.video) : null;
   const voiceOnly = !photo && !ad.video && !!ad.voice;
+  const voiceUri = useVoiceUri(ad.id, ad.voice);
+  const vp = useVoicePlayer(voiceUri);
   const [poster, setPoster] = useState(null);
   useEffect(() => {
     if (!videoUrl) return undefined;
@@ -38,16 +41,25 @@ export default function AdCard({ ad, preview }) {
         {!photo && videoUrl && (poster
           ? <Image source={poster} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
           : <View style={[StyleSheet.absoluteFill, s.plain]}><Text style={s.bigIcon}>🎬</Text></View>)}
-        {!photo && voiceOnly && <View style={[StyleSheet.absoluteFill, s.plain]}><Text style={s.bigIcon}>🎙️</Text></View>}
+        {!photo && voiceOnly && (
+          <Pressable onPress={vp.toggle} disabled={!vp.ready} style={[StyleSheet.absoluteFill, s.plain]}>
+            <Text style={s.bigIcon}>{vp.playing ? '⏹' : '🎙️'}</Text>
+            <Text style={s.playHint}>{vp.ready ? (vp.playing ? '' : '▶ ' + t('listenVoice')) : ''}</Text>
+          </Pressable>
+        )}
         {!photo && !videoUrl && !voiceOnly && <View style={[StyleSheet.absoluteFill, s.plain]}><Text style={s.bigIcon}>📷</Text></View>}
         {!!videoUrl && !!poster && <View style={s.playWrap} pointerEvents="none"><View style={s.play}><Text style={s.playTxt}>▶</Text></View></View>}
         {ad.status === 'sold' && <Text style={s.sold}>{t('sold')}</Text>}
         {ad.photos?.length > 1 && <Text style={s.count}>📷 {ad.photos.length}</Text>}
-        {/* Pastilles comme sur le site : vidéo et message vocal (quand il y a des photos) */}
-        {!!photo && (!!ad.video || !!ad.voice) && (
+        {/* Pastilles comme sur le site : vidéo et message vocal (touchez 🎙️ pour écouter) */}
+        {!voiceOnly && (!!ad.voice || (!!photo && !!ad.video)) && (
           <View style={s.flags}>
-            {!!ad.video && <Text style={s.flag}>🎬</Text>}
-            {!!ad.voice && <Text style={s.flag}>🎙️</Text>}
+            {!!photo && !!ad.video && <Text style={s.flag}>🎬</Text>}
+            {!!ad.voice && (
+              <Pressable onPress={vp.toggle} disabled={!vp.ready} hitSlop={8}>
+                <Text style={[s.flag, vp.playing && s.flagOn]}>{vp.playing ? '⏹' : '🎙️'}</Text>
+              </Pressable>
+            )}
           </View>
         )}
         {!preview && <FavButton adId={ad.id} size={18} style={s.fav} />}
@@ -66,6 +78,8 @@ const s = StyleSheet.create({
   photoBox: { aspectRatio: 1, backgroundColor: '#EEF5F0', overflow: 'hidden' },
   plain: { alignItems: 'center', justifyContent: 'center' },
   bigIcon: { fontSize: 44, opacity: 0.55 },
+  playHint: { marginTop: 4, fontSize: 12, fontWeight: '700', color: colors.primaryDark },
+  flagOn: { backgroundColor: colors.primary },
   fav: { position: 'absolute', top: 6, right: 6 },
   playWrap: { position: 'absolute', top: '50%', left: '50%', width: 52, height: 52, marginLeft: -26, marginTop: -26 },
   play: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },

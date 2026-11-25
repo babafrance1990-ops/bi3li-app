@@ -3,9 +3,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useAudioPlayer } from 'expo-audio';
 import { videoPoster } from '../videoPoster';
-import { voiceFile } from '../voiceFile';
+import { useVoicePlayer, useVoiceUri } from '../voiceHooks';
 import { colors, radius } from '../theme';
 
 // Vidéo : on affiche une image de la vidéo ; la lecture ne démarre qu'à l'appui (économie de données)
@@ -39,23 +38,14 @@ export function AdVideo({ url, width, label }) {
   );
 }
 
-// Lecteur du message vocal : le fichier est préparé à partir du texte de l'annonce
+// Message vocal sur la fiche : bouton de lecture (▶ / ⏹)
 export function AdVoice({ adId, dataUrl, label }) {
-  const [uri, setUri] = useState(null);
-  useEffect(() => {
-    let on = true;
-    voiceFile(adId, dataUrl).then((u) => { if (on) setUri(u); }).catch(() => {});
-    return () => { on = false; };
-  }, [adId, dataUrl]);
-  if (!uri) return null;
-  return <VoicePlayer uri={uri} label={label} />;
-}
-
-function VoicePlayer({ uri, label }) {
-  const player = useAudioPlayer({ uri });
+  const uri = useVoiceUri(adId, dataUrl);
+  const vp = useVoicePlayer(uri);
+  if (!dataUrl) return null;
   return (
-    <Pressable onPress={() => { player.seekTo(0); player.play(); }} style={styles.voice}>
-      <Text style={styles.voiceTxt}>🎙️ ▶ {label}</Text>
+    <Pressable onPress={vp.toggle} disabled={!vp.ready} style={[styles.voice, !vp.ready && { opacity: 0.5 }]}>
+      <Text style={styles.voiceTxt}>{vp.playing ? '⏹ ' : '🎙️ ▶ '}{label}</Text>
     </Pressable>
   );
 }
