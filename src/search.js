@@ -49,7 +49,46 @@ const tester = (w) => (w.length <= 3 && !/\s/.test(w)
   : (h) => h.includes(w));
 
 export function prepareQuery(q) {
-  return norm(q).split(/\s+/).filter(Boolean).map((w) => alternatives(w).map((x) => (x === w && w.length <= 3 ? (h) => h.includes(w) : tester(x))));
+  return norm(q).split(/\s+/).filter(Boolean).map((w) => ({
+    w,
+    tests: alternatives(w).map((x) => (x === w && w.length <= 3 ? (h) => h.includes(w) : tester(x))),
+  }));
+}
+
+// Distance d'édition (Levenshtein) bornée : renvoie false dès qu'elle dépasse max
+function within(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      if (cur[j] < best) best = cur[j];
+    }
+    if (best > max) return false;
+    prev = cur;
+  }
+  return prev[b.length] <= max;
+}
+
+// Mots de l'annonce, pour la tolérance aux fautes de frappe (« toyta » → Toyota)
+const tokCache = new WeakMap();
+function tokensOf(a) {
+  let t = tokCache.get(a);
+  if (!t) {
+    t = [...new Set(hay(a).split(/[^a-z0-9\u0600-\u06ff]+/).filter(Boolean))];
+    tokCache.set(a, t);
+  }
+  return t;
+}
+
+// Un mot d'au moins 4 lettres est accepté s'il ressemble à un mot de l'annonce (1 faute, 2 pour les mots longs)
+function fuzzyHit(a, w) {
+  if (w.length < 4) return false;
+  const max = w.length >= 7 ? 2 : 1;
+  return tokensOf(a).some((t) => within(w, t, max));
 }
 
 // Tout le texte d'une annonce dans lequel on cherche (titre, description, lieu en FR et AR, catégorie, vendeur, marque…)
@@ -83,7 +122,48 @@ function hay(a) {
 export function matchQuery(a, prepared) {
   if (!prepared.length) return true;
   const h = hay(a);
-  return prepared.every((alts) => alts.some((test) => test(h)));
+  return prepared.every((g) => g.tests.some((test) => test(h)) || fuzzyHit(a, g.w));
+}
+
+// ---------- Suggestions pendant la frappe ----------
+// Mots des titres, marques et modèles des annonces (et des catégories), avec leur nombre d'apparitions
+const sugCache = new WeakMap();
+function suggestIndex(ads) {
+  let m = sugCache.get(ads);
+  if (m) return m;
+  m = new Map();
+  const add = (text, bonus) => String(text || '').split(/[\s,;.!?()\/\-:"'«»]+/).forEach((w) => {
+    const k = norm(w);
+    if (k.length < 3 || /^\d+$/.test(k)) return;
+    const e = m.get(k);
+    if (e) e.n += bonus;
+    else m.set(k, { w: w.trim(), n: bonus });
+  });
+  ads.forEach((a) => {
+    if (a.status === 'sold' || a.status === 'deleted') return;
+    add(a.title, 1);
+    const o = a.car || a.veh || a.dev || a.mm || {};
+    add(o.brand, 1);
+    add(o.model, 1);
+  });
+  CATEGORIES.forEach((c) => { add(c.fr, 0); add(c.ar, 0); });
+  sugCache.set(ads, m);
+  return m;
+}
+
+// Propose des mots qui commencent par le dernier mot tapé ; chaque suggestion donne la requête complète
+export function suggest(ads, q, limit = 6) {
+  const raw = String(q ?? '');
+  if (!ads || !raw.trim() || /\s$/.test(raw)) return [];
+  const last = norm(raw).split(/\s+/).filter(Boolean).pop();
+  if (!last || last.length < 2) return [];
+  const head = raw.trim().split(/\s+/).slice(0, -1);
+  const out = [];
+  for (const [k, e] of suggestIndex(ads)) {
+    if (k !== last && k.startsWith(last)) out.push(e);
+  }
+  out.sort((x, y) => y.n - x.n || x.w.length - y.w.length);
+  return out.slice(0, limit).map((e) => ({ label: e.w, value: [...head, e.w].join(' ') }));
 }
 
 // ---------- Filtres ----------

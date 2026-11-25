@@ -11,7 +11,7 @@ import CategoryBar from '../../src/components/CategoryBar';
 import FiltersSheet from '../../src/components/FiltersSheet';
 import { useLang } from '../../src/i18n';
 import { cityName } from '../../src/places';
-import { countFilters, EMPTY_FILTERS, norm, search } from '../../src/search';
+import { countFilters, EMPTY_FILTERS, norm, search, suggest } from '../../src/search';
 import { getAllAds } from '../../src/store';
 import { colors, radius } from '../../src/theme';
 
@@ -79,6 +79,7 @@ export default function Recherche() {
   function pick(v) { setQ(v); setQuery(v); remember(v); Keyboard.dismiss(); }
 
   const results = useMemo(() => (ads ? search(ads, { q: query, cat, f }) : []), [ads, query, cat, f]);
+  const sugg = useMemo(() => suggest(ads, q), [ads, q]);
   const nf = countFilters(f);
   const current = toSaved({ q: query, cat, f });
   const alertSaved = (user?.searches || []).some((x) => sKey(x) === sKey(current));
@@ -148,6 +149,12 @@ export default function Recherche() {
           <Text style={[s.refineTxt, nf > 0 && { color: '#fff' }]}>⚙︎ {nf ? t('refineN', { n: nf }) : t('refine')}</Text>
         </Pressable>
       </View>
+
+      {sugg.length > 0 && (
+        <View style={[s.chips, row, { paddingHorizontal: 12, paddingTop: 8 }]}>
+          {sugg.map((x) => <Pressable key={x.value} style={s.chip} onPress={() => pick(x.value)}><Text style={s.chipTxt}>{x.label}</Text></Pressable>)}
+        </View>
+      )}
 
       {!ads && !error ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
