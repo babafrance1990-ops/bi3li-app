@@ -3,7 +3,7 @@
 // Les photos partent au serveur dès qu'elles sont ajoutées : à « Publier », il ne reste presque que le texte à envoyer.
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable,
+  ActivityIndicator, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +35,7 @@ const D = {
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
     deal: 'Vente ou location ?', sale: 'Vente', rent: 'Location', kind: 'Type de bien', surface: 'Surface (m², facultatif)',
-    photos: 'Photos', photosN: '{n} / 6', gallery: '🖼️ Galerie', camera: '📷 Appareil photo', main: 'Principale',
+    photos: 'Photos', photosN: '{n} / 6', gallery: 'Galerie', camera: 'Appareil photo', main: 'Principale',
     photoErr: 'Échec — toucher pour réessayer', perm: 'Autorisez l’accès aux photos dans les réglages du téléphone.',
     permAv: 'Autorisez l’accès à la caméra, aux photos ou au micro dans les réglages du téléphone.',
     vidL: 'Vidéo (facultatif, 2 minutes max)', vidCam: '🎥 Filmer', vidGal: '🎞️ Galerie vidéo', vidOk: 'Vidéo ajoutée', vidDel: 'Retirer la vidéo',
@@ -77,7 +77,7 @@ const D = {
     st2: 'الصور والوصف', st2sub: 'أضف صوراً حقيقية: تجذب مشترين أكثر.',
     st3: 'السعر والمكان', st3sub: 'راجع إعلانك ثم انشره.',
     deal: 'بيع أم إيجار؟', sale: 'بيع', rent: 'إيجار', kind: 'نوع العقار', surface: 'المساحة (م²، اختياري)',
-    photos: 'الصور', photosN: '{n} / 6', gallery: '🖼️ المعرض', camera: '📷 الكاميرا', main: 'الرئيسية',
+    photos: 'الصور', photosN: '{n} / 6', gallery: 'المعرض', camera: 'الكاميرا', main: 'الرئيسية',
     photoErr: 'فشل — اضغط لإعادة المحاولة', perm: 'اسمح بالوصول إلى الصور من إعدادات الهاتف.',
     permAv: 'اسمح بالوصول إلى الكاميرا أو الصور أو الميكروفون من إعدادات الهاتف.',
     vidL: 'فيديو (اختياري، دقيقتان كحد أقصى)', vidCam: '🎥 تصوير', vidGal: '🎞️ معرض الفيديو', vidOk: 'تمت إضافة الفيديو', vidDel: 'حذف الفيديو',
@@ -133,6 +133,44 @@ let photoKey = 0;
 // ---------- Petits éléments du formulaire (définis hors de l'écran pour que le clavier ne se ferme pas à chaque lettre) ----------
 const alignOf = (rtl) => (rtl ? { textAlign: 'right', writingDirection: 'rtl' } : null);
 const rowOf = (rtl) => (rtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' });
+// Choix dans une liste : un seul bouton montre la réponse, la liste s'ouvre en dessous (plus simple pour débuter)
+const PickSheet = ({ value, options, placeholder, title, onPick, rtl, ar, extra }) => {
+  const [open, setOpen] = useState(false);
+  const cur = options.find((o) => o.v === value);
+  const al = alignOf(rtl);
+  return (
+    <>
+      <Pressable onPress={() => setOpen(true)} style={[s.pickBtn, value && s.pickBtnOn]}>
+        <Text style={[s.pickTxt, !value && { color: colors.muted }, al]} numberOfLines={1}>
+          {cur ? (ar ? cur.ar : cur.fr) : placeholder}
+        </Text>
+        <Text style={s.pickArrow}>▾</Text>
+      </Pressable>
+      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
+        <Pressable style={s.sheetBg} onPress={() => setOpen(false)} />
+        <View style={s.sheet}>
+          <Text style={[s.sheetTitle, al]}>{title}</Text>
+          <ScrollView>
+            {options.map((o) => {
+              const on = o.v === value;
+              return (
+                <Pressable key={o.v} onPress={() => { onPick(o.v); setOpen(false); }} style={[s.sheetRow, on && s.sheetRowOn]}>
+                  <Text style={[s.sheetTxt, on && { color: colors.primary, fontWeight: '800' }, al]}>{ar ? o.ar : o.fr}</Text>
+                  {on && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                </Pressable>
+              );
+            })}
+            {extra}
+          </ScrollView>
+          <Pressable onPress={() => setOpen(false)} style={s.sheetClose}>
+            <Text style={s.sheetCloseTxt}>{ar ? 'إغلاق' : 'Fermer'}</Text>
+          </Pressable>
+        </View>
+      </Modal>
+    </>
+  );
+};
+
 // Champ d'un véhicule (liste de choix, texte, nombre ou case à cocher)
 const VehField = ({ f, d, update, lang, rtl, errors }) => {
   const ar = lang === 'ar';
@@ -149,30 +187,32 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
     );
   }
   if (f.type === 'model') {
-    // Modèles de la marque choisie, ou saisie libre (« Autre modèle », ou marque sans liste)
+    // Modèles de la marque choisie (liste déroulante), ou saisie libre (« Autre modèle », ou marque sans liste)
     const list = MODELS[d.brand] || [];
     const other = !!d.modelOther || (!!d.model && !list.includes(d.model));
+    const opts = [...list.map((m) => ({ v: m, fr: m, ar: m })), { v: '__other', fr: 'Autre modèle (je l’écris)', ar: 'موديل آخر (أكتبه)' }];
     return (
       <>
         <Label rtl={rtl}>{label}</Label>
         {!d.brand ? (
           <Text style={[s.help, al]}>{ar ? 'اختر الماركة أولاً' : 'Choisissez d’abord la marque'}</Text>
         ) : list.length ? (
-          <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
-            {[...list, '__other'].map((m) => {
-              const isOther = m === '__other';
-              const on = isOther ? other : !other && d.model === m;
-              return (
-                <Pressable key={m} onPress={() => update(isOther ? { model: '', modelOther: true } : { model: m, modelOther: false })} style={[s.chip, on && s.chipOn]}>
-                  <Text style={[s.chipTxt, on && s.chipTxtOn]}>{isOther ? (ar ? 'موديل آخر (أكتبه)' : 'Autre modèle (je l’écris)') : m}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <PickSheet value={other ? '__other' : d.model} options={opts} placeholder={ar ? 'اختر…' : 'Choisir…'} title={label} rtl={rtl} ar={ar}
+            onPick={(v) => update(v === '__other' ? { model: '', modelOther: true } : { model: v, modelOther: false })} />
         ) : null}
         {(other || (!!d.brand && !list.length)) && (
           <Field rtl={rtl} value={d.model} maxLength={30} placeholder={ar ? 'مثال: هايلكس' : 'Ex. : Hilux'} onChangeText={(v) => update({ model: v })} style={{ marginTop: 8 }} />
         )}
+        {err}
+      </>
+    );
+  }
+  if (f.type === 'chips' && f.opts.length > 4) {
+    return (
+      <>
+        <Label rtl={rtl}>{label}</Label>
+        <PickSheet value={d[f.k]} options={f.opts} placeholder={ar ? 'اختر…' : 'Choisir…'} title={label} rtl={rtl} ar={ar}
+          onPick={(v) => update(f.k === 'brand' ? { brand: v, model: '', modelOther: false } : { [f.k]: v })} />
         {err}
       </>
     );
@@ -666,6 +706,10 @@ export default function AdForm({ editAd = null }) {
             <Text style={[s.h1, al]}>{t('st2')}</Text>
             <Text style={[s.sub, al]}>{t('st2sub')}</Text>
 
+            <Label rtl={rtl}>{t('title')}</Label>
+            <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+            <Text style={[s.help, al]}>{t('titleHelp')}</Text>
+
             <View style={[row, { justifyContent: 'space-between' }]}>
               <Label rtl={rtl}>{t('photos')}</Label>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
@@ -685,15 +729,11 @@ export default function AdForm({ editAd = null }) {
             {d.photos.some((p) => p.status === 'err') && <Text style={[s.err, al]}>{t('photoErr')}</Text>}
             {d.photos.length < MAX_PHOTOS && (
               <View style={[row, { gap: 8 }]}>
-                <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addPhotos('library')}><Text style={s.btnLightTxt}>{t('gallery')}</Text></Pressable>
-                <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addPhotos('camera')}><Text style={s.btnLightTxt}>{t('camera')}</Text></Pressable>
+                <Pressable style={[s.btnLight, s.addBtn]} onPress={() => addPhotos('library')}><Ionicons name="images-outline" size={22} color={colors.primaryDark} /><Text style={s.btnLightTxt}>{t('gallery')}</Text></Pressable>
+                <Pressable style={[s.btnLight, s.addBtn]} onPress={() => addPhotos('camera')}><Ionicons name="camera-outline" size={22} color={colors.primaryDark} /><Text style={s.btnLightTxt}>{t('camera')}</Text></Pressable>
               </View>
             )}
             <Err errors={errors} rtl={rtl} k="photos" />
-
-            <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
-            <Text style={[s.help, al]}>{t('titleHelp')}</Text>
 
             <Label rtl={rtl}>{t('desc')}</Label>
             <Field rtl={rtl} value={d.desc} onChangeText={(v) => update({ desc: v })} placeholder={t('descPh')} multiline
@@ -931,6 +971,19 @@ const s = StyleSheet.create({
   btnMainTxt: { color: '#fff', fontSize: 17, fontWeight: '800' },
   okBtn: { width: '100%', height: 56, borderRadius: radius.m, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10 },
   okBtnTxt: { fontSize: 17, fontWeight: '800' },
+  pickBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 14 },
+  pickBtnOn: { borderColor: colors.primary },
+  pickTxt: { fontSize: 16, color: colors.text, fontWeight: '600', flex: 1 },
+  pickArrow: { fontSize: 16, color: colors.primary, marginLeft: 8 },
+  sheetBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 16, maxHeight: '70%' },
+  sheetTitle: { fontSize: 17, fontWeight: '800', color: colors.text, marginBottom: 10 },
+  sheetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sheetRowOn: { backgroundColor: colors.primary + '12' },
+  sheetTxt: { fontSize: 16, color: colors.text, flex: 1 },
+  sheetClose: { marginTop: 12, backgroundColor: '#EEF5F0', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  sheetCloseTxt: { color: colors.primaryDark, fontWeight: '700', fontSize: 16 },
+  addBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnLight: { backgroundColor: '#EEF5F0', borderRadius: radius.m, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
   btnLightTxt: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
   center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14 },
