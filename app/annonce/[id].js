@@ -129,10 +129,12 @@ export default function Annonce() {
       <Stack.Screen options={{
         title: cat ? cat[lang] : '',
         // en arabe : accueil + favori à gauche, retour à droite ; en français : favori + accueil à droite
-        headerLeft: rtl ? () => (<View style={{ flexDirection: 'row', alignItems: 'center' }}><HomeButton /><FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /></View>) : undefined,
-        headerRight: rtl ? () => <BackButton /> : () => (<View style={{ flexDirection: 'row', alignItems: 'center' }}><FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /><HomeButton /></View>),
+        headerLeft: rtl ? () => <HomeButton /> : undefined,
+        headerRight: rtl ? () => <BackButton /> : () => <HomeButton />,
       }} />
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
+        {/* Favori : bouton seul sur la photo (séparé de l'accueil dans l'en-tête) */}
+        <FavButton adId={ad.id} size={20} style={[s.favOver, rtl ? { left: 12 } : { right: 12 }]} />
         {photos.length > 0 ? (
           <View>
             <FlatList
@@ -271,6 +273,7 @@ export default function Annonce() {
 }
 
 const s = StyleSheet.create({
+  favOver: { position: 'absolute', top: 12, zIndex: 10, elevation: 10 },
   noPhoto: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   counter: { position: 'absolute', bottom: 10, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10 },
   box: { padding: 16, gap: 6 },
