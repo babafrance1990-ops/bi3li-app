@@ -43,7 +43,7 @@ export function AdVideo({ url, width, label }) {
 export function AdVoice({ adId, dataUrl }) {
   const uri = useVoiceUri(adId, dataUrl);
   if (!dataUrl) return null;
-  return <View style={styles.voice}><VoicePlayer uri={uri} /></View>;
+  return <View style={styles.voice}><VoicePlayer uri={uri} mime={(/^data:([^;,]*)/.exec(dataUrl) || [])[1]} /></View>;
 }
 
 const styles = StyleSheet.create({

@@ -12,6 +12,9 @@ import { cityName } from '../places';
 import FavButton from './FavButton';
 import { colors, radius } from '../theme';
 
+// Type du message vocal (ex. audio/webm) : affiché si le téléphone ne le lit pas
+const voiceMime = (d) => (/^data:([^;,]*)/.exec(d || '') || [])[1] || '';
+
 export default function AdCard({ ad, preview }) {
   const { lang, rtl, t } = useLang();
   const photo = mediaUrl(ad.photos?.[0]);
@@ -51,7 +54,7 @@ export default function AdCard({ ad, preview }) {
         {/* Message vocal : lecteur en bas de la photo (pause, 10 s, barre) */}
         {!!ad.voice && (
           <View style={s.voiceBar}>
-            <VoicePlayer uri={voiceUri} dark compact />
+            <VoicePlayer uri={voiceUri} dark compact mime={voiceMime(ad.voice)} />
           </View>
         )}
         {!preview && <FavButton adId={ad.id} size={18} style={s.fav} />}

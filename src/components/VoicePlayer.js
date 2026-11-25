@@ -1,5 +1,5 @@
 // Lecteur de message vocal façon WhatsApp : lecture / pause, reculer et avancer de 10 s, barre de progression.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { playbackMode } from '../voiceHooks';
@@ -8,11 +8,21 @@ import { colors } from '../theme';
 const mmss = (n) => { const x = Math.floor(n || 0); return Math.floor(x / 60) + ':' + ('0' + (x % 60)).slice(-2); };
 
 // uri : fichier audio prêt (null tant qu'il n'est pas prêt) · dark : sur fond sombre (carte) · compact : version de la carte
-export default function VoicePlayer({ uri, dark, compact }) {
+export default function VoicePlayer({ uri, dark, compact, mime }) {
   const player = useAudioPlayer(uri ? { uri } : null);
   const st = useAudioPlayerStatus(player);
   const [want, setWant] = useState(false);
   const [barW, setBarW] = useState(0);
+  const [failed, setFailed] = useState(false);
+  // Si le son ne démarre pas (format non lu par ce téléphone), on le signale au lieu de rester muet
+  useEffect(() => {
+    if (!uri || !want) return undefined;
+    const id = setTimeout(() => { const l = live.current; if (!l.playing && !(l.duration > 0)) setFailed(true); }, 3000);
+    return () => clearTimeout(id);
+  }, [uri, want]);
+  useEffect(() => { if (st.playing || st.duration > 0) setFailed(false); }, [st.playing, st.duration]);
+  const live = useRef(st);
+  live.current = st; // état le plus récent, lu par les minuteries
   const cur = st.currentTime || 0;
   const dur = st.duration || 0;
 
@@ -28,7 +38,9 @@ export default function VoicePlayer({ uri, dark, compact }) {
 
   function toggle() {
     if (!uri) { setWant(true); return; }
-    if (st.playing) player.pause(); else play();
+    if (st.playing) { player.pause(); return; }
+    play();
+    setTimeout(() => { const l = live.current; if (!l.playing && !(l.duration > 0)) setFailed(true); }, 3000);
   }
   function skip(sec) {
     if (!uri) return;
@@ -46,6 +58,13 @@ export default function VoicePlayer({ uri, dark, compact }) {
   const playing = st.playing || (want && !uri);
   const big = compact ? 30 : 44;
 
+  if (failed) {
+    return (
+      <View style={[s.row, compact && s.rowC]}>
+        <Text style={[s.warn, { color: ink }]}>⚠️ Vocal non lisible sur ce téléphone{mime ? ' (' + mime + ')' : ''}</Text>
+      </View>
+    );
+  }
   return (
     <View style={[s.row, compact && s.rowC]}>
       <Pressable onPress={() => skip(-10)} hitSlop={6} style={s.skip}>
@@ -82,4 +101,5 @@ const s = StyleSheet.create({
   track: { height: 4, borderRadius: 2, overflow: 'hidden' },
   fill: { height: 4, borderRadius: 2 },
   time: { fontSize: 12, fontWeight: '700', marginTop: 2 },
+  warn: { fontSize: 12, fontWeight: '700', textAlign: 'center', flex: 1 },
 });
