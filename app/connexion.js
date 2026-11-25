@@ -4,11 +4,27 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { api, cleanPhone } from '../src/api';
 import { useAuth } from '../src/auth';
 import { useLang } from '../src/i18n';
 import { useWaJob } from '../src/wa';
 import { colors, radius } from '../src/theme';
+
+// Champ de code secret à 4 chiffres : bouton œil pour afficher ou cacher les chiffres
+function PinInput({ inputRef, style, ...props }) {
+  const [show, setShow] = useState(false);
+  return (
+    <View>
+      <TextInput ref={inputRef} style={[style, { paddingEnd: 52 }]} secureTextEntry={!show}
+        keyboardType="number-pad" maxLength={4} autoCorrect={false} {...props} />
+      <Pressable onPress={() => setShow((v) => !v)} hitSlop={12} style={s.eye}
+        accessibilityRole="button" accessibilityLabel={show ? 'Cacher le code' : 'Afficher le code'}>
+        <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.muted} />
+      </Pressable>
+    </View>
+  );
+}
 
 export default function Connexion() {
   const { t, rtl } = useLang();
@@ -31,7 +47,6 @@ export default function Connexion() {
   const [busy, setBusy] = useState(false);
   const [support, setSupport] = useState('');
   const [newPin, setNewPin] = useState(null); // { a, b } : choix d'un nouveau code après « code oublié »
-  useEffect(() => { if (err) toEnd(); }, [err]); // un message d'erreur reste visible au-dessus du clavier
   const { lang } = useLang();
   const F = lang === 'ar'
     ? { forgotWa: 'استرجاع حسابي عبر واتساب', wait: 'في انتظار رسالتك على واتساب…', from: 'أرسل الرسالة من واتساب الرقم', again: 'فتح واتساب مرة أخرى', cancel: 'إلغاء', expired: 'انتهت صلاحية الرمز. أعد المحاولة.', noWa: 'لا يوجد واتساب على هذا الرقم؟ راسل فريق بيعلي', npT: 'اختر رمزك السري الجديد', np1: 'الرمز الجديد', np2: 'أكّد الرمز', npSave: 'حفظ رمزي الجديد', npLater: 'لاحقاً', tooMany: 'طلبات كثيرة. أعد المحاولة بعد ساعة.' }
@@ -104,7 +119,7 @@ export default function Connexion() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.white }}>
       {/* Défilement : quand le clavier est ouvert, on peut toujours atteindre le bouton et les messages */}
       <ScrollView ref={scrollRef} style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
-        contentContainerStyle={{ flexGrow: 1, minHeight: winH }}>
+        contentContainerStyle={{ flexGrow: 1, minHeight: step === 'phone' ? winH : undefined }}>
       {/* Toucher une zone vide ferme le clavier ; les champs et boutons restent cliquables */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={[s.wrap, { flex: 1, paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40, justifyContent: step === 'phone' ? 'center' : 'flex-start' }]}>
@@ -122,8 +137,7 @@ export default function Connexion() {
       {step === 'login' && (
         <>
           <Text style={s.hint}>{t('welcomeBack')}</Text>
-          <TextInput style={[input, s.pin]} value={code} onChangeText={setCode} placeholder={t('code')}
-            keyboardType="number-pad" maxLength={4} secureTextEntry autoFocus />
+          <PinInput style={[input, s.pin]} value={code} onChangeText={setCode} placeholder={t('code')} autoFocus />
         </>
       )}
 
@@ -134,10 +148,10 @@ export default function Connexion() {
           <TextInput style={input} value={name} onChangeText={setName} maxLength={30} autoFocus
             returnKeyType="next" />
           <Text style={[s.label, rtl && s.labelRtl]}>{L.code}</Text>
-          <TextInput style={[input, s.pin]} value={code} maxLength={4} secureTextEntry keyboardType="number-pad"
+          <PinInput style={[input, s.pin]} value={code}
             onFocus={toEnd} onChangeText={(v) => { setCode(v); if (v.length === 4) confirmRef.current?.focus(); }} />
           <Text style={[s.label, rtl && s.labelRtl]}>{L.code2}</Text>
-          <TextInput ref={confirmRef} style={[input, s.pin]} value={code2} maxLength={4} secureTextEntry keyboardType="number-pad"
+          <PinInput inputRef={confirmRef} style={[input, s.pin]} value={code2}
             onFocus={toEnd} onChangeText={(v) => { setCode2(v); if (v.length === 4) toEnd(); }} />
           {code2.length === 4 && code !== code2 && <Text style={s.err}>{t('errSame')}</Text>}
         </>
@@ -203,4 +217,5 @@ const s = StyleSheet.create({
   btnTxt: { color: '#fff', fontSize: 18, fontWeight: '800' },
   waBox: { gap: 10, padding: 14, borderRadius: radius.m, backgroundColor: '#EEF5F0', borderWidth: 1, borderColor: '#1E7A45', alignItems: 'center' },
   link: { color: colors.primaryDark, textAlign: 'center', padding: 8, fontWeight: '600' },
+  eye: { position: 'absolute', right: 14, top: 0, bottom: 0, justifyContent: 'center' },
 });
