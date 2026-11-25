@@ -25,7 +25,6 @@ import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
 import VoiceRecorder from './VoiceRecorder';
 import { cityName, NKC } from '../places';
 import { colors, radius } from '../theme';
-import { Ionicons } from '@expo/vector-icons';
 
 // ---------- Textes du dépôt ----------
 const D = {
