@@ -1,7 +1,7 @@
 // Un seul écran « Se connecter / Créer un compte », comme sur le site :
 // 1) numéro → le serveur dit si le compte existe ; 2a) code → connexion ; 2b) nom + code + confirmation → création
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, cleanPhone } from '../src/api';
@@ -97,7 +97,10 @@ export default function Connexion() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[s.wrap, { paddingTop: insets.top + 8 }]}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.white }}>
+      {/* Défilement : quand le clavier est ouvert, on peut toujours atteindre le bouton et les messages */}
+      <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
+        contentContainerStyle={[s.wrap, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40, flexGrow: 1 }]}>
       {/* Retour : flèche à droite en arabe (vers la droite), à gauche en français */}
       <View style={[s.top, rtl && { flexDirection: 'row-reverse' }]}>
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} hitSlop={12} style={s.back}>
@@ -170,6 +173,7 @@ export default function Connexion() {
           <Text style={s.link}>↩︎ {t('phone')}</Text>
         </Pressable>
       )}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
