@@ -1,7 +1,7 @@
 // Un seul écran « Se connecter / Créer un compte », comme sur le site :
 // 1) numéro → le serveur dit si le compte existe ; 2a) code → connexion ; 2b) nom + code + confirmation → création
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, cleanPhone } from '../src/api';
@@ -14,6 +14,9 @@ export default function Connexion() {
   const { t, rtl } = useLang();
   const insets = useSafeAreaInsets(); // page sans en-tête : on laisse la place de la barre d'état
   const confirmRef = useRef(null);    // passage automatique au champ « confirmer » après 4 chiffres
+  const scrollRef = useRef(null);     // pour faire remonter le bouton et les messages au-dessus du clavier
+  const { height: winH } = useWindowDimensions();
+  const toEnd = () => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
   // Libellés au-dessus des champs (le texte d'exemple disparaît quand on tape)
   const L = rtl
     ? { name: 'اسمك', code: 'الرمز السري (4 أرقام)', code2: 'أعد كتابة الرمز' }
@@ -28,6 +31,7 @@ export default function Connexion() {
   const [busy, setBusy] = useState(false);
   const [support, setSupport] = useState('');
   const [newPin, setNewPin] = useState(null); // { a, b } : choix d'un nouveau code après « code oublié »
+  useEffect(() => { if (err) toEnd(); }, [err]); // un message d'erreur reste visible au-dessus du clavier
   const { lang } = useLang();
   const F = lang === 'ar'
     ? { forgotWa: 'استرجاع حسابي عبر واتساب', wait: 'في انتظار رسالتك على واتساب…', from: 'أرسل الرسالة من واتساب الرقم', again: 'فتح واتساب مرة أخرى', cancel: 'إلغاء', expired: 'انتهت صلاحية الرمز. أعد المحاولة.', noWa: 'لا يوجد واتساب على هذا الرقم؟ راسل فريق بيعلي', npT: 'اختر رمزك السري الجديد', np1: 'الرمز الجديد', np2: 'أكّد الرمز', npSave: 'حفظ رمزي الجديد', npLater: 'لاحقاً', tooMany: 'طلبات كثيرة. أعد المحاولة بعد ساعة.' }
@@ -99,8 +103,11 @@ export default function Connexion() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.white }}>
       {/* Défilement : quand le clavier est ouvert, on peut toujours atteindre le bouton et les messages */}
-      <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
-        contentContainerStyle={[s.wrap, { paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40, flexGrow: 1, justifyContent: step === 'phone' ? 'center' : 'flex-start' }]}>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
+        contentContainerStyle={{ flexGrow: 1, minHeight: winH }}>
+      {/* Toucher une zone vide ferme le clavier ; les champs et boutons restent cliquables */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={[s.wrap, { flex: 1, paddingTop: insets.top + 64, paddingBottom: insets.bottom + 40, justifyContent: step === 'phone' ? 'center' : 'flex-start' }]}>
       {/* Retour : flèche à droite en arabe (vers la droite), à gauche en français */}
       <View style={[s.top, rtl && { flexDirection: 'row-reverse' }, { position: 'absolute', top: insets.top + 8, left: 24, right: 24, zIndex: 1 }]}>
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} hitSlop={12} style={s.back}>
@@ -128,10 +135,10 @@ export default function Connexion() {
             returnKeyType="next" />
           <Text style={[s.label, rtl && s.labelRtl]}>{L.code}</Text>
           <TextInput style={[input, s.pin]} value={code} maxLength={4} secureTextEntry keyboardType="number-pad"
-            onChangeText={(v) => { setCode(v); if (v.length === 4) confirmRef.current?.focus(); }} />
+            onFocus={toEnd} onChangeText={(v) => { setCode(v); if (v.length === 4) confirmRef.current?.focus(); }} />
           <Text style={[s.label, rtl && s.labelRtl]}>{L.code2}</Text>
           <TextInput ref={confirmRef} style={[input, s.pin]} value={code2} maxLength={4} secureTextEntry keyboardType="number-pad"
-            onChangeText={setCode2} />
+            onFocus={toEnd} onChangeText={(v) => { setCode2(v); if (v.length === 4) toEnd(); }} />
           {code2.length === 4 && code !== code2 && <Text style={s.err}>{t('errSame')}</Text>}
         </>
       )}
@@ -173,6 +180,8 @@ export default function Connexion() {
           <Text style={s.link}>↩︎ {t('phone')}</Text>
         </Pressable>
       )}
+      </View>
+      </TouchableWithoutFeedback>
       </ScrollView>
     </KeyboardAvoidingView>
   );
