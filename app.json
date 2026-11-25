@@ -30,14 +30,26 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "ios": {
       "bundleIdentifier": "net.bi3li.app",
       "supportsTablet": false
     },
     "extra": {
-      "apiUrl": "https://bi3li.net"
+      "apiUrl": "https://bi3li.net",
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "536f30df-ef1a-485d-a9e0-0f409191e78c"
+      }
     },
     "web": {
       "output": "single",
@@ -54,7 +66,9 @@
     "updates": {
       "enabled": true,
       "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 0
-    }
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/536f30df-ef1a-485d-a9e0-0f409191e78c"
+    },
+    "owner": "bi3li-apps-team"
   }
 }
