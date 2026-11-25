@@ -87,6 +87,9 @@ export default function Annonce() {
   if (!ad) return missing ? <Text style={{ padding: 20 }}>{t('netErr')}</Text> : <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />;
 
   const photos = (ad.photos || []).map(mediaUrl);
+  // Sans photo : la vidéo ou le vocal prend la place de la photo principale
+  const heroVideo = photos.length === 0 && !!ad.video;
+  const heroVoice = photos.length === 0 && !ad.video && !!ad.voice;
   const phone = String(ad.phone || '').replace(/\D/g, '');
   const cat = catById(ad.cat);
   const link = 'https://bi3li.net/?annonce=' + ad.id; // même lien que le site (aperçu WhatsApp)
@@ -147,11 +150,15 @@ export default function Annonce() {
             />
             {photos.length > 1 && <Text style={s.counter}>{index + 1} / {photos.length}</Text>}
           </View>
+        ) : heroVideo ? (
+          <AdVideo url={mediaUrl(ad.video)} width={W} label={t('playVid')} />
+        ) : heroVoice ? (
+          <View style={[s.noPhoto, { height: W * 0.5 }]}><Text style={{ fontSize: 56 }}>🎙️</Text></View>
         ) : <View style={[s.noPhoto, { height: W * 0.5 }]}><Text style={{ fontSize: 40, opacity: 0.4 }}>📷</Text></View>}
 
-        {(!!ad.video || !!ad.voice) && (
+        {((photos.length > 0 && !!ad.video) || !!ad.voice) && (
           <View style={[s.box, { paddingBottom: 0 }]}>
-            {!!ad.video && <AdVideo url={mediaUrl(ad.video)} width={W - 32} label={t('playVid')} />}
+            {photos.length > 0 && !!ad.video && <AdVideo url={mediaUrl(ad.video)} width={W - 32} label={t('playVid')} />}
             {!!ad.voice && <AdVoice adId={ad.id} dataUrl={ad.voice} label={t('listenVoice')} />}
           </View>
         )}
