@@ -431,6 +431,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     if (admin) { setD({ ...newDraft(), wa: true, call: true }); return; }
     loadDraft().then(({ draft, restored: r }) => {
       draft.photos = draft.photos.map((p) => ({ ...p, key: p.key || 'p' + ++photoKey }));
+      if (!draft.city && user?.city) draft.city = user.city; // ville du compte par défaut
       setD(draft);
       setRestored(r && (draft.cat || draft.photos.length > 0));
       draft.photos.filter((p) => p.status === 'todo').forEach((p) => setTimeout(() => startUpload(p), 0));
@@ -776,10 +777,6 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Text style={[s.h1, al]}>{t('st2')}</Text>
             <Text style={[s.sub, al]}>{t('st2sub')}</Text>
 
-            <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
-            <Text style={[s.help, al]}>{t('titleHelp')}</Text>
-
             <View style={[row, { justifyContent: 'space-between' }]}>
               <Label rtl={rtl}>{t('photos')}</Label>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
@@ -804,6 +801,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               </View>
             )}
             <Err errors={errors} rtl={rtl} k="photos" />
+
+            <Label rtl={rtl}>{t('title')}</Label>
+            <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+            <Text style={[s.help, al]}>{t('titleHelp')}</Text>
 
             <Label rtl={rtl}>{t('desc')}</Label>
             <Field rtl={rtl} value={d.desc} onChangeText={(v) => update({ desc: v })} placeholder={t('descPh')} multiline
