@@ -35,6 +35,7 @@ const T = {
     complete: 'Boutique complète à {p} %', moreInfo: 'Plus d’informations', lessInfo: 'Masquer les informations',
     preview: 'Aperçu de ma boutique', previewClose: 'Fermer l’aperçu', verifyAsk: 'Demander la vérification', verifyMsg: 'Bonjour, je demande la vérification de ma boutique « {n} » ({p}).',
     adsT: 'Annonces de ma boutique', myAds: 'Voir mes annonces', addAd: 'Ajouter une annonce à ma boutique',
+    hoursSel: 'Utiliser les sélecteurs', hoursFree: 'Saisir librement', hoursDays: 'Jours d’ouverture', hoursFrom: 'De', hoursTo: 'À', hoursWarn: 'L’heure de fermeture doit être après l’ouverture.',
     previewAddr: 'Adresse', previewHours: 'Horaires', previewWa: 'WhatsApp', previewDeliv: 'Livraison', previewMarket: 'Marché',
   },
   ar: {
@@ -56,10 +57,31 @@ const T = {
     complete: 'اكتمال المتجر: {p} %', moreInfo: 'معلومات إضافية', lessInfo: 'إخفاء المعلومات',
     preview: 'معاينة متجري', previewClose: 'إغلاق المعاينة', verifyAsk: 'طلب التوثيق', verifyMsg: 'السلام عليكم، أطلب توثيق متجري « {n} » ({p}).',
     adsT: 'إعلانات متجري', myAds: 'عرض إعلاناتي', addAd: 'إضافة إعلان لمتجري',
+    hoursSel: 'اختيار بالأزرار', hoursFree: 'كتابة حرة', hoursDays: 'أيام العمل', hoursFrom: 'من', hoursTo: 'إلى', hoursWarn: 'يجب أن يكون وقت الإغلاق بعد وقت الفتح.',
     previewAddr: 'العنوان', previewHours: 'أوقات العمل', previewWa: 'واتساب', previewDeliv: 'التوصيل', previewMarket: 'السوق',
   },
 };
 const digits = (v) => String(v || '').replace(/\D/g, '');
+// Jours et heures choisis avec des boutons ; le texte enregistré est écrit à partir de ces choix
+const DAYS = [
+  { id: 'sa', fr: 'Sam', ar: 'السبت' }, { id: 'di', fr: 'Dim', ar: 'الأحد' }, { id: 'lu', fr: 'Lun', ar: 'الاثنين' },
+  { id: 'ma', fr: 'Mar', ar: 'الثلاثاء' }, { id: 'me', fr: 'Mer', ar: 'الأربعاء' }, { id: 'je', fr: 'Jeu', ar: 'الخميس' },
+  { id: 've', fr: 'Ven', ar: 'الجمعة' },
+];
+const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 6 h à 23 h
+
+// Rangée horizontale d'heures (6 h à 23 h)
+function HourRow({ value, onPick, row }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[{ gap: 8 }, row]}>
+      {HOURS.map((h) => (
+        <Pressable key={h} onPress={() => onPick(h)} style={[s.dayChip, value === h && s.dayOn]}>
+          <Text style={[s.dayTxt, value === h && s.dayTxtOn]}>{h} h</Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+}
 
 export default function Boutique() {
   const { user, reloadUser } = useAuth();
@@ -76,6 +98,8 @@ export default function Boutique() {
   const [more, setMore] = useState(() => !!(old && (old.desc || old.addr || old.hours || old.wa || old.deliv || old.agency)));
   const [preview, setPreview] = useState(false);
   const [support, setSupport] = useState('');
+  const [hoursSel, setHoursSel] = useState(!old?.hours);
+  const [hm, setHM] = useState({ days: [], from: 9, to: 21 });
   useEffect(() => { api.config().then((c) => setSupport(c.support || '')).catch(() => {}); }, []);
   const set = (patch) => setF((x) => ({ ...x, ...patch }));
   const al = rtl ? { textAlign: 'right' } : null;
@@ -96,6 +120,14 @@ export default function Boutique() {
     { ok: !!f.wa, fr: 'Numéro WhatsApp de la boutique', ar: 'رقم واتساب المتجر' },
   ];
   const pct = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
+  // Horaires : jours et heures choisis avec des boutons, écrits dans le champ « horaires »
+  function setHours(patch) {
+    const n = { ...hm, ...patch };
+    setHM(n);
+    const names = DAYS.filter((d) => n.days.includes(d.id)).map((d) => d[lang]).join(', ');
+    set({ hours: n.days.length ? names + ' · ' + n.from + ' h – ' + n.to + ' h' : '' });
+  }
+  const toggleDay = (id) => setHours({ days: hm.days.includes(id) ? hm.days.filter((x) => x !== id) : [...hm.days, id] });
   const shareWa = () => Linking.openURL('https://wa.me/?text=' + encodeURIComponent('🏪 ' + (old?.name || f.name) + (link ? '\n' + link : '')));
   const askVerify = () => Linking.openURL('https://wa.me/222' + digits(support).slice(-8) + '?text=' + encodeURIComponent(t('verifyMsg').replace('{n}', old?.name || f.name).replace('{p}', user.phone)));
 
@@ -208,7 +240,33 @@ export default function Boutique() {
       <TextInput style={[s.input, al]} value={f.addr} onChangeText={(v) => set({ addr: v })} placeholder={t('addrPh')} placeholderTextColor={colors.muted} maxLength={160} />
 
       <Text style={[s.label, al]}>{t('hours')}</Text>
-      <TextInput style={[s.input, al]} value={f.hours} onChangeText={(v) => set({ hours: v })} placeholder={t('hoursPh')} placeholderTextColor={colors.muted} maxLength={80} />
+      {hoursSel ? (
+        <View style={{ gap: 8 }}>
+          <Text style={[s.help, al]}>{t('hoursDays')}</Text>
+          <View style={[s.chips, row]}>
+            {DAYS.map((d) => {
+              const on = hm.days.includes(d.id);
+              return (
+                <Pressable key={d.id} onPress={() => toggleDay(d.id)} style={[s.dayChip, on && s.dayOn]}>
+                  <Text style={[s.dayTxt, on && s.dayTxtOn]}>{d[lang]}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={[s.help, al]}>{t('hoursFrom')}</Text>
+          <HourRow value={hm.from} onPick={(h) => setHours({ from: h })} row={row} />
+          <Text style={[s.help, al]}>{t('hoursTo')}</Text>
+          <HourRow value={hm.to} onPick={(h) => setHours({ to: h })} row={row} />
+          {hm.to <= hm.from && <Text style={[s.warn, al]}>{t('hoursWarn')}</Text>}
+          {!!f.hours && <Text style={[s.p, al]}>{f.hours}</Text>}
+          <Pressable onPress={() => setHoursSel(false)}><Text style={s.link}>{t('hoursFree')}</Text></Pressable>
+        </View>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <TextInput style={[s.input, al]} value={f.hours} onChangeText={(v) => set({ hours: v })} placeholder={t('hoursPh')} placeholderTextColor={colors.muted} maxLength={80} />
+          <Pressable onPress={() => setHoursSel(true)}><Text style={s.link}>{t('hoursSel')}</Text></Pressable>
+        </View>
+      )}
 
       <Text style={[s.label, al]}>{t('wa')}</Text>
       <TextInput style={[s.input, al]} value={f.wa} onChangeText={(v) => set({ wa: digits(v).slice(0, 8) })} placeholder={user.phone} placeholderTextColor={colors.muted} keyboardType="phone-pad" />
@@ -301,6 +359,11 @@ const s = StyleSheet.create({
   progFill: { height: 8, backgroundColor: colors.primary },
   progRow: { alignItems: 'center', gap: 8 },
   progItem: { fontSize: 14, color: colors.text, flex: 1 },
+  chips: { flexWrap: 'wrap', gap: 8 },
+  dayChip: { borderWidth: 1, borderColor: colors.border, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.white },
+  dayOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  dayTxt: { fontSize: 14, fontWeight: '700', color: colors.text },
+  dayTxtOn: { color: '#fff' },
   moreBtn: { alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
   moreTxt: { fontSize: 15, fontWeight: '700', color: colors.primaryDark },
   prevCard: { backgroundColor: colors.white, borderRadius: radius.l, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 8, marginTop: 8 },
