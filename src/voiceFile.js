@@ -1,12 +1,14 @@
 // Message vocal d'une annonce : il est gardé dans l'annonce sous forme de texte (data URL, comme sur le site).
 // On l'écrit une seule fois dans un fichier du téléphone pour pouvoir le lire.
 import { cacheDirectory, getInfoAsync, writeAsStringAsync } from 'expo-file-system/legacy';
+import { mediaUrl } from './api';
 
 const done = new Map(); // annonce → adresse du fichier (ou promesse en cours)
 
 export function voiceFile(adId, dataUrl) {
   const m = /^data:([^,]*);base64,(.*)$/.exec(dataUrl || '');
-  if (!m) return Promise.resolve(null);
+  // Vocal stocké sur le serveur comme fichier (/api/media/…) : on le lit directement depuis son adresse
+  if (!m) return Promise.resolve(/^(\/|https?:)/.test(dataUrl || '') ? mediaUrl(dataUrl) : null);
   const key = String(adId) + ':' + m[2].length;
   if (!done.has(key)) {
     const mime = m[1].split(';')[0];
