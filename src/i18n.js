@@ -14,6 +14,7 @@ const T = {
     call: 'اتصال', whatsapp: 'واتساب', message: 'رسالة', soon: 'قريباً في التطبيق', seller: 'البائع',
     verifiedNum: 'رقم مؤكَّد ✓', notVerified: 'رقم غير مؤكَّد', loginToSee: 'سجّل الدخول لرؤية رسائلك', lang: 'Français',
     description: 'الوصف', sold: 'تم البيع',
+    videoTag: 'فيديو', voiceTag: 'رسالة صوتية', playVid: 'تشغيل الفيديو', listenVoice: 'استمع إلى الرسالة',
   },
   fr: {
     home: 'Accueil', search: 'Recherche', post: 'Déposer', messages: 'Messages', account: 'Mon compte',
@@ -27,6 +28,7 @@ const T = {
     call: 'Appeler', whatsapp: 'WhatsApp', message: 'Message', soon: "Bientôt dans l'application", seller: 'Vendeur',
     verifiedNum: 'Numéro vérifié ✓', notVerified: 'Numéro non vérifié', loginToSee: 'Connectez-vous pour voir vos messages', lang: 'العربية',
     description: 'Description', sold: 'Vendu',
+    videoTag: 'Vidéo', voiceTag: 'Message vocal', playVid: 'Lire la vidéo', listenVoice: 'Écouter le message',
   },
 };
 

@@ -16,6 +16,7 @@ import { cityName } from '../../src/places';
 import { getAllAds } from '../../src/store';
 import { useLang } from '../../src/i18n';
 import { colors, radius } from '../../src/theme';
+import { AdVideo, AdVoice } from '../../src/components/AdMedia';
 
 const W = Dimensions.get('window').width;
 const H = Dimensions.get('window').height;
@@ -147,6 +148,13 @@ export default function Annonce() {
             {photos.length > 1 && <Text style={s.counter}>{index + 1} / {photos.length}</Text>}
           </View>
         ) : <View style={[s.noPhoto, { height: W * 0.5 }]}><Text style={{ fontSize: 40, opacity: 0.4 }}>📷</Text></View>}
+
+        {(!!ad.video || !!ad.voice) && (
+          <View style={[s.box, { paddingBottom: 0 }]}>
+            {!!ad.video && <AdVideo url={mediaUrl(ad.video)} width={W - 32} label={t('playVid')} />}
+            {!!ad.voice && <AdVoice adId={ad.id} dataUrl={ad.voice} label={t('listenVoice')} />}
+          </View>
+        )}
 
         <View style={s.box}>
           {ad.status === 'sold' && <Text style={s.sold}>{t('sold')}</Text>}
