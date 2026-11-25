@@ -1,6 +1,6 @@
 // Un seul écran « Se connecter / Créer un compte », comme sur le site :
 // 1) numéro → le serveur dit si le compte existe ; 2a) code → connexion ; 2b) nom + code + confirmation → création
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,12 @@ import { colors, radius } from '../src/theme';
 export default function Connexion() {
   const { t, rtl } = useLang();
   const insets = useSafeAreaInsets(); // page sans en-tête : on laisse la place de la barre d'état
+  const confirmRef = useRef(null);    // passage automatique au champ « confirmer » après 4 chiffres
+  // Libellés au-dessus des champs (le texte d'exemple disparaît quand on tape)
+  const L = rtl
+    ? { name: 'اسمك', code: 'الرمز السري (4 أرقام)', code2: 'أعد كتابة الرمز' }
+    : { name: 'Votre nom', code: 'Code secret (4 chiffres)', code2: 'Confirmez le code' };
+  const createOk = name.trim().length > 0 && code.length === 4 && code2.length === 4;
   const { login, register, signInWith } = useAuth();
   const [step, setStep] = useState('phone'); // phone | login | create
   const [phone, setPhone] = useState('');
@@ -114,17 +120,22 @@ export default function Connexion() {
       {step === 'create' && (
         <>
           <Text style={s.hint}>{t('newAccount')}</Text>
-          <TextInput style={input} value={name} onChangeText={setName} placeholder={t('name')} maxLength={30} autoFocus />
-          <TextInput style={[input, s.pin]} value={code} onChangeText={setCode} placeholder={t('code')}
-            keyboardType="number-pad" maxLength={4} secureTextEntry />
-          <TextInput style={[input, s.pin]} value={code2} onChangeText={setCode2} placeholder={t('code2')}
-            keyboardType="number-pad" maxLength={4} secureTextEntry />
+          <Text style={[s.label, rtl && s.labelRtl]}>{L.name}</Text>
+          <TextInput style={input} value={name} onChangeText={setName} maxLength={30} autoFocus
+            returnKeyType="next" />
+          <Text style={[s.label, rtl && s.labelRtl]}>{L.code}</Text>
+          <TextInput style={[input, s.pin]} value={code} maxLength={4} secureTextEntry keyboardType="number-pad"
+            onChangeText={(v) => { setCode(v); if (v.length === 4) confirmRef.current?.focus(); }} />
+          <Text style={[s.label, rtl && s.labelRtl]}>{L.code2}</Text>
+          <TextInput ref={confirmRef} style={[input, s.pin]} value={code2} maxLength={4} secureTextEntry keyboardType="number-pad"
+            onChangeText={setCode2} />
+          {code2.length === 4 && code !== code2 && <Text style={s.err}>{t('errSame')}</Text>}
         </>
       )}
 
       {!!err && <Text style={s.err}>{err}</Text>}
 
-      <Pressable disabled={busy} style={[s.btn, busy && { opacity: 0.6 }]}
+      <Pressable disabled={busy || (step === 'create' && !createOk)} style={[s.btn, (busy || (step === 'create' && !createOk)) && { opacity: 0.5 }]}
         onPress={step === 'phone' ? onPhone : step === 'login' ? onLogin : onCreate}>
         {busy ? <ActivityIndicator color="#fff" /> :
           <Text style={s.btnTxt}>{step === 'phone' ? t('next') : step === 'login' ? t('enter') : t('create')}</Text>}
@@ -171,7 +182,9 @@ const s = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: colors.text, textAlign: 'center', marginBottom: 8 },
   hint: { textAlign: 'center', color: colors.primaryDark, fontWeight: '600' },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, padding: 14, fontSize: 18, backgroundColor: colors.bg },
-  pin: { letterSpacing: 8, textAlign: 'center' },
+  pin: { textAlign: 'center', fontSize: 20 },
+  label: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
+  labelRtl: { textAlign: 'right' },
   err: { color: colors.danger, textAlign: 'center' },
   btn: { backgroundColor: colors.primary, borderRadius: radius.m, padding: 16, alignItems: 'center', marginTop: 4 },
   btnTxt: { color: '#fff', fontSize: 18, fontWeight: '800' },
