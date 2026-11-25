@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, cleanPhone } from '../src/api';
 import { useAuth } from '../src/auth';
 import { useLang } from '../src/i18n';
@@ -11,6 +12,7 @@ import { colors, radius } from '../src/theme';
 
 export default function Connexion() {
   const { t, rtl } = useLang();
+  const insets = useSafeAreaInsets(); // page sans en-tête : on laisse la place de la barre d'état
   const { login, register, signInWith } = useAuth();
   const [step, setStep] = useState('phone'); // phone | login | create
   const [phone, setPhone] = useState('');
@@ -89,7 +91,13 @@ export default function Connexion() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.wrap}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[s.wrap, { paddingTop: insets.top + 8 }]}>
+      {/* Retour : flèche à droite en arabe (vers la droite), à gauche en français */}
+      <View style={[s.top, rtl && { flexDirection: 'row-reverse' }]}>
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))} hitSlop={12} style={s.back}>
+          <Text style={s.backTxt}>{rtl ? '›' : '‹'}</Text>
+        </Pressable>
+      </View>
       <Text style={s.title}>{t('login')}</Text>
 
       <TextInput style={input} value={phone} onChangeText={setPhone} placeholder={t('phone')}
@@ -157,6 +165,9 @@ export default function Connexion() {
 
 const s = StyleSheet.create({
   wrap: { flex: 1, padding: 24, gap: 12, backgroundColor: colors.white },
+  top: { flexDirection: 'row', alignItems: 'center' },
+  back: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  backTxt: { color: colors.text, fontSize: 30, lineHeight: 34, fontWeight: '600' },
   title: { fontSize: 22, fontWeight: '800', color: colors.text, textAlign: 'center', marginBottom: 8 },
   hint: { textAlign: 'center', color: colors.primaryDark, fontWeight: '600' },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, padding: 14, fontSize: 18, backgroundColor: colors.bg },

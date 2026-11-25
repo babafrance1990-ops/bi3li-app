@@ -21,7 +21,7 @@ function Nav() {
       ...rtlHeader,
     }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="connexion" options={{ title: 'بيعلي – Bi3li' }} />
+      <Stack.Screen name="connexion" options={{ headerShown: false }} />
       <Stack.Screen name="annonce/[id]" options={{ title: '' }} />
       <Stack.Screen name="conversation/[id]" options={{ title: '' }} />
       <Stack.Screen name="mes-annonces" options={{ title: '' }} />
