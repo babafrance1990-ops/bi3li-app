@@ -5,21 +5,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { notify } from '../notify';
 import { colors, radius } from '../theme';
-import { useVoicePlayer, useVoiceUri } from '../voiceHooks';
+import { useVoiceUri } from '../voiceHooks';
+import VoicePlayer from './VoicePlayer';
 
 export const MAX_VOICE_SEC = 60;
 
 const mmss = (n) => Math.floor(n / 60) + ':' + ('0' + (n % 60)).slice(-2);
-
-// Bouton « Écouter » : joue le message enregistré ici, ou celui déjà présent sur l'annonce
-function Preview({ src, label }) {
-  const vp = useVoicePlayer(src);
-  return (
-    <Pressable onPress={vp.toggle} disabled={!vp.ready} style={[styles.play, !vp.ready && { opacity: 0.5 }]}>
-      <Text style={styles.playTxt}>{vp.playing ? '⏹ ' : '▶ '}{label}</Text>
-    </Pressable>
-  );
-}
 
 // uri : fichier enregistré sur le téléphone · saved : message déjà présent sur l'annonce (modification)
 export default function VoiceRecorder({ uri, saved, savedData, savedId, onRecorded, onRemove, t, rtl }) {
@@ -75,7 +66,7 @@ export default function VoiceRecorder({ uri, saved, savedData, savedId, onRecord
     <View style={{ gap: 8 }}>
       {uri || saved ? (
         <View style={[styles.row, rowStyle]}>
-          {(uri || savedUri) ? <Preview src={uri || savedUri} label={t('voiceListen')} /> : <Text style={styles.ok}>🎙️ {t('voiceOk')}</Text>}
+          {(uri || savedUri) ? <View style={styles.previewBox}><VoicePlayer uri={uri || savedUri} /></View> : <Text style={styles.ok}>🎙️ {t('voiceOk')}</Text>}
           <Pressable onPress={onRemove} hitSlop={8}><Text style={styles.del}>{t('voiceDel')}</Text></Pressable>
         </View>
       ) : recording ? (
@@ -97,8 +88,7 @@ const styles = StyleSheet.create({
   btn: { backgroundColor: '#EEF5F0', borderRadius: radius.m, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primary },
   recOn: { backgroundColor: colors.danger, borderStyle: 'solid', borderColor: colors.danger },
   btnTxt: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
-  play: { backgroundColor: '#EEF5F0', borderRadius: radius.m, paddingVertical: 10, paddingHorizontal: 14 },
-  playTxt: { color: colors.primaryDark, fontWeight: '700' },
+  previewBox: { flex: 1, minWidth: 220, backgroundColor: '#EEF5F0', borderRadius: radius.m, padding: 10 },
   ok: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
   del: { color: colors.danger, fontWeight: '700' },
   help: { fontSize: 13, color: colors.muted },

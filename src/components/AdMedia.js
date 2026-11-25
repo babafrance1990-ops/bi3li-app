@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { videoPoster } from '../videoPoster';
-import { useVoicePlayer, useVoiceUri } from '../voiceHooks';
+import { useVoiceUri } from '../voiceHooks';
+import VoicePlayer from './VoicePlayer';
 import { colors, radius } from '../theme';
 
 // Vidéo : on affiche une image de la vidéo ; la lecture ne démarre qu'à l'appui (économie de données)
@@ -38,16 +39,11 @@ export function AdVideo({ url, width, label }) {
   );
 }
 
-// Message vocal sur la fiche : bouton de lecture (▶ / ⏹)
-export function AdVoice({ adId, dataUrl, label }) {
+// Message vocal sur la fiche : lecteur complet (pause, 10 s, barre)
+export function AdVoice({ adId, dataUrl }) {
   const uri = useVoiceUri(adId, dataUrl);
-  const vp = useVoicePlayer(uri);
   if (!dataUrl) return null;
-  return (
-    <Pressable onPress={vp.toggle} disabled={!vp.ready} style={[styles.voice, !vp.ready && { opacity: 0.5 }]}>
-      <Text style={styles.voiceTxt}>{vp.playing ? '⏹ ' : '🎙️ ▶ '}{label}</Text>
-    </Pressable>
-  );
+  return <View style={styles.voice}><VoicePlayer uri={uri} /></View>;
 }
 
 const styles = StyleSheet.create({
@@ -57,6 +53,6 @@ const styles = StyleSheet.create({
   play: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   playTxt: { color: '#fff', fontSize: 26, marginLeft: 4 },
   tag: { position: 'absolute', bottom: 10, left: 10, color: '#fff', backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden', fontWeight: '700' },
-  voice: { backgroundColor: '#EEF5F0', borderRadius: radius.m, padding: 14, alignItems: 'center', marginTop: 10 },
+  voice: { backgroundColor: '#EEF5F0', borderRadius: radius.m, padding: 12, marginTop: 10 },
   voiceTxt: { color: colors.primaryDark, fontWeight: '700', fontSize: 16 },
 });
