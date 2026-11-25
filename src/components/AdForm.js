@@ -339,7 +339,6 @@ export default function AdForm({ editAd = null }) {
   const [d, setD] = useState(null);         // brouillon
   const [restored, setRestored] = useState(false);
   const [errors, setErrors] = useState({});
-  const [subStage, setSubStage] = useState(false); // vrai : on choisit la sous-catégorie (après la catégorie)
   const [detOpen, setDetOpen] = useState(false); // détails de catégorie (fin de l'étape 3, comme sur le site)
   const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
   const [busy, setBusy] = useState('');     // texte du bouton pendant la publication
@@ -501,7 +500,6 @@ export default function AdForm({ editAd = null }) {
 
   function go(step) {
     if (step > d.step && !check(d.step)) {
-      if (d.step === 1 && d.cat === 'immo') setSubStage(true); // il manque vente/location ou le type : on les montre
       return;
     }
     setErrors({});
@@ -652,11 +650,21 @@ export default function AdForm({ editAd = null }) {
           <>
             <Text style={[s.h1, al]}>{t('st1')}</Text>
             <Text style={[s.sub, al]}>{t('st1sub')}</Text>
-            {subStage && hasSub(d.cat) ? (
+            <View style={[s.grid, row]}>
+              {CATEGORIES.map((c) => {
+                const on = d.cat === c.id;
+                return (
+                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); }}
+                    style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
+                    <CatArt cat={c.id} size={52} />
+                    <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Err errors={errors} rtl={rtl} k="cat" />
+            {hasSub(d.cat) && (
               <>
-                <Pressable onPress={() => setSubStage(false)} hitSlop={10} style={[s.backRow, row]}>
-                  <Text style={s.backTxt}>{rtl ? '›' : '‹'}  {lang === 'ar' ? 'الفئات' : 'Catégories'}</Text>
-                </Pressable>
                 <Label rtl={rtl}>{(CATEGORIES.find((c) => c.id === d.cat) || {})[lang]}</Label>
                 {d.cat === 'immo' ? (
                   /* Immobilier : vente ou location, puis le type de bien (ce sont ses sous-catégories) */
@@ -679,7 +687,6 @@ export default function AdForm({ editAd = null }) {
                     )}
                   </>
                 ) : (
-                  /* Après la catégorie : choix de la sous-catégorie, avec les mêmes dessins que sur le site */
                   <View style={[s.grid, row]}>
                     <Pressable onPress={() => pickSub('')} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                       <View style={s.allIcon}><Ionicons name="grid-outline" size={30} color={colors.primaryDark} /></View>
@@ -697,30 +704,6 @@ export default function AdForm({ editAd = null }) {
                   </View>
                 )}
               </>
-            ) : (
-            <View style={[s.grid, row]}>
-              {CATEGORIES.map((c) => {
-                const on = d.cat === c.id;
-                return (
-                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); setSubStage(hasSub(c.id)); }}
-                    style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
-                    <CatArt cat={c.id} size={52} />
-                    <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            )}
-            <Err errors={errors} rtl={rtl} k="cat" />
-            {!subStage && hasSub(d.cat) && (
-              <Pressable onPress={() => setSubStage(true)} style={[s.subLine, row]}>
-                <Text style={[s.subLineTxt, { color: colors.primaryDark }]}>
-                  {d.cat === 'immo'
-                    ? (d.kind ? '✓ ' + KIND_L[d.kind][L] + ' · ' + (d.deal === 'rent' ? t('rent') : t('sale')) : (lang === 'ar' ? 'اختر البيع أو الإيجار ونوع العقار' : 'Choisir vente ou location et le type'))
-                    : d.sub ? (lang === 'ar' ? '✓ النوع: ' : '✓ Type : ') + (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang] : (lang === 'ar' ? 'اختر النوع (اختياري)' : 'Choisir le type (facultatif)')}
-                  {'  ›'}
-                </Text>
-              </Pressable>
             )}
           </>
         )}
