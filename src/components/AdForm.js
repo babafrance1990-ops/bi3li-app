@@ -1021,7 +1021,8 @@ const s = StyleSheet.create({
   mediaOk: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
   linkDanger: { color: colors.danger, fontWeight: '700' },
   toggleTxt: { fontSize: 15, color: colors.text, flex: 1 },
-  foot: { gap: 8, padding: 12, backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.border },
+  // Espace en bas : le bouton « + » de la barre d'onglets dépasse de 26 px et ne doit pas couvrir « Suivant »
+  foot: { gap: 8, paddingTop: 12, paddingHorizontal: 12, paddingBottom: 40, backgroundColor: colors.white, borderTopWidth: 1, borderColor: colors.border },
   btnMain: { backgroundColor: colors.primary, borderRadius: radius.m, paddingVertical: 15, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
   btnMainTxt: { color: '#fff', fontSize: 17, fontWeight: '800' },
   okBtn: { width: '100%', height: 56, borderRadius: radius.m, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10 },
