@@ -42,7 +42,7 @@ const D = {
     upVid: 'Envoi de la vidéo… {p} %',
     animInfo: 'Détails de l’animal', species: 'Espèce', count: 'Nombre de têtes', sex: 'Sexe', sx_m: 'Mâle', sx_f: 'Femelle', sx_mix: 'Mâles et femelles',
     age: 'Âge', ag_0: 'Moins d’1 an', ag_1: '1 à 2 ans', ag_2: '2 à 4 ans', ag_4: 'Plus de 4 ans', breed: 'Race (facultatif)', breedPh: 'Ex. : Touabire, Ladoum',
-    addDet: 'Ajouter des détails (facultatif)', tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
+    addDet: 'Ajouter des détails (facultatif)', detHelp: 'Facultatif : sexe, âge, race et Tabaski aident les acheteurs à mieux choisir.', tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
     voiceL: 'Message vocal (facultatif, 1 minute max)', voiceRec: 'Enregistrer un message vocal', voiceStop: 'Arrêter', voiceListen: 'Écouter',
     voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
     voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
@@ -84,7 +84,7 @@ const D = {
     upVid: 'جارٍ إرسال الفيديو… {p}٪',
     animInfo: 'تفاصيل الحيوان', species: 'النوع', count: 'عدد الرؤوس', sex: 'الجنس', sx_m: 'ذكر', sx_f: 'أنثى', sx_mix: 'ذكور وإناث',
     age: 'العمر', ag_0: 'أقل من سنة', ag_1: 'من سنة إلى سنتين', ag_2: 'من 2 إلى 4 سنوات', ag_4: 'أكثر من 4 سنوات', breed: 'السلالة (اختياري)', breedPh: 'مثال: توابير، لادوم',
-    addDet: 'إضافة تفاصيل (اختياري)', tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
+    addDet: 'إضافة تفاصيل (اختياري)', detHelp: 'اختياري: الجنس والعمر والسلالة والتبريد لعيد الأضحى تساعد المشترين على الاختيار.', tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
     voiceL: 'رسالة صوتية (اختياري، دقيقة كحد أقصى)', voiceRec: 'سجّل رسالة صوتية', voiceStop: 'إيقاف', voiceListen: 'استمع',
     voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
     voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
@@ -749,9 +749,12 @@ export default function AdForm({ editAd = null }) {
                 )}
               </View>
             ) : d.cat === 'anim' ? (
+              <>
+              <Text style={[s.help, al, { marginTop: 10 }]}>{t('detHelp')}</Text>
               <Pressable onPress={() => setDetOpen(true)} style={s.moreBtn}>
                 <Text style={s.moreTxt}>+ {t('addDet')}</Text>
               </Pressable>
+              </>
             ) : null}
           </>
         )}
