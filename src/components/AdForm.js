@@ -619,7 +619,7 @@ export default function AdForm({ editAd = null }) {
               <Text style={[s.help, al]}>{t('vidHelp')}</Text>
 
               <Label rtl={rtl}>{t('voiceL')}</Label>
-              <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice}
+              <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice} savedData={d.voice} savedId={editAd ? editAd.id : 'nouvelle'}
                 onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
                 onRemove={() => update({ voiceUri: '', voice: '' })} />
               </>

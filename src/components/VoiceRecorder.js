@@ -2,26 +2,28 @@
 // Enregistré sur le téléphone ; l'annonce le reçoit à la publication (voir src/media.js).
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioPlayer, useAudioRecorder } from 'expo-audio';
+import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { notify } from '../notify';
 import { colors, radius } from '../theme';
+import { playbackMode, useVoicePlayer, useVoiceUri } from '../voiceHooks';
 
 export const MAX_VOICE_SEC = 60;
 
 const mmss = (n) => Math.floor(n / 60) + ':' + ('0' + (n % 60)).slice(-2);
 
-// Bouton « Écouter » : ne lit que le fichier enregistré sur ce téléphone
-function Preview({ uri, label }) {
-  const player = useAudioPlayer({ uri });
+// Bouton « Écouter » : joue le message enregistré ici, ou celui déjà présent sur l'annonce
+function Preview({ src, label }) {
+  const vp = useVoicePlayer(src);
   return (
-    <Pressable onPress={() => { player.seekTo(0); player.play(); }} style={styles.play}>
-      <Text style={styles.playTxt}>▶ {label}</Text>
+    <Pressable onPress={vp.toggle} disabled={!vp.ready} style={[styles.play, !vp.ready && { opacity: 0.5 }]}>
+      <Text style={styles.playTxt}>{vp.playing ? '⏹ ' : '▶ '}{label}</Text>
     </Pressable>
   );
 }
 
 // uri : fichier enregistré sur le téléphone · saved : message déjà présent sur l'annonce (modification)
-export default function VoiceRecorder({ uri, saved, onRecorded, onRemove, t, rtl }) {
+export default function VoiceRecorder({ uri, saved, savedData, savedId, onRecorded, onRemove, t, rtl }) {
+  const savedUri = useVoiceUri(savedId, !uri && saved ? savedData : null);
   const recorder = useAudioRecorder(RecordingPresets.LOW_QUALITY);
   const [recording, setRecording] = useState(false);
   const [sec, setSec] = useState(0);
@@ -37,6 +39,7 @@ export default function VoiceRecorder({ uri, saved, onRecorded, onRemove, t, rtl
     clearInterval(timer.current);
     try {
       await recorder.stop();
+      await playbackMode();
       if (recorder.uri) onRecorded(recorder.uri);
       else notify(t('voiceErr'));
     } catch {
@@ -73,7 +76,7 @@ export default function VoiceRecorder({ uri, saved, onRecorded, onRemove, t, rtl
     <View style={{ gap: 8 }}>
       {uri || saved ? (
         <View style={[styles.row, rowStyle]}>
-          {uri ? <Preview uri={uri} label={t('voiceListen')} /> : <Text style={styles.ok}>🎙️ {t('voiceOk')}</Text>}
+          {(uri || savedUri) ? <Preview src={uri ? { uri } : savedUri} label={t('voiceListen')} /> : <Text style={styles.ok}>🎙️ {t('voiceOk')}</Text>}
           <Pressable onPress={onRemove} hitSlop={8}><Text style={styles.del}>{t('voiceDel')}</Text></Pressable>
         </View>
       ) : recording ? (
