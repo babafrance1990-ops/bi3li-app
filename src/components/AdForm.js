@@ -6,6 +6,7 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable,
   ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { adCache, api, mediaUrl, priceText } from '../api';
@@ -13,6 +14,7 @@ import { invalidateAds } from '../store';
 import { useAuth } from '../auth';
 import { CATEGORIES, catById } from '../categories';
 import { SUB_KEY, subsOf } from '../subcategories';
+import { CatArt, SubArt } from './Art';
 import AdCard from './AdCard';
 import CityPicker from './CityPicker';
 import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
@@ -169,6 +171,7 @@ export default function AdForm({ editAd = null }) {
   const [d, setD] = useState(null);         // brouillon
   const [restored, setRestored] = useState(false);
   const [errors, setErrors] = useState({});
+  const [subStage, setSubStage] = useState(false); // vrai : on choisit la sous-catégorie (après la catégorie)
   const [busy, setBusy] = useState('');     // texte du bouton pendant la publication
   const [cityOpen, setCityOpen] = useState(false);
   const [done, setDone] = useState(null);   // annonce publiée
@@ -433,30 +436,51 @@ export default function AdForm({ editAd = null }) {
           <>
             <Text style={[s.h1, al]}>{t('st1')}</Text>
             <Text style={[s.sub, al]}>{t('st1sub')}</Text>
+            {subStage && subsOf(d.cat).length > 0 ? (
+              /* Après la catégorie : choix de la sous-catégorie, avec les mêmes dessins que sur le site */
+              <>
+                <Pressable onPress={() => setSubStage(false)} hitSlop={10} style={[s.backRow, row]}>
+                  <Text style={s.backTxt}>{rtl ? '›' : '‹'}  {lang === 'ar' ? 'الفئات' : 'Catégories'}</Text>
+                </Pressable>
+                <Label rtl={rtl}>{(CATEGORIES.find((c) => c.id === d.cat) || {})[lang]}</Label>
+                <View style={[s.grid, row]}>
+                  <Pressable onPress={() => { update({ sub: '' }); setSubStage(false); }} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                    <View style={s.allIcon}><Ionicons name="grid-outline" size={30} color={colors.primaryDark} /></View>
+                    <Text style={[s.catTxt, !d.sub && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{lang === 'ar' ? 'الكل' : 'Tous'}</Text>
+                  </Pressable>
+                  {subsOf(d.cat).map((x) => {
+                    const on = d.sub === x.id;
+                    return (
+                      <Pressable key={x.id} onPress={() => { update({ sub: x.id }); setSubStage(false); }} style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                        <SubArt cat={d.cat} sub={x.id} size={52} />
+                        <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            ) : (
             <View style={[s.grid, row]}>
               {CATEGORIES.map((c) => {
                 const on = d.cat === c.id;
                 return (
-                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); }}
+                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); setSubStage(subsOf(c.id).length > 0); }}
                     style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
-                    <Text style={{ fontSize: 26 }}>{c.icon}</Text>
+                    <CatArt cat={c.id} size={52} />
                     <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
                   </Pressable>
                 );
               })}
             </View>
+            )}
             <Err errors={errors} rtl={rtl} k="cat" />
-
-            {subsOf(d.cat).length > 0 && (
-              <>
-                <Label rtl={rtl}>{lang === 'ar' ? 'النوع (اختياري)' : 'Sous-catégorie (facultatif)'}</Label>
-                <View style={[s.chips, row]}>
-                  {subsOf(d.cat).map((x) => (
-                    <Chip key={x.id} on={d.sub === x.id} label={x[lang]} color={CATEGORIES.find((c) => c.id === d.cat)?.c}
-                      onPress={() => update({ sub: d.sub === x.id ? '' : x.id })} />
-                  ))}
-                </View>
-              </>
+            {!subStage && subsOf(d.cat).length > 0 && (
+              <Pressable onPress={() => setSubStage(true)} style={[s.subLine, row]}>
+                <Text style={[s.subLineTxt, { color: colors.primaryDark }]}>
+                  {d.sub ? (lang === 'ar' ? '✓ النوع: ' : '✓ Type : ') + (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang] : (lang === 'ar' ? 'اختر النوع (اختياري)' : 'Choisir le type (facultatif)')}
+                  {'  ›'}
+                </Text>
+              </Pressable>
             )}
 
             {d.cat === 'immo' && (
@@ -635,6 +659,12 @@ const s = StyleSheet.create({
   grid: { flexWrap: 'wrap', gap: 8 },
   cat: { width: '31.5%', aspectRatio: 1.1, borderWidth: 2, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', padding: 6, gap: 4 },
   catTxt: { fontSize: 12, textAlign: 'center', color: colors.text, fontWeight: '600' },
+  subCat: { width: '23.5%', aspectRatio: 0.82 },
+  allIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
+  backRow: { alignItems: 'center', gap: 6, paddingVertical: 4 },
+  backTxt: { color: colors.primary, fontWeight: '700', fontSize: 15 },
+  subLine: { alignItems: 'center', paddingVertical: 10 },
+  subLineTxt: { fontWeight: '700', fontSize: 15 },
   label: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 8 },
   help: { fontSize: 13, color: colors.muted },
   err: { color: colors.danger, fontWeight: '600' },
