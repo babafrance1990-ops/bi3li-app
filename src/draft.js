@@ -80,6 +80,9 @@ export function newDraft(last = {}) {
     jcontract: '', jtime: '', jsector: '', jfunc: '', jexp: '', jedu: '', flangs: [],
     // Services
     soffer: 'offer', sarea: '', shome: false,
+    // Mode et beauté
+    moitem: '', mopub: '', mosize: '', mofabric: '', mocolor: '', mobrand: '', mometal: '', moweight: '', mocond: '', mohand: false,
+    bbrand: '', bcond: '',
     // Covoiturage
     ctype: '', cfrom: '', cto: '', cdate: '', ctime: '', cseats: '', ccar: '', cstops: '', cbags: '', cclim: false, cwomen: false,
   };
