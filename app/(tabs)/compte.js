@@ -1,4 +1,4 @@
-// Mon compte : connexion, informations du compte, changement de langue, déconnexion
+// Mon compte : identité, puis les accès regroupés par thème (annonces, activité, découvrir, aide), déconnexion
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -16,9 +16,24 @@ export default function Compte() {
   const align = rtl ? { textAlign: 'right' } : null;
   const fresh = useAlertCount();
   const nAlerts = (user?.searches || []).length;
+  const ar = lang === 'ar';
+
+  // Un accès = un bouton ; un bloc = un titre et ses accès (les blocs vides ne s'affichent pas)
+  const Item = ({ icon, label, onPress, color }) => (
+    <Pressable style={s.item} onPress={onPress}>
+      <Text style={[s.itemTxt, rtl && { textAlign: 'right' }, color && { color }]}>{icon}  {label}</Text>
+      <Text style={s.chev}>{rtl ? '‹' : '›'}</Text>
+    </Pressable>
+  );
+  const Block = ({ title, children }) => (
+    <View style={s.block}>
+      <Text style={[s.blockTitle, align]}>{title}</Text>
+      <View style={s.blockBox}>{children}</View>
+    </View>
+  );
 
   return (
-    // sans compte : le bouton de connexion est au milieu de l'écran
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
     <View style={[s.wrap, !user && { justifyContent: 'center' }]}>
       {!ready ? null : user ? (
         <View style={s.card}>
@@ -31,8 +46,8 @@ export default function Compte() {
           {user.shop?.name && <Text style={[s.line, align]}>🏪 {user.shop.name}</Text>}
           {!!user.city && <Text style={[s.line, align]}>📍 {cityName(user.city, lang)}</Text>}
           <View style={{ flexDirection: rtl ? 'row-reverse' : 'row', gap: 14, marginTop: 6 }}>
-            <Pressable onPress={() => router.push('/profil')}><Text style={s.link}>✏️ {lang === 'ar' ? 'تعديل ملفي' : 'Modifier mon profil'}</Text></Pressable>
-            <Pressable onPress={() => router.push('/vendeur/' + user.id)}><Text style={s.link}>👁 {lang === 'ar' ? 'صفحتي كما يراها المشترون' : 'Ma page vendeur'}</Text></Pressable>
+            <Pressable onPress={() => router.push('/profil')}><Text style={s.link}>✏️ {ar ? 'تعديل ملفي' : 'Modifier mon profil'}</Text></Pressable>
+            <Pressable onPress={() => router.push('/vendeur/' + user.id)}><Text style={s.link}>👁 {ar ? 'صفحتي كما يراها المشترون' : 'Ma page vendeur'}</Text></Pressable>
           </View>
         </View>
       ) : (
@@ -44,71 +59,58 @@ export default function Compte() {
       <VerifyBanner />
 
       {user && (
-        <Pressable style={[s.light, s.big]} onPress={() => router.push('/boutique')}>
-          <Text style={[s.lightTxt, { fontSize: 17 }]}>
-            🏪 {user.shop ? (lang === 'ar' ? 'متجري: ' : 'Ma boutique : ') + user.shop.name : (lang === 'ar' ? 'افتح متجري (مجاناً)' : 'Ouvrir ma boutique (gratuit)')}
-          </Text>
-        </Pressable>
+        <Block title={ar ? 'إعلاناتي ومتجري' : 'Mes annonces et ma boutique'}>
+          <Item icon="📋" label={ar ? 'إعلاناتي' : 'Mes annonces'} onPress={() => router.push('/mes-annonces')} />
+          <Item icon="🏪" label={user.shop ? (ar ? 'متجري: ' : 'Ma boutique : ') + user.shop.name : (ar ? 'افتح متجري (مجاناً)' : 'Ouvrir ma boutique (gratuit)')} onPress={() => router.push('/boutique')} />
+        </Block>
       )}
 
-      <Pressable style={[s.light, s.big]} onPress={() => router.push('/boutiques')}>
-        <Text style={[s.lightTxt, { fontSize: 17 }]}>🏬 {lang === 'ar' ? 'المتاجر' : 'Boutiques'}</Text>
-      </Pressable>
+      {user && (
+        <Block title={ar ? 'نشاطي' : 'Mon activité'}>
+          <Item icon="♥" label={(ar ? 'المفضلة' : 'Mes favoris') + (user.favs?.length ? ' (' + user.favs.length + ')' : '')} onPress={() => router.push('/favoris')} />
+          <Item icon="🔔" label={(ar ? 'تنبيهاتي' : 'Mes alertes') + (nAlerts ? ' (' + nAlerts + ')' : '') + (fresh > 0 ? '  ·  🆕 ' + (fresh > 50 ? '50+' : fresh) : '')} onPress={() => router.push('/alertes')} />
+          <Item icon="👁" label={ar ? 'شاهدتها مؤخراً' : 'Vus récemment'} onPress={() => router.push('/vus')} />
+        </Block>
+      )}
 
-      <Pressable style={[s.light, s.big]} onPress={() => router.push('/vus')}>
-        <Text style={[s.lightTxt, { fontSize: 17 }]}>👁 {lang === 'ar' ? 'شاهدتها مؤخراً' : 'Vus récemment'}</Text>
-      </Pressable>
+      <Block title={ar ? 'اكتشف' : 'Découvrir'}>
+        <Item icon="🏬" label={ar ? 'المتاجر' : 'Boutiques'} onPress={() => router.push('/boutiques')} />
+      </Block>
 
-      <Pressable style={[s.light, s.big]} onPress={() => router.push('/about')}>
-        <Text style={[s.lightTxt, { fontSize: 17 }]}>ℹ️ {lang === 'ar' ? 'عن بيعلي' : 'À propos de Bi3li'}</Text>
-      </Pressable>
+      <Block title={ar ? 'المساعدة والتواصل' : 'Aide et contact'}>
+        <Item icon="ℹ️" label={ar ? 'عن بيعلي' : 'À propos de Bi3li'} onPress={() => router.push('/about')} />
+      </Block>
 
       {user?.admin && (
-        <Pressable style={[s.light, s.big]} onPress={() => router.push('/admin')}>
-          <Text style={[s.lightTxt, { fontSize: 17 }]}>🛡️ {lang === 'ar' ? 'الإدارة' : 'Administration'}</Text>
-        </Pressable>
+        <Block title={ar ? 'الإدارة' : 'Administration'}>
+          <Item icon="🛡️" label={ar ? 'لوحة الإدارة' : 'Tableau de bord'} onPress={() => router.push('/admin')} />
+        </Block>
       )}
 
       {user && (
-        <Pressable style={[s.light, s.big]} onPress={() => router.push('/mes-annonces')}>
-          <Text style={[s.lightTxt, { fontSize: 17 }]}>📋 {lang === 'ar' ? 'إعلاناتي' : 'Mes annonces'}</Text>
+        <Pressable style={[s.item, s.logout]} onPress={logout}>
+          <Text style={[s.itemTxt, { color: colors.danger, textAlign: 'center', flex: 1 }]}>{t('logout')}</Text>
         </Pressable>
       )}
-
-      {user && (
-        <Pressable style={[s.light, s.big]} onPress={() => router.push('/favoris')}>
-          <Text style={[s.lightTxt, { fontSize: 17 }]}>♥ {lang === 'ar' ? 'المفضلة' : 'Mes favoris'}{user.favs?.length ? ' (' + user.favs.length + ')' : ''}</Text>
-        </Pressable>
-      )}
-
-      {user && (
-        <Pressable style={[s.light, s.big]} onPress={() => router.push('/alertes')}>
-          <Text style={[s.lightTxt, { fontSize: 17 }]}>
-            🔔 {lang === 'ar' ? 'تنبيهاتي' : 'Mes alertes'}{nAlerts ? ' (' + nAlerts + ')' : ''}
-            {fresh > 0 ? (lang === 'ar' ? '  ·  🆕 جديد: ' : '  ·  🆕 ') + (fresh > 50 ? '50+' : fresh) + (lang === 'ar' ? '' : ' nouvelle(s)') : ''}
-          </Text>
-        </Pressable>
-      )}
-
-      {user && (
-        <Pressable style={s.light} onPress={logout}>
-          <Text style={[s.lightTxt, { color: colors.danger }]}>{t('logout')}</Text>
-        </Pressable>
-      )}
+    </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  wrap: { flex: 1, padding: 16, gap: 12 },
+  wrap: { flex: 1, padding: 16, gap: 14 },
   card: { backgroundColor: colors.white, borderRadius: radius.l, padding: 18, gap: 6, borderWidth: 1, borderColor: colors.border },
   name: { fontSize: 22, fontWeight: '800', color: colors.text },
   line: { fontSize: 15, color: colors.text },
   btn: { backgroundColor: colors.primary, borderRadius: radius.m, padding: 16, alignItems: 'center' },
   btnTxt: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  light: { backgroundColor: colors.white, borderRadius: radius.m, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   link: { color: colors.primaryDark, fontWeight: '700', fontSize: 14 },
   avatar: { width: 64, height: 64, borderRadius: 32, marginBottom: 4 },
-  big: { paddingVertical: 18, borderColor: colors.primary },
-  lightTxt: { fontSize: 16, fontWeight: '600', color: colors.primaryDark },
+  block: { gap: 6 },
+  blockTitle: { fontSize: 13, fontWeight: '800', color: colors.muted, textTransform: 'uppercase', marginStart: 4 },
+  blockBox: { backgroundColor: colors.white, borderRadius: radius.m, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  item: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.border },
+  itemTxt: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
+  chev: { fontSize: 22, color: colors.muted, marginStart: 8 },
+  logout: { backgroundColor: colors.white, borderRadius: radius.m, borderWidth: 1, borderColor: colors.border, borderBottomWidth: 1, marginTop: 4 },
 });
