@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { notify } from '../notify';
 import { colors, radius } from '../theme';
-import { playbackMode, useVoicePlayer, useVoiceUri } from '../voiceHooks';
+import { useVoicePlayer, useVoiceUri } from '../voiceHooks';
 
 export const MAX_VOICE_SEC = 60;
 
@@ -39,7 +39,6 @@ export default function VoiceRecorder({ uri, saved, savedData, savedId, onRecord
     clearInterval(timer.current);
     try {
       await recorder.stop();
-      await playbackMode();
       if (recorder.uri) onRecorded(recorder.uri);
       else notify(t('voiceErr'));
     } catch {
@@ -76,7 +75,7 @@ export default function VoiceRecorder({ uri, saved, savedData, savedId, onRecord
     <View style={{ gap: 8 }}>
       {uri || saved ? (
         <View style={[styles.row, rowStyle]}>
-          {(uri || savedUri) ? <Preview src={uri ? { uri } : savedUri} label={t('voiceListen')} /> : <Text style={styles.ok}>🎙️ {t('voiceOk')}</Text>}
+          {(uri || savedUri) ? <Preview src={uri || savedUri} label={t('voiceListen')} /> : <Text style={styles.ok}>🎙️ {t('voiceOk')}</Text>}
           <Pressable onPress={onRemove} hitSlop={8}><Text style={styles.del}>{t('voiceDel')}</Text></Pressable>
         </View>
       ) : recording ? (
