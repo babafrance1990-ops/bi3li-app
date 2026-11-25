@@ -393,6 +393,16 @@ export default function AdForm({ editAd = null }) {
   const pending = useRef({});               // envois de photos en cours (clé → promesse)
   const urls = useRef({});                  // adresses des photos déjà envoyées (clé → /api/media/ID)
   const scroll = useRef(null);
+  const subY = useRef(0);              // position des sous-catégories dans la page (étape 1)
+  const pendingSub = useRef(false);    // vrai : on vient de choisir une catégorie avec des sous-catégories
+  // Quand les sous-catégories apparaissent, la page descend jusqu'à elles
+  const onSubLayout = (e) => {
+    subY.current = e.nativeEvent.layout.y;
+    if (pendingSub.current) {
+      pendingSub.current = false;
+      scroll.current?.scrollTo({ y: Math.max(0, subY.current - 12), animated: true });
+    }
+  };
 
   // Mise à jour du brouillon (+ sauvegarde sur le téléphone)
   const update = (patch) => setD((prev) => {
@@ -702,7 +712,7 @@ export default function AdForm({ editAd = null }) {
               {CATEGORIES.map((c) => {
                 const on = d.cat === c.id;
                 return (
-                  <Pressable key={c.id} onPress={() => { update({ cat: c.id, sub: '' }); setErrors({}); }}
+                  <Pressable key={c.id} onPress={() => { pendingSub.current = hasSub(c.id); update({ cat: c.id, sub: '' }); setErrors({}); }}
                     style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
                     <CatArt cat={c.id} size={52} />
                     <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
@@ -712,7 +722,7 @@ export default function AdForm({ editAd = null }) {
             </View>
             <Err errors={errors} rtl={rtl} k="cat" />
             {hasSub(d.cat) && (
-              <>
+              <View key={d.cat} onLayout={onSubLayout} collapsable={false}>
                 <Label rtl={rtl}>{(CATEGORIES.find((c) => c.id === d.cat) || {})[lang]}</Label>
                 {d.cat === 'immo' ? (
                   /* Immobilier : vente ou location, puis le type de bien (ce sont ses sous-catégories) */
@@ -751,7 +761,7 @@ export default function AdForm({ editAd = null }) {
                     })}
                   </View>
                 )}
-              </>
+              </View>
             )}
           </>
         )}
