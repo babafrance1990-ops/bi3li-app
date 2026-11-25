@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
-  ScrollView, StyleSheet, Switch, Text, TextInput, View,
+  ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -16,14 +16,17 @@ import { CATEGORIES, catById } from '../categories';
 import { SUB_KEY, subsOf } from '../subcategories';
 import { CatArt, SubArt } from './Art';
 import AdCard from './AdCard';
-import CityPicker from './CityPicker';
 import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
 import { useLang } from '../i18n';
 import { notify } from '../notify';
 import { MAX_PHOTOS, pickPhotos, uploadPhoto } from '../photos';
 import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
 import VoiceRecorder from './VoiceRecorder';
-import { cityName, NKC } from '../places';
+import { NKC, WILAYAS } from '../places';
+
+// Listes des villes et des quartiers de Nouakchott (listes déroulantes, comme sur le site)
+const CITY_OPTS = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
+const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h + ' (' + w.fr.replace('Nouakchott-', '') + ')', ar: h + ' (' + w.ar.replace('نواكشوط ', '') + ')' })));
 import { colors, radius } from '../theme';
 import { MODELS, VEH_ERR } from '../details/vehicles';
 import { ELEC_ERR } from '../details/electronics';
@@ -207,14 +210,7 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
       </>
     );
   }
-  if (f.type === 'check') {
-    return (
-      <Pressable onPress={() => update({ [f.k]: !d[f.k] })} style={[row, { alignItems: 'center', gap: 8 }]}>
-        <Text style={s.chipTxt}>{d[f.k] ? '☑' : '☐'}</Text>
-        <Text style={s.chipTxt}>{label}</Text>
-      </Pressable>
-    );
-  }
+  if (f.type === 'check') return <Toggle rtl={rtl} label={label} value={!!d[f.k]} onChange={(v) => update({ [f.k]: v })} />;
   if (f.type === 'model') {
     // Modèles de la marque choisie (liste déroulante), ou saisie libre (« Autre modèle », ou marque sans liste)
     const list = MODELS[d.brand] || [];
@@ -323,11 +319,12 @@ const Chip = ({ on, label, onPress, color }) => (
   </Pressable>
 );
 const Field = ({ rtl, style, ...props }) => <TextInput placeholderTextColor={colors.muted} {...props} style={[s.input, alignOf(rtl), style]} />;
+// Choix à cocher : un cadre avec la case et le libellé
 const Toggle = ({ label, value, onChange, rtl }) => (
-  <View style={[s.toggle, rowOf(rtl)]}>
-    <Text style={[s.toggleTxt, alignOf(rtl)]}>{label}</Text>
-    <Switch value={!!value} onValueChange={onChange} trackColor={{ true: colors.primary }} />
-  </View>
+  <Pressable onPress={() => onChange(!value)} style={[s.checkRow, rowOf(rtl)]}>
+    <Ionicons name={value ? 'checkbox' : 'square-outline'} size={26} color={value ? colors.primary : colors.muted} />
+    <Text style={[s.checkTxt, alignOf(rtl)]}>{label}</Text>
+  </Pressable>
 );
 
 // Annonce existante → formulaire (à partir de la copie « _d » gardée par le site, sinon des champs de l'annonce)
@@ -388,7 +385,6 @@ export default function AdForm({ editAd = null }) {
   const [detOpen, setDetOpen] = useState(false); // détails de catégorie (fin de l'étape 3, comme sur le site)
   const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
   const [busy, setBusy] = useState('');     // texte du bouton pendant la publication
-  const [cityOpen, setCityOpen] = useState(false);
   const [done, setDone] = useState(null);   // annonce publiée
   const pending = useRef({});               // envois de photos en cours (clé → promesse)
   const urls = useRef({});                  // adresses des photos déjà envoyées (clé → /api/media/ID)
@@ -857,22 +853,14 @@ export default function AdForm({ editAd = null }) {
             <Toggle rtl={rtl} label={'🙈 ' + t('hidep')} value={d.hidep} onChange={(v) => { update({ hidep: v }); setErrors({}); }} />
 
             <Label rtl={rtl}>{t('city')}</Label>
-            <Pressable style={[s.input, row, { justifyContent: 'space-between' }]} onPress={() => setCityOpen(true)}>
-              <Text style={{ fontSize: 16, color: colors.text }}>📍 {cityName(d.city, lang)}</Text>
-              <Text style={{ color: colors.muted }}>▾</Text>
-            </Pressable>
+            <PickSheet value={d.city} options={CITY_OPTS} placeholder={ar ? 'اختر المدينة' : 'Choisir la ville'} title={t('city')} rtl={rtl} ar={ar}
+              onPick={(c) => update({ city: c, hood: c === d.city ? d.hood : '' })} />
 
             {d.city === 'Nouakchott' ? (
               <>
                 <Label rtl={rtl}>{t('hoodNkc')}</Label>
-                {NKC.map((w) => (
-                  <View key={w.id} style={{ marginBottom: 6 }}>
-                    <Text style={[s.help, al]}>{w[lang]}</Text>
-                    <View style={[s.chips, row]}>
-                      {w.h.map((h) => <Chip key={h} on={d.hood === h} label={h} onPress={() => update({ hood: d.hood === h ? '' : h })} />)}
-                    </View>
-                  </View>
-                ))}
+                <PickSheet value={d.hood} options={HOOD_OPTS} placeholder={ar ? 'اختر (اختياري)' : 'Choisir (facultatif)'} title={t('hoodNkc')} rtl={rtl} ar={ar}
+                  onPick={(h) => update({ hood: h })} />
               </>
             ) : (
               <>
@@ -978,15 +966,14 @@ export default function AdForm({ editAd = null }) {
         </Pressable>
       </View>
 
-      <CityPicker visible={cityOpen} value={d.city}
-        onClose={() => setCityOpen(false)}
-        onPick={(c) => { update({ city: c, hood: c === d.city ? d.hood : '' }); setCityOpen(false); }} />
     </KeyboardAvoidingView>
   );
 }
 
 const s = StyleSheet.create({
   detBox: { backgroundColor: '#EEF5F0', borderRadius: 12, padding: 12, gap: 8, marginBottom: 12 },
+  checkRow: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingVertical: 12, paddingHorizontal: 14, marginVertical: 4 },
+  checkTxt: { flex: 1, fontSize: 16, color: colors.text, fontWeight: '600' },
   chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
   chipOn: { borderColor: colors.primary, backgroundColor: colors.primary + '18' },
   chipTxt: { color: colors.text, fontWeight: '600' },
