@@ -8,6 +8,7 @@ import { adCache, api, mediaUrl, priceText } from '../../src/api';
 import { catById } from '../../src/categories';
 import { notify } from '../../src/notify';
 import { useAuth } from '../../src/auth';
+import BackButton from '../../src/components/BackButton';
 import FavButton from '../../src/components/FavButton';
 import { cityName } from '../../src/places';
 import { getAllAds } from '../../src/store';
@@ -99,7 +100,12 @@ export default function Annonce() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.white }}>
-      <Stack.Screen options={{ title: cat ? cat[lang] : '', headerRight: () => <FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /> }} />
+      <Stack.Screen options={{
+        title: cat ? cat[lang] : '',
+        // en arabe : favori à gauche, retour à droite ; en français : favori à droite, retour natif à gauche
+        headerLeft: rtl ? () => <FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} /> : undefined,
+        headerRight: rtl ? () => <BackButton /> : () => <FavButton adId={ad.id} size={22} style={{ backgroundColor: 'transparent' }} />,
+      }} />
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
         {photos.length > 0 ? (
           <View>
