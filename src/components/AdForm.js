@@ -25,6 +25,7 @@ import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
 import VoiceRecorder from './VoiceRecorder';
 import { cityName, NKC } from '../places';
 import { colors, radius } from '../theme';
+import { VEH_ERR, hasVehDetails, vehicleAdObject, vehicleErrors, vehicleFields } from '../details/vehicles';
 
 // ---------- Textes du dépôt ----------
 const D = {
@@ -42,7 +43,7 @@ const D = {
     upVid: 'Envoi de la vidéo… {p} %',
     animInfo: 'Détails de l’animal', species: 'Espèce', count: 'Nombre de têtes', sex: 'Sexe', sx_m: 'Mâle', sx_f: 'Femelle', sx_mix: 'Mâles et femelles',
     age: 'Âge', ag_0: 'Moins d’1 an', ag_1: '1 à 2 ans', ag_2: '2 à 4 ans', ag_4: 'Plus de 4 ans', breed: 'Race (facultatif)', breedPh: 'Ex. : Touabire, Ladoum',
-    addDet: 'Ajouter des détails (facultatif)', detHelp: 'Facultatif : sexe, âge, race et Tabaski aident les acheteurs à mieux choisir.', tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
+    addDet: 'Ajouter des détails (facultatif)', vehInfo: 'Détails du véhicule', detHelpVeh: 'Facultatif : marque, année et kilométrage aident les acheteurs.', detHelp: 'Facultatif : sexe, âge, race et Tabaski aident les acheteurs à mieux choisir.', tabaski: 'Idéal pour la Tabaski', errSpecies: 'Choisissez l’espèce.', errCount: 'Indiquez le nombre de têtes.',
     voiceL: 'Message vocal (facultatif, 1 minute max)', voiceRec: 'Enregistrer un message vocal', voiceStop: 'Arrêter', voiceListen: 'Écouter',
     voiceOk: 'Message vocal ajouté', voiceDel: 'Supprimer le vocal', voiceHelp: 'Décrivez votre article en 30 secondes, en hassaniya, en arabe ou en français.',
     voiceErr: 'Impossible d’enregistrer le message. Réessayez.', recDenied: 'Autorisez le micro dans les réglages du téléphone.',
@@ -84,7 +85,7 @@ const D = {
     upVid: 'جارٍ إرسال الفيديو… {p}٪',
     animInfo: 'تفاصيل الحيوان', species: 'النوع', count: 'عدد الرؤوس', sex: 'الجنس', sx_m: 'ذكر', sx_f: 'أنثى', sx_mix: 'ذكور وإناث',
     age: 'العمر', ag_0: 'أقل من سنة', ag_1: 'من سنة إلى سنتين', ag_2: 'من 2 إلى 4 سنوات', ag_4: 'أكثر من 4 سنوات', breed: 'السلالة (اختياري)', breedPh: 'مثال: توابير، لادوم',
-    addDet: 'إضافة تفاصيل (اختياري)', detHelp: 'اختياري: الجنس والعمر والسلالة والتبريد لعيد الأضحى تساعد المشترين على الاختيار.', tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
+    addDet: 'إضافة تفاصيل (اختياري)', vehInfo: 'تفاصيل المركبة', detHelpVeh: 'اختياري: الماركة والسنة والكيلومترات تساعد المشترين.', detHelp: 'اختياري: الجنس والعمر والسلالة والتبريد لعيد الأضحى تساعد المشترين على الاختيار.', tabaski: 'مناسب لعيد الأضحى', errSpecies: 'اختر النوع.', errCount: 'حدد عدد الرؤوس.',
     voiceL: 'رسالة صوتية (اختياري، دقيقة كحد أقصى)', voiceRec: 'سجّل رسالة صوتية', voiceStop: 'إيقاف', voiceListen: 'استمع',
     voiceOk: 'تمت إضافة الرسالة الصوتية', voiceDel: 'حذف الرسالة الصوتية', voiceHelp: 'صف سلعتك في 30 ثانية بالحسانية أو العربية أو الفرنسية.',
     voiceErr: 'تعذّر تسجيل الرسالة. أعد المحاولة.', recDenied: 'اسمح بالميكروفون من إعدادات الهاتف.',
@@ -132,6 +133,50 @@ let photoKey = 0;
 // ---------- Petits éléments du formulaire (définis hors de l'écran pour que le clavier ne se ferme pas à chaque lettre) ----------
 const alignOf = (rtl) => (rtl ? { textAlign: 'right', writingDirection: 'rtl' } : null);
 const rowOf = (rtl) => (rtl ? { flexDirection: 'row-reverse' } : { flexDirection: 'row' });
+// Champ d'un véhicule (liste de choix, texte, nombre ou case à cocher)
+const VehField = ({ f, d, update, lang, rtl, errors }) => {
+  const ar = lang === 'ar';
+  const al = alignOf(rtl);
+  const row = rowOf(rtl);
+  const label = (ar ? f.label[1] : f.label[0]) + (f.req ? '' : ar ? ' (اختياري)' : ' (facultatif)');
+  const err = errors[f.k] ? <Text style={[s.err, al]}>{errors[f.k]}</Text> : null;
+  if (f.type === 'check') {
+    return (
+      <Pressable onPress={() => update({ [f.k]: !d[f.k] })} style={[row, { alignItems: 'center', gap: 8 }]}>
+        <Text style={s.chipTxt}>{d[f.k] ? '☑' : '☐'}</Text>
+        <Text style={s.chipTxt}>{label}</Text>
+      </Pressable>
+    );
+  }
+  if (f.type === 'chips') {
+    return (
+      <>
+        <Label rtl={rtl}>{label}</Label>
+        <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+          {f.opts.map((o) => {
+            const on = d[f.k] === o.v;
+            return (
+              <Pressable key={o.v} onPress={() => update({ [f.k]: on ? '' : o.v })} style={[s.chip, on && s.chipOn]}>
+                <Text style={[s.chipTxt, on && s.chipTxtOn]}>{ar ? o.ar : o.fr}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {err}
+      </>
+    );
+  }
+  const numeric = f.type === 'num' || f.numeric;
+  return (
+    <>
+      <Label rtl={rtl}>{label}</Label>
+      <Field rtl={rtl} value={d[f.k]} keyboardType={numeric ? 'number-pad' : 'default'} maxLength={f.len || (numeric ? 7 : 40)}
+        onChangeText={(v) => update({ [f.k]: numeric ? digits(v) : v })} />
+      {err}
+    </>
+  );
+};
+
 const Err = ({ errors, k, rtl }) => (errors[k] ? <Text style={[s.err, alignOf(rtl)]}>{errors[k]}</Text> : null);
 const Label = ({ children, rtl }) => <Text style={[s.label, alignOf(rtl)]}>{children}</Text>;
 const Chip = ({ on, label, onPress, color }) => (
@@ -160,6 +205,9 @@ function adToDraft(a) {
   d.nego = !!a.nego; d.hidep = !!a.hidep; d.city = a.city || d.city; d.hood = a.hood || ''; d.near = a.near || '';
   d.deliv = !!a.deliv; d.delivNote = a.delivNote || '';
   if (a.contacts) { d.wa = !!a.contacts.wa; d.call = !!a.contacts.call; d.msg = !!a.contacts.msg; }
+  // Véhicule : si l'annonce n'a pas le brouillon, on reprend les champs de l'annonce
+  if (a.car) Object.entries({ brand: a.car.brand, model: a.car.model, vtype: a.car.vtype, color: a.car.color, seats: a.car.seats, doors: a.car.doors, year: a.car.year, km: a.car.km, fuel: a.car.fuel, gear: a.car.gear, cond: a.car.cond }).forEach(([k, v]) => { if (!d0[k] && v != null) d[k] = String(v); });
+  if (a.veh) { const v = a.veh; Object.entries({ vbrand: v.brand, vmodel: v.model, vmtype: v.mtype, vcc: v.cc, vyear: v.year, vkm: v.km, vfuel: v.fuel, vseats: v.seats, vttype: v.ttype, vload: v.load, vbtype: v.btype, vpart: v.part, vcompat: v.compat, vservice: v.service, vhours: v.hours, vcond: v.cond }).forEach(([k, x]) => { if (!d0[k] && x != null) d[k] = String(x); }); if (!d0.vhome) d.vhome = !!v.home; if (!d0.vdriver) d.vdriver = !!v.driver; }
   if (a.anim) { d.count = String(a.anim.count || 1); d.sex = a.anim.sex || ''; d.age = a.anim.age || ''; d.breed = a.anim.breed || ''; d.tabaski = !!a.anim.tabaski; }
   if (a.estate) { d.deal = a.estate.deal || d.deal; d.kind = a.estate.kind || d.kind; d.surface = a.estate.surface ? String(a.estate.surface) : d.surface; }
   ['surface', 'title', 'desc', 'hood', 'near', 'delivNote'].forEach((k) => { d[k] = d[k] == null ? '' : String(d[k]); });
@@ -318,6 +366,7 @@ export default function AdForm({ editAd = null }) {
     if (step === 1) {
       if (!d.cat) e.cat = t('eCat');
       else if (d.cat === 'anim' && !d.sub) e.cat = t('errSpecies');
+      else if (d.cat === 'auto' && !d.sub) e.cat = lang === 'ar' ? VEH_ERR.errVkind[1] : VEH_ERR.errVkind[0];
       if (d.cat === 'immo') {
         if (!d.deal) e.deal = t('eDeal');
         else if (!d.kind || !KINDS[d.deal].includes(d.kind)) e.kind = t('eKind');
@@ -325,6 +374,7 @@ export default function AdForm({ editAd = null }) {
     }
     if (step === 2 && d.cat === 'immo' && d.photos.length === 0) e.photos = t('ePhotoImmo');
     if (step === 3 && d.cat === 'anim' && !(+digits(d.count) > 0)) e.count = t('errCount');
+    if (step === 3 && d.cat === 'auto' && d.sub) Object.assign(e, vehicleErrors(d.sub, d, lang === 'ar'));
     if (step === 3) {
       // Prix masqué : ni le prix ni l'unité ne sont obligatoires (l'annonce part sans prix)
       if (!d.hidep) {
@@ -401,6 +451,7 @@ export default function AdForm({ editAd = null }) {
       stype: 'part',
     };
     if (d.sub && SUB_KEY[d.cat]) ad[SUB_KEY[d.cat]] = d.sub; // sous-catégorie : même champ que sur le site
+    if (d.cat === 'auto' && d.sub) Object.assign(ad, vehicleAdObject(d.sub, d));
     if (d.cat === 'anim') ad.anim = { species: d.sub, count: +digits(d.count) || 1, sex: d.sex, age: d.age, breed: d.breed.trim(), tabaski: !!d.tabaski, delivery: !!d.deliv };
     if (d.cat === 'immo') ad.estate = { deal: d.deal, kind: d.kind, surface: +digits(d.surface) || 0, eq: [], pub: 'owner' };
     // Copie du formulaire pour pouvoir modifier l'annonce plus tard sur le site (sans la vidéo ni le vocal, trop lourds)
@@ -754,6 +805,21 @@ export default function AdForm({ editAd = null }) {
               <Pressable onPress={() => setDetOpen(true)} style={s.moreBtn}>
                 <Text style={s.moreTxt}>+ {t('addDet')}</Text>
               </Pressable>
+              </>
+            ) : null}
+            {d.cat === 'auto' && !!d.sub && (detOpen || hasVehDetails(d)) ? (
+              <View style={s.detBox}>
+                <Label rtl={rtl}>{t('vehInfo')}</Label>
+                {vehicleFields(d.sub).map((f) => (
+                  <VehField key={f.k} f={f} d={d} update={update} lang={lang} rtl={rtl} errors={errors} />
+                ))}
+              </View>
+            ) : d.cat === 'auto' && !!d.sub ? (
+              <>
+                <Text style={[s.help, al, { marginTop: 10 }]}>{t('detHelpVeh')}</Text>
+                <Pressable onPress={() => setDetOpen(true)} style={s.moreBtn}>
+                  <Text style={s.moreTxt}>+ {t('addDet')}</Text>
+                </Pressable>
               </>
             ) : null}
           </>
