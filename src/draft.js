@@ -49,6 +49,30 @@ export function newDraft(last = {}) {
     vcond: '',
     vhome: false, vdriver: false,
     modelOther: false, // modèle de voiture saisi à la main (« Autre modèle »)
+    // Téléphones et électronique (noms comme sur le site)
+    pbrand: '',
+    pmodel: '',
+    pstorage: '',
+    pram: '',
+    pcond: '',
+    pcolor: '',
+    pbatt: '',
+    pimei: '',
+    mbrand: '',
+    mmodel: '',
+    msize: '',
+    mres: '',
+    mpads: '',
+    mgames: '',
+    mcpu: '',
+    mram: '',
+    mstorage: '',
+    mstype: '',
+    mscreen: '',
+    macc: '',
+    mcompat: '',
+    mcond: '',
+    pdual: '', punlock: '', msmart: '', pincl: [],
   };
 }
 
