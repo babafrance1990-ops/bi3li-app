@@ -303,6 +303,9 @@ export default function AdForm({ editAd = null }) {
     return Object.keys(e).length === 0;
   }
 
+  // Choisir une sous-catégorie (ou « Tous ») passe directement à l'étape suivante
+  function pickSub(id) { setSubStage(false); update({ sub: id }); go(2); }
+
   function go(step) {
     if (step > d.step && !check(d.step)) return;
     setErrors({});
@@ -444,14 +447,14 @@ export default function AdForm({ editAd = null }) {
                 </Pressable>
                 <Label rtl={rtl}>{(CATEGORIES.find((c) => c.id === d.cat) || {})[lang]}</Label>
                 <View style={[s.grid, row]}>
-                  <Pressable onPress={() => { update({ sub: '' }); setSubStage(false); }} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                  <Pressable onPress={() => pickSub('')} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                     <View style={s.allIcon}><Ionicons name="grid-outline" size={30} color={colors.primaryDark} /></View>
                     <Text style={[s.catTxt, !d.sub && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{lang === 'ar' ? 'الكل' : 'Tous'}</Text>
                   </Pressable>
                   {subsOf(d.cat).map((x) => {
                     const on = d.sub === x.id;
                     return (
-                      <Pressable key={x.id} onPress={() => { update({ sub: x.id }); setSubStage(false); }} style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                      <Pressable key={x.id} onPress={() => pickSub(x.id)} style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                         <SubArt cat={d.cat} sub={x.id} size={52} />
                         <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
                       </Pressable>
@@ -659,7 +662,7 @@ const s = StyleSheet.create({
   grid: { flexWrap: 'wrap', gap: 8 },
   cat: { width: '31.5%', aspectRatio: 1.1, borderWidth: 2, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', padding: 6, gap: 4 },
   catTxt: { fontSize: 12, textAlign: 'center', color: colors.text, fontWeight: '600' },
-  subCat: { width: '23.5%', aspectRatio: 0.82 },
+  subCat: { width: '23%', aspectRatio: 0.8, padding: 4 },
   allIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   backRow: { alignItems: 'center', gap: 6, paddingVertical: 4 },
   backTxt: { color: colors.primary, fontWeight: '700', fontSize: 15 },
