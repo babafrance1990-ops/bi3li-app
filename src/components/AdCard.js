@@ -11,6 +11,7 @@ import { useLang } from '../i18n';
 import { cityName } from '../places';
 import FavButton from './FavButton';
 import { colors, radius } from '../theme';
+import { adCondLabel, adFacts, adSubInfo } from '../adInfo';
 
 // Type du message vocal (ex. audio/webm) : affiché si le téléphone ne le lit pas
 const voiceMime = (d) => (/^data:([^;,]*)/.exec(d || '') || [])[1] || '';
@@ -30,6 +31,10 @@ export default function AdCard({ ad, preview }) {
     return () => { on = false; };
   }, [videoUrl]);
   const place = [ad.hood, cityName(ad.city, lang)].filter(Boolean).join(' · ');
+  // Sous-catégorie toujours présente ; titre seulement s'il est saisi ; deux faits clés ; état sur la photo
+  const sub = adSubInfo(ad, lang, t);
+  const facts = adFacts(ad, lang).join(' · ');
+  const cond = adCondLabel(ad, lang);
 
   function open() {
     if (preview) return; // aperçu dans le formulaire de dépôt
@@ -48,6 +53,7 @@ export default function AdCard({ ad, preview }) {
         {!photo && !videoUrl && !voiceOnly && <View style={[StyleSheet.absoluteFill, s.plain]}><Text style={s.bigIcon}>📷</Text></View>}
         {!!videoUrl && !!poster && <View style={s.playWrap} pointerEvents="none"><View style={s.play}><Text style={s.playTxt}>▶</Text></View></View>}
         {ad.status === 'sold' && <Text style={s.sold}>{t('sold')}</Text>}
+        {ad.status !== 'sold' && !!cond && <Text style={s.cond}>{cond}</Text>}
         {ad.photos?.length > 1 && <Text style={[s.count, !!ad.voice && { bottom: 44 }]}>📷 {ad.photos.length}</Text>}
         {/* Vidéo : pastille comme sur le site */}
         {!!photo && !!ad.video && <View style={[s.flags, !!ad.voice && { bottom: 44 }]}><Text style={s.flag}>🎬</Text></View>}
@@ -60,8 +66,10 @@ export default function AdCard({ ad, preview }) {
         {!preview && <FavButton adId={ad.id} size={18} style={s.fav} />}
       </View>
       <View style={s.body}>
-        <Text style={[s.title, rtl && s.rtl]} numberOfLines={2}>{ad.title}</Text>
+        {!!sub && <Text style={[s.sub, rtl && s.rtl]} numberOfLines={1}>{sub}</Text>}
+        {!!ad.title && <Text style={[s.title, rtl && s.rtl]} numberOfLines={1}>{ad.title}</Text>}
         <Text style={[s.price, rtl && s.rtl]} numberOfLines={1}>{priceText(ad, lang)}</Text>
+        {!!facts && <Text style={[s.facts, rtl && s.rtl]} numberOfLines={1}>{facts}</Text>}
         {!!place && <Text style={[s.place, rtl && s.rtl]} numberOfLines={1}>📍 {place}</Text>}
       </View>
     </Pressable>
@@ -83,7 +91,10 @@ const s = StyleSheet.create({
   flag: { backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, fontSize: 11, overflow: 'hidden' },
   count: { position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 6, borderRadius: 6, fontSize: 11 },
   body: { padding: 8, gap: 3 },
+  sub: { fontSize: 12, color: colors.primary, fontWeight: '700' },
   title: { fontSize: 14, color: colors.text, fontWeight: '600' },
+  facts: { fontSize: 12, color: colors.muted },
+  cond: { position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, fontSize: 11, overflow: 'hidden', fontWeight: '700' },
   price: { fontSize: 14, color: colors.primaryDark, fontWeight: '800' },
   place: { fontSize: 12, color: colors.muted },
   rtl: { textAlign: 'right', writingDirection: 'rtl' },

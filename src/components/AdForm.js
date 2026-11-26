@@ -15,6 +15,7 @@ import { useAuth } from '../auth';
 import { CATEGORIES, catById } from '../categories';
 import { SUB_KEY, subsOf } from '../subcategories';
 import { CatArt, KindArt, SubArt } from './Art';
+import { KIND_L } from '../kindArt';
 import AdCard from './AdCard';
 import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
 import { useLang } from '../i18n';
@@ -144,11 +145,6 @@ const D = {
 const KINDS = {
   sale: ['house', 'villa', 'duplex', 'land', 'apt', 'building', 'shop', 'farm'],
   rent: ['apt', 'house', 'villa', 'duplex', 'room', 'shop', 'office', 'warehouse', 'land'],
-};
-const KIND_L = {
-  apt: ['Appartement', 'شقة'], house: ['Maison', 'منزل'], villa: ['Villa', 'فيلا'], duplex: ['Duplex', 'دوبلكس'],
-  room: ['Chambre', 'غرفة'], shop: ['Boutique', 'محل'], office: ['Bureau', 'مكتب'], warehouse: ['Entrepôt', 'مستودع'],
-  land: ['Terrain', 'قطعة أرضية'], building: ['Immeuble', 'عمارة'], farm: ['Ferme', 'مزرعة'],
 };
 
 const digits = (v) => String(v || '').replace(/\D/g, '');
@@ -781,7 +777,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     ? t('reqCount', { n: 3 - reqMissing.length, m: 3 }) + ' · ' + t('reqMiss', { x: reqMissing.join(', ') })
     : t('reqDone');
   const previewAd = {
-    id: 'preview', status: 'online', title: d.title.trim() || autoTitle(), punit: 'new', hidep: d.hidep,
+    ...(SUB_KEY[d.cat] ? { [SUB_KEY[d.cat]]: d.sub } : {}), ...detailAdObject(d),
+    id: 'preview', status: 'online', cat: d.cat, title: d.title.trim() || autoTitle(), punit: 'new', hidep: d.hidep,
     price: pu, city: d.city, hood: d.hood, photos: d.photos.map((p) => p.uri || p.url).filter(Boolean),
   };
   // Ligne « sous-catégorie » sous la catégorie choisie (formulaire sur une page)

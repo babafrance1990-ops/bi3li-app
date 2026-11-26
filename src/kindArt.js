@@ -13,3 +13,9 @@ export const KIND_ART = {
  "farm": "<path d=\"M4 40h56v20H4z\" fill=\"#7A9E87\"/><path d=\"M4 46h56M4 52h56\" stroke=\"#5C7E68\" stroke-width=\"2\"/><path d=\"M8 40V26l11-8 11 8v14z\" fill=\"#D9482B\"/><rect x=\"15\" y=\"30\" width=\"8\" height=\"10\" fill=\"#FFFFFF\"/><path d=\"M46 40V20\" stroke=\"#8A5A2B\" stroke-width=\"3\"/><path d=\"M46 20c-6-6-12-4-14 0M46 20c6-6 12-4 12 2M46 20c-2-6 2-10 6-10\" stroke=\"#0B6B3A\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/>"
 };
 export const KIND_BG = '#E3F2E8';
+
+export const KIND_L = {
+  apt: ['Appartement', 'شقة'], house: ['Maison', 'منزل'], villa: ['Villa', 'فيلا'], duplex: ['Duplex', 'دوبلكس'],
+  room: ['Chambre', 'غرفة'], shop: ['Boutique', 'محل'], office: ['Bureau', 'مكتب'], warehouse: ['Entrepôt', 'مستودع'],
+  land: ['Terrain', 'قطعة أرضية'], building: ['Immeuble', 'عمارة'], farm: ['Ferme', 'مزرعة'],
+};

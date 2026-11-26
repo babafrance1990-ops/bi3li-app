@@ -2,7 +2,7 @@
 // Téléphone (smartphone, simple, tablette) → champ « dev » ; électronique et accessoires → champ « mm ».
 // Noms des champs identiques au site ; libellés (fr / ar) repris du site.
 
-const LBL = {
+export const LBL = {
   a_bag: ["Sacoche", "حقيبة"],
   a_cable: ["Câble", "كابل"],
   a_case: ["Coque / étui", "غطاء / جراب"],

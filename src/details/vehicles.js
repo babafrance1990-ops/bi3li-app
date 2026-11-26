@@ -27,7 +27,7 @@ export const MODELS = {
 };
 
 // Libellés (fr / ar) des valeurs de liste, comme sur le site
-const L = {
+export const L = {
   vtype: { berline: ['Berline', 'سيدان'], suv: ['4x4 / SUV', 'دفع رباعي'], pickup: ['Pick-up', 'بيك أب'], citadine: ['Citadine', 'سيارة صغيرة'], utilitaire: ['Utilitaire', 'سيارة نفعية'], monospace: ['Monospace', 'ميني فان'] },
   color: { blanc: ['Blanc', 'أبيض'], noir: ['Noir', 'أسود'], gris: ['Gris', 'رمادي'], argent: ['Argent', 'فضي'], bleu: ['Bleu', 'أزرق'], rouge: ['Rouge', 'أحمر'], vert: ['Vert', 'أخضر'], beige: ['Beige', 'بيج'], marron: ['Marron', 'بني'], autre: ['Autre', 'آخر'] },
   cond: { new: ['Neuf', 'جديدة'], vgood: ['Très bon', 'ممتازة'], good: ['Bon', 'جيدة'], fair: ['Correct', 'مقبولة'], repair: ['À réparer', 'تحتاج إصلاح'] },
