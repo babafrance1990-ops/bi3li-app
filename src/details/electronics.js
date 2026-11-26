@@ -194,12 +194,9 @@ export function electronicsFilled(d) {
   return ['pbrand', 'pmodel', 'pstorage', 'pram', 'pcond', 'pcolor', 'pbatt', 'pdual', 'punlock', 'pimei', 'mbrand', 'mmodel', 'msize', 'mres', 'msmart', 'mpads', 'mgames', 'mcpu', 'mram', 'mstorage', 'mstype', 'mscreen', 'macc', 'mcompat', 'mcond'].some((k) => !!d[k]) || (d.pincl || []).length > 0;
 }
 
-// Erreurs : champs obligatoires et IMEI
+// Erreurs : détails facultatifs, seul l'IMEI saisi est vérifié
 export function electronicsErrors(cat, sub, d, ar) {
   const e = {};
-  electronicFields(cat, sub).forEach((f) => {
-    if (f.req && !String(d[f.k] ?? '').trim()) e[f.k] = ELEC_ERR[f.err][ar ? 1 : 0];
-  });
   if (d.pimei && String(d.pimei).replace(/\D/g, '').length !== 15) e.pimei = ELEC_ERR.errImei[ar ? 1 : 0];
   return e;
 }

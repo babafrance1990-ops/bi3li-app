@@ -60,12 +60,9 @@ export const VEH_ERR = {
   errCond: ['Choisissez l’état.', 'اختر الحالة.'], errVsel: ['Choisissez une option.', 'اختر خياراً.'], errVkind: ['Choisissez ce que vous proposez.', 'اختر ما تعرضه.'],
 };
 
-// Vérifie les champs obligatoires : renvoie { champ: message }
+// Détails facultatifs : seules les valeurs saisies sont vérifiées (renvoie { champ: message })
 export function vehicleErrors(kind, d, ar) {
   const e = {};
-  vehicleFields(kind).forEach((f) => {
-    if (f.req && !String(d[f.k] ?? '').trim()) e[f.k] = (ar ? VEH_ERR[f.err][1] : VEH_ERR[f.err][0]);
-  });
   const y = +d.year || +d.vyear;
   if (kind === 'car' && d.year && (y < 1980 || y > 2027)) e.year = VEH_ERR.errYear[ar ? 1 : 0];
   if (kind !== 'car' && d.vyear && (+d.vyear < 1980 || +d.vyear > 2027)) e.vyear = VEH_ERR.errYear[ar ? 1 : 0];

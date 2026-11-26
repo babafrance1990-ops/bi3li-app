@@ -1,10 +1,10 @@
 // Détails de catégorie au dépôt (véhicules, téléphones, électronique, immobilier, emploi, services, covoiturage) :
 // un seul point d'entrée pour le formulaire
 import { electronicAdObject, electronicFields, electronicsErrors, electronicsFilled } from './electronics';
-import { l3AdObject, l3Errors, l3Fields, l3FromAd, l3Title } from './lot3';
-import { l4AdObject, l4Errors, l4Fields, l4FromAd } from './lot4';
-import { l5AdObject, l5Errors, l5Fields, l5FromAd } from './lot5';
-import { l6AdObject, l6Errors, l6Fields, l6FromAd } from './lot6';
+import { l3AdObject, l3Fields, l3FromAd, l3Title } from './lot3';
+import { l4AdObject, l4Fields, l4FromAd } from './lot4';
+import { l5AdObject, l5Fields, l5FromAd } from './lot5';
+import { l6AdObject, l6Fields, l6FromAd } from './lot6';
 
 // Modules de détails : le premier qui a des champs pour la catégorie l'emporte
 const MODULES_FIELDS = [l3Fields, l4Fields, l5Fields, l6Fields];
@@ -34,11 +34,11 @@ export function detailTitle(d, ar) {
   return l3Title(d, ar);
 }
 
-// Erreurs des champs obligatoires
+// Erreurs de saisie : les détails sont facultatifs, seules les valeurs saisies sont vérifiées
 export function detailErrors(d, ar) {
   if (d.cat === 'auto' && d.sub) return vehicleErrors(d.sub, d, ar);
   if ((d.cat === 'phone' || d.cat === 'multi') && d.sub) return electronicsErrors(d.cat, d.sub, d, ar);
-  return { ...l3Errors(d, ar), ...l4Errors(d, ar), ...l5Errors(d, ar), ...l6Errors(d, ar) };
+  return {};
 }
 
 // Champs ajoutés à l'annonce

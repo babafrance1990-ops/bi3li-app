@@ -207,7 +207,7 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
   const ar = lang === 'ar';
   const al = alignOf(rtl);
   const row = rowOf(rtl);
-  const label = (ar ? f.label[1] : f.label[0]) + (f.req ? '' : ar ? ' (اختياري)' : ' (facultatif)');
+  const label = (ar ? f.label[1] : f.label[0]) + (ar ? ' (اختياري)' : ' (facultatif)');
   const err = errors[f.k] ? <Text style={[s.err, al]}>{errors[f.k]}</Text> : null;
   if (f.type === 'checks') {
     const sel = d[f.k] || [];
@@ -1048,7 +1048,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               </Fold>
             )}
             {detailFields(d).length > 0 && (
-              <Fold title={detailTitle(d, lang === 'ar') + (((d.cat === 'auto' || d.cat === 'phone' || d.cat === 'multi') && d.sub) ? t('reqSuffix') : t('optSuffix'))} rtl={rtl}
+              <Fold title={detailTitle(d, lang === 'ar') + t('optSuffix')} rtl={rtl}
                 open={detOpen}
                 onToggle={() => setDetOpen((v) => !v)}>
                 {detailFields(d).map((f) => (
