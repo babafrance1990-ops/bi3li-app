@@ -45,6 +45,7 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
+    moreOpt: 'Plus d’options (repère, livraison, vidéo, vocal)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
@@ -88,6 +89,7 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
+    moreOpt: 'خيارات إضافية (المعلم، التوصيل، فيديو، صوت)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
     st1: 'ماذا تبيع؟', st1sub: 'اختر الفئة ثم النوع.',
@@ -829,10 +831,125 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         )}
 
         {/* ---------- Étape 2 : photos, titre, description ---------- */}
-        {(ONE_SCREEN || step === 2) && (
+        {/* ---------- Une seule page, version compacte : tout l'essentiel sans défiler ---------- */}
+        {ONE_SCREEN && (
           <>
-            {ONE_SCREEN ? <View style={s.sep} /> : <Text style={[s.h1, al]}>{t('st2')}</Text>}
-            {!ONE_SCREEN && <Text style={[s.sub, al]}>{t('st2sub')}</Text>}
+            <View style={[row, { justifyContent: 'space-between' }]}>
+              <Label rtl={rtl}>{t('photos')}</Label>
+              <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[row, { gap: 8 }]}>
+              {d.photos.length < MAX_PHOTOS && (
+                <>
+                  <Pressable style={s.tile} onPress={() => addPhotos('library')}>
+                    <Ionicons name="images-outline" size={22} color={colors.primaryDark} />
+                    <Text style={s.tileTxt}>{t('gallery')}</Text>
+                  </Pressable>
+                  <Pressable style={s.tile} onPress={() => addPhotos('camera')}>
+                    <Ionicons name="camera-outline" size={22} color={colors.primaryDark} />
+                    <Text style={s.tileTxt}>{t('camera')}</Text>
+                  </Pressable>
+                </>
+              )}
+              {d.photos.map((p, i) => (
+                <Pressable key={p.key} style={s.thumbS} onPress={() => (p.status === 'err' ? startUpload(p) : makeMain(p.key))}>
+                  <Image source={p.uri || mediaUrl(p.url) || null} style={s.thumbImg} contentFit="cover" />
+                  {p.status === 'up' && <View style={s.thumbOver}><ActivityIndicator color="#fff" /></View>}
+                  {(p.status === 'err' || (p.status === 'todo' && !p.uri)) && <View style={[s.thumbOver, { backgroundColor: 'rgba(220,38,38,0.7)' }]}><Text style={s.thumbErr}>⚠︎ ↻</Text></View>}
+                  {i === 0 && <Text style={s.mainTag}>{t('main')}</Text>}
+                  <Pressable style={s.del} hitSlop={8} onPress={() => removePhoto(p.key)}><Text style={s.delTxt}>✕</Text></Pressable>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <Err errors={errors} rtl={rtl} k="photos" />
+
+            <Label rtl={rtl}>{t('title')}</Label>
+            <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+
+            <Label rtl={rtl}>{t('desc')}</Label>
+            <Field rtl={rtl} value={d.desc} onChangeText={(v) => update({ desc: v })} placeholder={t('descPh')} multiline
+              style={{ minHeight: 80, maxHeight: 120, textAlignVertical: 'top' }} maxLength={3000} />
+
+            <Label rtl={rtl}>{t('price')}</Label>
+            <View style={[row, { gap: 8, alignItems: 'center' }]}>
+              <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[⁦⁩]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad"
+                style={{ flex: 1, fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
+              <Chip on={d.punit === 'new'} label={t('unitNew')} onPress={() => update({ punit: 'new' })} />
+              <Chip on={d.punit === 'old'} label={t('unitOld')} onPress={() => update({ punit: 'old' })} />
+            </View>
+            <Err errors={errors} rtl={rtl} k="punit" />
+            <Err errors={errors} rtl={rtl} k="price" />
+            {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
+            {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
+            <View style={[s.chips, row]}>
+              <Chip on={d.nego} label={t('nego')} onPress={() => update({ nego: !d.nego })} />
+              <Chip on={d.hidep} label={t('hidep')} onPress={() => { update({ hidep: !d.hidep }); setErrors((e) => ({ ...e, price: undefined, punit: undefined })); }} />
+            </View>
+
+            <View style={[row, { gap: 8 }]}>
+              <View style={{ flex: 1 }}>
+                <Label rtl={rtl}>{t('city')}</Label>
+                <PickSheet value={d.city} options={CITY_OPTS} placeholder={ar ? 'اختر المدينة' : 'Choisir la ville'} title={t('city')} rtl={rtl} ar={ar}
+                  onPick={(c) => update({ city: c, hood: c === d.city ? d.hood : '' })} />
+              </View>
+              <View style={{ flex: 1 }}>
+                {d.city === 'Nouakchott' ? (
+                  <>
+                    <Label rtl={rtl}>{t('hoodNkc')}</Label>
+                    <PickSheet value={d.hood} options={HOOD_OPTS} placeholder={ar ? 'اختر (اختياري)' : 'Choisir (facultatif)'} title={t('hoodNkc')} rtl={rtl} ar={ar}
+                      onPick={(h) => update({ hood: h })} />
+                  </>
+                ) : (
+                  <>
+                    <Label rtl={rtl}>{t('hood')}</Label>
+                    <Field rtl={rtl} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
+                  </>
+                )}
+              </View>
+            </View>
+
+            <Label rtl={rtl}>{t('contactAt')} <Text style={{ color: colors.primaryDark }}>{user.phone}</Text></Label>
+            <View style={[s.chips, row]}>
+              <Chip on={d.wa} label={t('wa')} color="#25D366" onPress={() => update({ wa: !d.wa })} />
+              <Chip on={d.call} label={t('call')} onPress={() => update({ call: !d.call })} />
+            </View>
+            <Err errors={errors} rtl={rtl} k="contact" />
+
+            {(moreOpen || d.near || d.deliv || d.videoUri || d.video || d.voiceUri || d.voice) ? (
+              <>
+                <Field rtl={rtl} value={d.near} onChangeText={(v) => update({ near: v })} placeholder={t('nearPh')} maxLength={60} />
+                <Toggle rtl={rtl} label={t('deliv')} value={d.deliv} onChange={(v) => update({ deliv: v })} />
+                {d.deliv && <Field rtl={rtl} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
+                <Label rtl={rtl}>{t('vidL')}</Label>
+                {d.videoUri || d.video ? (
+                  <View style={[s.mediaRow, row]}>
+                    <Text style={s.mediaOk}>🎬 {t('vidOk')}</Text>
+                    <Pressable hitSlop={8} onPress={() => update({ videoUri: '', video: '' })}><Text style={s.linkDanger}>{t('vidDel')}</Text></Pressable>
+                  </View>
+                ) : (
+                  <View style={[row, { gap: 8 }]}>
+                    <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('camera')}><Text style={s.btnLightTxt}>{t('vidCam')}</Text></Pressable>
+                    <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('library')}><Text style={s.btnLightTxt}>{t('vidGal')}</Text></Pressable>
+                  </View>
+                )}
+                <Label rtl={rtl}>{t('voiceL')}</Label>
+                <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice} savedData={d.voice} savedId={editAd ? editAd.id : 'nouvelle'}
+                  onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
+                  onRemove={() => update({ voiceUri: '', voice: '' })} />
+              </>
+            ) : (
+              <Pressable onPress={() => setMoreOpen(true)} style={s.moreBtn}>
+                <Text style={s.moreTxt}>+ {t('moreOpt')}</Text>
+              </Pressable>
+            )}
+          </>
+        )}
+
+        {/* ---------- Étape 2 : photos, titre, description (ancien formulaire en 3 étapes) ---------- */}
+        {!ONE_SCREEN && step === 2 && (
+          <>
+            <Text style={[s.h1, al]}>{t('st2')}</Text>
+            <Text style={[s.sub, al]}>{t('st2sub')}</Text>
 
             <View style={[row, { justifyContent: 'space-between' }]}>
               <Label rtl={rtl}>{t('photos')}</Label>
@@ -903,6 +1020,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             {ONE_SCREEN ? <View style={s.sep} /> : <Text style={[s.h1, al]}>{t('st3')}</Text>}
             {!ONE_SCREEN && <Text style={[s.sub, al]}>{t('st3sub')}</Text>}
 
+            {!ONE_SCREEN && <>
             <Label rtl={rtl}>{t('unit')}</Label>
             <View style={[s.chips, row]}>
               <Chip on={d.punit === 'new'} label={t('unitNew')} onPress={() => update({ punit: 'new' })} />
@@ -952,6 +1070,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                 city: d.city, hood: d.hood, photos: d.photos.map((p) => p.uri || p.url).filter(Boolean),
               }} />
             </View>
+            </>}
 
             {d.cat === 'anim' && (detOpen || d.count !== '1' || d.sex || d.age || d.breed || d.tabaski) ? (
               <View style={s.detBox}>
@@ -1148,6 +1267,9 @@ export function CatPickScreen() {
 
 const s = StyleSheet.create({
   sep: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
+  tile: { width: 84, height: 84, borderRadius: radius.m, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  tileTxt: { fontSize: 11, fontWeight: '700', color: colors.primaryDark },
+  thumbS: { width: 84, height: 84, borderRadius: radius.m, overflow: 'hidden', backgroundColor: colors.border },
   catRow: { alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, padding: 10 },
   catRowTxt: { fontSize: 16, fontWeight: '700', color: colors.text },
   pickBlock: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 10, gap: 8 },
