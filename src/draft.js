@@ -12,7 +12,7 @@ export function newDraft(last = {}) {
     price: '', punit: '', nego: true, hidep: false, // comme le site : « à discuter » coché par défaut
     city: last.city || 'Nouakchott', hood: last.hood || '', near: '',
     deliv: false, delivNote: '',
-    wa: last.wa ?? true, call: last.call ?? true, msg: last.msg ?? false,
+    wa: last.wa ?? true, call: last.call ?? true, msg: last.msg ?? true,
     // Immobilier
     deal: '', kind: '', surface: '',
     // Vidéo et message vocal : adresse du serveur (annonce existante) ou fichier sur le téléphone (nouveau)

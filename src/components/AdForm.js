@@ -26,7 +26,7 @@ import { HOOD_AR, NKC, WILAYAS } from '../places';
 
 // Listes des villes et des quartiers de Nouakchott (listes déroulantes, comme sur le site)
 const CITY_OPTS = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
-const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h + ' (' + w.fr.replace('Nouakchott-', '') + ')', ar: (HOOD_AR[h] || h) + ' (' + w.ar.replace('نواكشوط ', '') + ')' })));
+const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h, ar: HOOD_AR[h] || h })));
 import { colors, radius } from '../theme';
 import { setCatCallback, takeCatCallback } from '../catPick';
 
@@ -52,7 +52,7 @@ const D = {
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
     deal: 'Vente ou location ?', sale: 'Vente', rent: 'Location', kind: 'Type de bien', surface: 'Surface (m², facultatif)',
-    photos: 'Photos', photosN: '{n} / 6', gallery: 'Galerie', camera: 'Appareil photo', main: 'Principale',
+    photos: 'Photos', photosN: '{n} / 8', titlePh: 'Facultatif : sinon, le début de la description', gallery: 'Galerie', camera: 'Appareil photo', main: 'Principale',
     photoErr: 'Échec — toucher pour réessayer', perm: 'Autorisez l’accès aux photos dans les réglages du téléphone.',
     permAv: 'Autorisez l’accès à la caméra, aux photos ou au micro dans les réglages du téléphone.',
     vidL: 'Vidéo (facultatif, 2 minutes max)', vidCam: '🎥 Filmer', vidGal: '🎞️ Galerie vidéo', vidOk: 'Vidéo ajoutée', vidDel: 'Retirer la vidéo',
@@ -99,7 +99,7 @@ const D = {
     st2: 'الصور والوصف', st2sub: 'أضف صوراً حقيقية: تجذب مشترين أكثر.',
     st3: 'السعر والمكان', st3sub: 'راجع إعلانك ثم انشره.',
     deal: 'بيع أم إيجار؟', sale: 'بيع', rent: 'إيجار', kind: 'نوع العقار', surface: 'المساحة (م²، اختياري)',
-    photos: 'الصور', photosN: '{n} / 6', gallery: 'المعرض', camera: 'الكاميرا', main: 'الرئيسية',
+    photos: 'الصور', photosN: '{n} / 8', titlePh: 'اختياري: وإلا فبداية الوصف', gallery: 'المعرض', camera: 'الكاميرا', main: 'الرئيسية',
     photoErr: 'فشل — اضغط لإعادة المحاولة', perm: 'اسمح بالوصول إلى الصور من إعدادات الهاتف.',
     permAv: 'اسمح بالوصول إلى الكاميرا أو الصور أو الميكروفون من إعدادات الهاتف.',
     vidL: 'فيديو (اختياري، دقيقتان كحد أقصى)', vidCam: '🎥 تصوير', vidGal: '🎞️ معرض الفيديو', vidOk: 'تمت إضافة الفيديو', vidDel: 'حذف الفيديو',
@@ -473,7 +473,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     loadDraft().then(({ draft, restored: r }) => {
       draft.photos = draft.photos.map((p) => ({ ...p, key: p.key || 'p' + ++photoKey }));
       if (!draft.city && user?.city) draft.city = user.city; // ville du compte par défaut
-      if (!draft.cat && !draft.photos.length) draft.nego = true; // « prix à discuter » coché par défaut
+      if (!editing) { draft.nego = true; draft.wa = true; draft.call = true; draft.msg = true; } // « à discuter » et les 3 contacts cochés par défaut
       setDetOpen(detailsFilled(draft));
       setMoreOpen(!!(draft.video || draft.voice || draft.videoUri || draft.voiceUri));
       setD(draft);
@@ -878,7 +878,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
             <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} style={[CF, { minHeight: 50 }]} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+            <Field rtl={rtl} style={[CF, { minHeight: 50 }]} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={t('titlePh')} maxLength={70} />
             <Label rtl={rtl}>{t('desc')}</Label>
             <Field rtl={rtl} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
