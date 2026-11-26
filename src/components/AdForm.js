@@ -1,7 +1,7 @@
 // Formulaire d'annonce en 3 étapes (dépôt d'une nouvelle annonce ET modification d'une annonce existante), comme sur le site :
 // 1) catégorie et type ; 2) photos, titre (facultatif), description ; 3) prix, lieu, contact, aperçu, « Publier ».
 // Les photos partent au serveur dès qu'elles sont ajoutées : à « Publier », il ne reste presque que le texte à envoyer.
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
@@ -46,8 +46,8 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
-    addPhS: 'Ajouter photos', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
-    moreOpt: 'Vidéo et message vocal (facultatif)',
+    addPhS: 'Ajouter photos', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
+    moreOpt: 'Titre, vidéo et message vocal (facultatif)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
@@ -91,8 +91,8 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
-    addPhS: 'إضافة صور', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
-    moreOpt: 'فيديو ورسالة صوتية (اختياري)',
+    addPhS: 'إضافة صور', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
+    moreOpt: 'العنوان، فيديو ورسالة صوتية (اختياري)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
     st1: 'ماذا تبيع؟', st1sub: 'اختر الفئة ثم النوع.',
@@ -328,7 +328,7 @@ const Chip = ({ on, label, onPress, color, icon }) => (
     <Text style={[s.chipTxt, on && { color: '#fff' }]}>{label}</Text>
   </Pressable>
 );
-const Field = ({ rtl, style, ...props }) => <TextInput placeholderTextColor={colors.muted} {...props} style={[s.input, alignOf(rtl), style]} />;
+const Field = forwardRef(({ rtl, style, ...props }, ref) => <TextInput ref={ref} placeholderTextColor={colors.muted} {...props} style={[s.input, alignOf(rtl), style]} />);
 // Choix à cocher : un cadre avec la case et le libellé
 const Toggle = ({ label, icon, iconColor = colors.whatsapp, value, onChange, rtl }) => (
   <Pressable onPress={() => onChange(!value)} style={[s.checkRow, rowOf(rtl)]}>
@@ -417,6 +417,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
   const [descH, setDescH] = useState(64);          // hauteur de la description : elle grandit avec le texte
   const [kbOpen, setKbOpen] = useState(false);     // clavier ouvert
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const fref = useRef({});                          // champs de saisie (pour Précédent / Suivant)
+  const curF = useRef(null);                        // champ en cours de saisie
   useEffect(() => {
     const a = Keyboard.addListener('keyboardDidShow', () => setKbOpen(true));
     const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
@@ -468,14 +471,14 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   }
 
   useEffect(() => {
-    if (editing) { const dd = adToDraft(editAd); setD(dd); setDetOpen(detailsFilled(dd)); setMoreOpen(!!(dd.video || dd.voice)); return; }
+    if (editing) { const dd = adToDraft(editAd); setD(dd); setDetOpen(detailsFilled(dd)); setMoreOpen(!!(dd.title || dd.video || dd.voice)); return; }
     if (admin) { setD({ ...newDraft(), wa: true, call: true }); return; }
     loadDraft().then(({ draft, restored: r }) => {
       draft.photos = draft.photos.map((p) => ({ ...p, key: p.key || 'p' + ++photoKey }));
       if (!draft.city && user?.city) draft.city = user.city; // ville du compte par défaut
-      if (!editing) { draft.nego = true; draft.wa = true; draft.call = true; draft.msg = true; } // « à discuter » et les 3 contacts cochés par défaut
+      if (!editing) { draft.nego = true; draft.wa = true; draft.call = true; draft.msg = true; draft.punit = 'new'; } // « à discuter » et les 3 contacts cochés ; prix en nouvelles ouguiya
       setDetOpen(detailsFilled(draft));
-      setMoreOpen(!!(draft.video || draft.voice || draft.videoUri || draft.voiceUri));
+      setMoreOpen(!!(draft.title || draft.video || draft.voice || draft.videoUri || draft.voiceUri));
       setD(draft);
       setRestored(r && (draft.cat || draft.photos.length > 0));
       draft.photos.filter((p) => p.status === 'todo').forEach((p) => setTimeout(() => startUpload(p), 0));
@@ -596,6 +599,17 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // Choisir une sous-catégorie (ou « Tous ») : on reste sur la grille, le choix est entouré ; « Suivant » passe à l'étape 2
   function pickSub(id) { update({ sub: id }); }
+
+  // Précédent / Suivant entre les champs de saisie (dans l'ordre de la page)
+  const FIELD_ORDER = ['desc', 'price', 'hood', 'title'];
+  function stepField(dir) {
+    const i = FIELD_ORDER.indexOf(curF.current);
+    for (let j = i + dir; j >= 0 && j < FIELD_ORDER.length; j += dir) {
+      const r = fref.current[FIELD_ORDER[j]];
+      if (r) { r.focus(); return; }
+    }
+    Keyboard.dismiss();
+  }
 
   // Une seule page : la catégorie s'ouvre sur sa propre page ; le choix revient ici
   function openCat() {
@@ -746,6 +760,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   const step = d.step;
   const pu = +digits(d.price);
+  const previewAd = {
+    id: 'preview', status: 'online', title: d.title.trim() || autoTitle(), punit: 'new', hidep: d.hidep,
+    price: pu, city: d.city, hood: d.hood, photos: d.photos.map((p) => p.uri || p.url).filter(Boolean),
+  };
   // Ligne « sous-catégorie » sous la catégorie choisie (formulaire sur une page)
   const catSub = (() => {
     if (!d.cat) return '';
@@ -877,10 +895,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             {d.photos.some((p) => p.status === 'err') && <Text style={[s.err, al]}>{t('photoErr')}</Text>}
 
             <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
-            <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} style={[CF, { minHeight: 50 }]} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={t('titlePh')} maxLength={70} />
-            <Label rtl={rtl}>{t('desc')}</Label>
-            <Field rtl={rtl} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+            <Label rtl={rtl}>{t('descOpt')}</Label>
+            <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => { curF.current = 'desc'; }} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
               placeholder={t('descPh')} multiline maxLength={3000} />
 
@@ -903,16 +919,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             )}
 
             <Text style={[s.secT, s.secGap, al]}>{t('price')}</Text>
-            <View style={[row, s.segRow]}>
-              <Pressable style={[s.segBtn, d.punit === 'new' && s.segOn]} onPress={() => update({ punit: 'new' })}>
-                <Text style={[s.segTxt, d.punit === 'new' && s.segTxtOn]}>{t('unitNew')}</Text>
-              </Pressable>
-              <Pressable style={[s.segBtn, d.punit === 'old' && s.segOn]} onPress={() => update({ punit: 'old' })}>
-                <Text style={[s.segTxt, d.punit === 'old' && s.segTxtOn]}>{t('unitOld')}</Text>
-              </Pressable>
-            </View>
             <View style={[s.priceBox, row]}>
-              <Field rtl={rtl} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
+              <Field rtl={rtl} ref={(r) => { fref.current.price = r; }} onFocus={() => { curF.current = 'price'; }} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
                 onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
               <Text style={s.priceUnit}>{t(d.punit === 'old' ? 'sufOld' : 'sufNew')}</Text>
             </View>
@@ -938,7 +946,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                   <PickSheet value={d.hood} options={HOOD_OPTS} placeholder={ar ? 'المقاطعة' : 'Quartier'} title={t('hoodNkc')} rtl={rtl} ar={ar}
                     onPick={(h) => update({ hood: h })} />
                 ) : (
-                  <Field rtl={rtl} style={CF} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
+                  <Field rtl={rtl} style={CF} ref={(r) => { fref.current.hood = r; }} onFocus={() => { curF.current = 'hood'; }} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
                 )}
               </View>
             </View>
@@ -952,6 +960,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Err errors={errors} rtl={rtl} k="contact" />
 
             <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen} onToggle={() => setMoreOpen((v) => !v)}>
+              <Label rtl={rtl}>{t('title')}</Label>
+              <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
+                value={d.title} onChangeText={(v) => update({ title: v })} placeholder={t('titlePh')} maxLength={70} />
               <View style={[row, { gap: 8 }]}>
                 {d.videoUri || d.video ? (
                   <View style={[s.mediaRow, row, { flex: 1 }]}>
@@ -1151,7 +1162,11 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       {/* Boutons du bas (clavier ouvert : un bouton « Terminé » à la place, pour le fermer) */}
       {ONE_SCREEN && kbOpen ? (
         <View style={s.kbBar}>
-          <Pressable hitSlop={12} onPress={() => Keyboard.dismiss()}><Text style={s.kbDone}>{t('kbDone')}</Text></Pressable>
+          <View style={[row, s.kbRow]}>
+            <Pressable hitSlop={12} onPress={() => stepField(-1)}><Text style={s.kbNav}>{t('kbPrev')}</Text></Pressable>
+            <Pressable hitSlop={12} onPress={() => stepField(1)}><Text style={s.kbNav}>{t('kbNext')}</Text></Pressable>
+            <Pressable hitSlop={12} onPress={() => Keyboard.dismiss()}><Text style={s.kbDone}>{t('kbDone')}</Text></Pressable>
+          </View>
         </View>
       ) : (
       <View style={[s.foot, row]}>
@@ -1160,7 +1175,12 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Text style={s.btnLightTxt}>{t('prev')}</Text>
           </Pressable>
         )}
-        <Pressable style={[s.btnMain, { flex: ONE_SCREEN ? 1 : 2 }, !!busy && { opacity: 0.7 }]} disabled={!!busy}
+        {ONE_SCREEN && (
+          <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => setPreviewOpen(true)}>
+            <Text style={s.btnLightTxt}>{t('previewBtn')}</Text>
+          </Pressable>
+        )}
+        <Pressable style={[s.btnMain, { flex: 2 }, !!busy && { opacity: 0.7 }]} disabled={!!busy}
           onPress={() => (ONE_SCREEN || step === 3 ? publish() : go(step + 1))}>
           {busy
             ? <View style={[row, { gap: 8, alignItems: 'center' }]}><ActivityIndicator color="#fff" /><Text style={s.btnMainTxt}>{busy}</Text></View>
@@ -1168,6 +1188,20 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         </Pressable>
       </View>
       )}
+
+      {/* Aperçu de l'annonce, avant de la publier */}
+      <Modal visible={ONE_SCREEN && previewOpen} animationType="slide" onRequestClose={() => setPreviewOpen(false)}>
+        <ScrollView contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 16, paddingBottom: 24, gap: 12, alignItems: 'center' }} style={{ backgroundColor: colors.bg }}>
+          <Text style={s.secT}>{t('previewT')}</Text>
+          <View style={{ width: '60%' }}>
+            <AdCard preview ad={previewAd} />
+          </View>
+          {!!d.desc.trim() && <Text style={[s.sub, al, { alignSelf: 'stretch' }]}>{d.desc}</Text>}
+        </ScrollView>
+        <View style={s.foot}>
+          <Pressable style={s.btnMain} onPress={() => setPreviewOpen(false)}><Text style={s.btnMainTxt}>{t('back')}</Text></Pressable>
+        </View>
+      </Modal>
 
     </KeyboardAvoidingView>
   );
@@ -1300,6 +1334,8 @@ const s = StyleSheet.create({
   chipRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   kbBar: { alignItems: 'flex-end', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#F3F3F3', borderTopWidth: 1, borderColor: colors.border },
   kbDone: { color: colors.primary, fontSize: 17, fontWeight: '800' },
+  kbNav: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
+  kbRow: { width: '100%', justifyContent: 'space-between', alignItems: 'center' },
   priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 64 },
   priceIn: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', padding: 0, fontSize: 26, fontWeight: '800', color: colors.text, writingDirection: 'ltr', textAlign: 'right' },
   priceUnit: { fontSize: 14, fontWeight: '700', color: colors.muted },

@@ -9,7 +9,7 @@ const PHOTO_TTL = 24 * 3600 * 1000; // le serveur efface les photos non publiée
 export function newDraft(last = {}) {
   return {
     step: 1, cat: '', sub: '', title: '', desc: '', photos: [],
-    price: '', punit: '', nego: true, hidep: false, // comme le site : « à discuter » coché par défaut
+    price: '', punit: 'new', nego: true, hidep: false, // comme le site : « à discuter » coché par défaut
     city: last.city || 'Nouakchott', hood: last.hood || '', near: '',
     deliv: false, delivNote: '',
     wa: last.wa ?? true, call: last.call ?? true, msg: last.msg ?? true,
