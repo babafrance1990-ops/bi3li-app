@@ -48,7 +48,7 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
-    addPhS: 'Ajouter photos', ePhotoAny: 'Ajoutez au moins une photo.', cancelL: 'Annuler', contactN: 'Contact', optSuffix: ' (facultatif)', reqCount: '{n} sur {m} obligatoires', reqMiss: 'Il manque : {x}', reqDone: 'Tous les champs obligatoires sont remplis', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
+    addPhS: 'Ajouter photos', ePhotoAny: 'Ajoutez au moins une photo.', cancelL: 'Annuler', contactN: 'Contact', optSuffix: ' (facultatif)', reqSuffix: ' (obligatoire)', reqCount: '{n} sur {m} obligatoires', reqMiss: 'Il manque : {x}', reqDone: 'Tous les champs obligatoires sont remplis', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
     moreOpt: 'Titre, vidéo et message vocal (facultatif)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
@@ -93,7 +93,7 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
-    addPhS: 'إضافة صور', ePhotoAny: 'أضف صورة واحدة على الأقل.', cancelL: 'إلغاء', contactN: 'التواصل', optSuffix: ' (اختياري)', reqCount: '{n} من {m} إلزامية', reqMiss: 'ينقص: {x}', reqDone: 'كل الحقول الإلزامية مملوءة', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
+    addPhS: 'إضافة صور', ePhotoAny: 'أضف صورة واحدة على الأقل.', cancelL: 'إلغاء', contactN: 'التواصل', optSuffix: ' (اختياري)', reqSuffix: ' (إلزامي)', reqCount: '{n} من {m} إلزامية', reqMiss: 'ينقص: {x}', reqDone: 'كل الحقول الإلزامية مملوءة', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
     moreOpt: 'العنوان، فيديو ورسالة صوتية (اختياري)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
@@ -1048,7 +1048,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               </Fold>
             )}
             {detailFields(d).length > 0 && (
-              <Fold title={detailTitle(d, lang === 'ar') + t('optSuffix')} rtl={rtl}
+              <Fold title={detailTitle(d, lang === 'ar') + (((d.cat === 'auto' || d.cat === 'phone' || d.cat === 'multi') && d.sub) ? t('reqSuffix') : t('optSuffix'))} rtl={rtl}
                 open={detOpen}
                 onToggle={() => setDetOpen((v) => !v)}>
                 {detailFields(d).map((f) => (
