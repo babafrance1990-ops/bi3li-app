@@ -6,6 +6,7 @@ import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, S
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, mediaUrl } from '../src/api';
 import { useAuth } from '../src/auth';
 import { useLang } from '../src/i18n';
@@ -97,6 +98,7 @@ export default function Boutique() {
   const [done, setDone] = useState(null); // 'created' | 'saved'
   const [more, setMore] = useState(() => !!(old && (old.desc || old.addr || old.hours || old.wa || old.deliv || old.agency)));
   const [preview, setPreview] = useState(false);
+  const insets = useSafeAreaInsets();
   const [support, setSupport] = useState('');
   const [hoursSel, setHoursSel] = useState(!old?.hours);
   const [hm, setHM] = useState({ days: [], from: 9, to: 21 });
@@ -311,8 +313,7 @@ export default function Boutique() {
       )}
 
       <Modal visible={preview} animationType="slide" onRequestClose={() => setPreview(false)}>
-        <ScrollView contentContainerStyle={s.wrap}>
-          <Pressable onPress={() => setPreview(false)}><Text style={s.link}>{t('previewClose')}</Text></Pressable>
+        <ScrollView contentContainerStyle={[s.wrap, { paddingTop: insets.top + 16, paddingBottom: 110 + insets.bottom }]}>
           <View style={s.prevCard}>
             {logo ? <Image source={logo} style={s.prevLogo} contentFit="cover" /> : null}
             <Text style={[s.h, al]}>{f.name || '—'}</Text>
@@ -325,6 +326,10 @@ export default function Boutique() {
             {old?.verified && <Text style={[s.badge, s.badgeOk]}>{t('verified')}</Text>}
           </View>
         </ScrollView>
+        {/* Bouton en bas : hors de la zone de l'encoche et de la caméra */}
+        <View style={[s.prevFoot, { paddingBottom: insets.bottom + 12 }]}>
+          <Pressable style={s.prevClose} onPress={() => setPreview(false)}><Text style={s.prevCloseTxt}>{t('previewClose')}</Text></Pressable>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -367,6 +372,9 @@ const s = StyleSheet.create({
   moreBtn: { alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, marginTop: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border },
   moreTxt: { fontSize: 15, fontWeight: '700', color: colors.primaryDark },
   prevCard: { backgroundColor: colors.white, borderRadius: radius.l, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 8, marginTop: 8 },
-  prevLogo: { width: 80, height: 80, borderRadius: 14 },
+  prevLogo: { width: 80, height: 80, borderRadius: 14, alignSelf: 'center' },
+  prevFoot: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 12, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.border },
+  prevClose: { backgroundColor: colors.primary, borderRadius: radius.m, paddingVertical: 14, alignItems: 'center' },
+  prevCloseTxt: { color: '#fff', fontSize: 16, fontWeight: '800' },
   adsBox: { gap: 4, marginTop: 14, padding: 12, borderRadius: radius.m, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
 });
