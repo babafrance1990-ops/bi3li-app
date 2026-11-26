@@ -550,9 +550,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   function autoTitle() {
     const c = catById(d.cat);
     if (d.cat === 'immo' && d.kind) return KIND_L[d.kind][L] + ' ' + (d.deal === 'rent' ? t('rent') : t('sale')).toLowerCase();
-    // Sans titre saisi : catégorie · sous-catégorie (l'aperçu suit donc le choix)
+    // Sans titre saisi : la sous-catégorie (sinon la catégorie)
     const sub = (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang] || '';
-    return [c ? c[lang] : '', sub].filter(Boolean).join(' · ');
+    return sub || (c ? c[lang] : '');
   }
 
   // ---------- Vérification de chaque étape ----------
