@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { adCache, api, mediaUrl, priceText } from '../api';
 import { invalidateAds } from '../store';
 import { useAuth } from '../auth';
@@ -28,6 +28,11 @@ import { NKC, WILAYAS } from '../places';
 const CITY_OPTS = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
 const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h + ' (' + w.fr.replace('Nouakchott-', '') + ')', ar: h + ' (' + w.ar.replace('نواكشوط ', '') + ')' })));
 import { colors, radius } from '../theme';
+import { setCatCallback, takeCatCallback } from '../catPick';
+
+// Formulaire sur une seule page (catégorie en haut, puis photos, texte, prix et contact, un seul bouton « Publier »).
+// Mettre false pour revenir à l'ancien formulaire en 3 étapes : tout le code des étapes est gardé.
+const ONE_SCREEN = true;
 import { MODELS, VEH_ERR } from '../details/vehicles';
 import { ELEC_ERR } from '../details/electronics';
 import { L3 } from '../details/labels3';
@@ -38,6 +43,8 @@ import { detailAdObject, detailErrors, detailFields, detailsFilled, detailsOpenB
 const D = {
   fr: {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
+    catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
+    pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
@@ -81,6 +88,8 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
+    catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
+    pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
     st1: 'ماذا تبيع؟', st1sub: 'اختر الفئة ثم النوع.',
     st2: 'الصور والوصف', st2sub: 'أضف صوراً حقيقية: تجذب مشترين أكثر.',
     st3: 'السعر والمكان', st3sub: 'راجع إعلانك ثم انشره.',
@@ -506,7 +515,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   }
 
   // ---------- Vérification de chaque étape ----------
-  function check(step) {
+  function collect(step) {
     const e = {};
     if (step === 1) {
       if (!d.cat) e.cat = t('eCat');
@@ -533,6 +542,16 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       }
       if (!d.wa && !d.call) e.contact = t('eContact');
     }
+    return e;
+  }
+  function check(step) {
+    const e = collect(step);
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+  // Formulaire sur une seule page : toutes les étapes d'un coup
+  function checkAll() {
+    const e = { ...collect(1), ...collect(2), ...collect(3) };
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -542,6 +561,12 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // Choisir une sous-catégorie (ou « Tous ») : on reste sur la grille, le choix est entouré ; « Suivant » passe à l'étape 2
   function pickSub(id) { update({ sub: id }); }
+
+  // Une seule page : la catégorie s'ouvre sur sa propre page ; le choix revient ici
+  function openCat() {
+    setCatCallback((c) => { update(c); setErrors((e) => ({ ...e, cat: undefined, deal: undefined, kind: undefined })); });
+    router.push({ pathname: '/choisir-categorie', params: { cat: d.cat || '', sub: d.sub || '', deal: d.deal || '', kind: d.kind || '' } });
+  }
 
   // Vidéo : caméra ou galerie → fichier gardé sur le téléphone, envoyé à la publication
   async function addVideo(source) {
@@ -610,7 +635,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // ---------- Publication ----------
   async function publish() {
-    if (busy || !check(3)) return;
+    if (busy) return;
+    if (ONE_SCREEN ? !checkAll() : !check(3)) { if (ONE_SCREEN) notify(t('eFix')); return; }
     try {
       // 1) photos : on relance celles qui ont échoué, puis on attend celles en cours
       d.photos.filter((p) => p.status === 'err' || p.status === 'todo').forEach((p) => startUpload(p));
@@ -685,31 +711,62 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   const step = d.step;
   const pu = +digits(d.price);
+  // Ligne « sous-catégorie » sous la catégorie choisie (formulaire sur une page)
+  const catSub = (() => {
+    if (!d.cat) return '';
+    if (d.cat === 'immo') return [d.deal && t(d.deal === 'rent' ? 'rent' : 'sale'), d.kind && KIND_L[d.kind]?.[L]].filter(Boolean).join(' · ');
+    return (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang] || '';
+  })();
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       {/* En-tête : étape + barre de progression */}
       <View style={s.head}>
         <View style={[row, { justifyContent: 'space-between', alignItems: 'center' }]}>
-          <Text style={s.stepOf}>{editing ? t('editTitle') + ' · ' : ''}{t('stepOf', { n: step })}</Text>
+          <Text style={s.stepOf}>{editing ? t('editTitle') + (ONE_SCREEN ? '' : ' · ') : ''}{ONE_SCREEN ? '' : t('stepOf', { n: step })}</Text>
           {restored && !editing && (
             <Pressable onPress={() => { clearDraft(); setD(newDraft({ city: d.city, hood: d.hood })); setRestored(false); setErrors({}); }}>
               <Text style={s.restart}>{t('restored')} · {t('restart')}</Text>
             </Pressable>
           )}
         </View>
-        {editing && <Text style={[s.help, al]}>{t('jump')}</Text>}
-        <View style={[s.bar, row]}>
+        {editing && !ONE_SCREEN && <Text style={[s.help, al]}>{t('jump')}</Text>}
+        {!ONE_SCREEN && <View style={[s.bar, row]}>
           {[1, 2, 3].map((n) => (editing
             // en modification : toucher une barre = aller directement à cette étape (ex. changer seulement le prix)
             ? <Pressable key={n} hitSlop={{ top: 12, bottom: 12 }} style={[s.barPart, { height: 8 }, n <= step && { backgroundColor: colors.primary }]} onPress={() => go(n)} />
             : <View key={n} style={[s.barPart, n <= step && { backgroundColor: colors.primary }]} />))}
-        </View>
+        </View>}
       </View>
 
       <ScrollView ref={scroll} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
-        {/* ---------- Étape 1 : catégorie et type ---------- */}
-        {step === 1 && (
+        {/* ---------- Une seule page : la catégorie ouvre sa propre page ---------- */}
+        {ONE_SCREEN && (
+          <>
+            <Label rtl={rtl}>{t('catL')}</Label>
+            <Pressable onPress={openCat} style={[s.catRow, row]}>
+              {d.cat
+                ? <CatArt cat={d.cat} size={44} />
+                : <View style={s.allIcon}><Ionicons name="apps-outline" size={22} color={colors.muted} /></View>}
+              <View style={{ flex: 1 }}>
+                <Text style={[s.catRowTxt, al, !d.cat && { color: colors.muted, fontWeight: '600' }]}>
+                  {d.cat ? (CATEGORIES.find((c) => c.id === d.cat) || {})[lang] : t('catPh')}
+                </Text>
+                {!!catSub && <Text style={[s.help, al]}>{catSub}</Text>}
+              </View>
+              <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.primary} />
+            </Pressable>
+            <Err errors={errors} rtl={rtl} k="cat" />
+            <Err errors={errors} rtl={rtl} k="deal" />
+            <Err errors={errors} rtl={rtl} k="kind" />
+            {d.cat === 'immo' && !!d.kind && (
+              <Field rtl={rtl} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
+            )}
+          </>
+        )}
+
+        {/* ---------- Étape 1 : catégorie et type (ancien formulaire en 3 étapes) ---------- */}
+        {!ONE_SCREEN && step === 1 && (
           <>
             <Text style={[s.h1, al]}>{t('st1')}</Text>
             <Text style={[s.sub, al]}>{t('st1sub')}</Text>
@@ -772,10 +829,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         )}
 
         {/* ---------- Étape 2 : photos, titre, description ---------- */}
-        {step === 2 && (
+        {(ONE_SCREEN || step === 2) && (
           <>
-            <Text style={[s.h1, al]}>{t('st2')}</Text>
-            <Text style={[s.sub, al]}>{t('st2sub')}</Text>
+            {ONE_SCREEN ? <View style={s.sep} /> : <Text style={[s.h1, al]}>{t('st2')}</Text>}
+            {!ONE_SCREEN && <Text style={[s.sub, al]}>{t('st2sub')}</Text>}
 
             <View style={[row, { justifyContent: 'space-between' }]}>
               <Label rtl={rtl}>{t('photos')}</Label>
@@ -841,10 +898,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         )}
 
         {/* ---------- Étape 3 : prix, lieu, contact, aperçu ---------- */}
-        {step === 3 && (
+        {(ONE_SCREEN || step === 3) && (
           <>
-            <Text style={[s.h1, al]}>{t('st3')}</Text>
-            <Text style={[s.sub, al]}>{t('st3sub')}</Text>
+            {ONE_SCREEN ? <View style={s.sep} /> : <Text style={[s.h1, al]}>{t('st3')}</Text>}
+            {!ONE_SCREEN && <Text style={[s.sub, al]}>{t('st3sub')}</Text>}
 
             <Label rtl={rtl}>{t('unit')}</Label>
             <View style={[s.chips, row]}>
@@ -962,16 +1019,16 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
       {/* Boutons du bas */}
       <View style={[s.foot, row]}>
-        {step > 1 && (
+        {!ONE_SCREEN && step > 1 && (
           <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => go(step - 1)} disabled={!!busy}>
             <Text style={s.btnLightTxt}>{t('prev')}</Text>
           </Pressable>
         )}
-        <Pressable style={[s.btnMain, { flex: 2 }, !!busy && { opacity: 0.7 }]} disabled={!!busy}
-          onPress={() => (step < 3 ? go(step + 1) : publish())}>
+        <Pressable style={[s.btnMain, { flex: ONE_SCREEN ? 1 : 2 }, !!busy && { opacity: 0.7 }]} disabled={!!busy}
+          onPress={() => (ONE_SCREEN || step === 3 ? publish() : go(step + 1))}>
           {busy
             ? <View style={[row, { gap: 8, alignItems: 'center' }]}><ActivityIndicator color="#fff" /><Text style={s.btnMainTxt}>{busy}</Text></View>
-            : <Text style={s.btnMainTxt}>{step < 3 ? t('next') : editing ? t('save') : t('publish')}</Text>}
+            : <Text style={s.btnMainTxt}>{!ONE_SCREEN && step < 3 ? t('next') : editing ? t('save') : t('publish')}</Text>}
         </Pressable>
       </View>
 
@@ -979,7 +1036,123 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   );
 }
 
+// Page « Choisir la catégorie » (formulaire sur une seule page) : 1 · catégorie, puis 2 · type.
+// Le choix est rendu au formulaire par src/catPick.js, puis la page se ferme.
+export function CatPickScreen() {
+  const params = useLocalSearchParams();
+  const { lang, rtl } = useLang();
+  const t = (k, v = {}) => Object.entries(v).reduce((x, [a, b]) => x.replace('{' + a + '}', b), D[lang][k] ?? k);
+  const L = lang === 'ar' ? 1 : 0;
+  const al = alignOf(rtl);
+  const row = rowOf(rtl);
+  const [v, setV] = useState(() => ({
+    cat: String(params.cat || ''), sub: String(params.sub || ''), deal: String(params.deal || ''), kind: String(params.kind || ''),
+  }));
+  const scroll = useRef(null);
+  const subY = useRef(0);
+  const pendingSub = useRef(false);
+  const hasSub = (c) => c === 'immo' || subsOf(c).length > 0;
+  const complete = !!v.cat && (v.cat === 'immo'
+    ? !!v.deal && KINDS[v.deal].includes(v.kind)
+    : (!hasSub(v.cat) || !!v.sub));
+
+  function chooseCat(id) {
+    pendingSub.current = hasSub(id);
+    setV({ cat: id, sub: '', deal: '', kind: '' });
+  }
+  // Quand les sous-catégories apparaissent, la page descend jusqu'à elles
+  const onSubLayout = (e) => {
+    subY.current = e.nativeEvent.layout.y;
+    if (pendingSub.current) {
+      pendingSub.current = false;
+      scroll.current?.scrollTo({ y: Math.max(0, subY.current - 12), animated: true });
+    }
+  };
+  function confirm() {
+    if (!complete) return;
+    const give = takeCatCallback();
+    give?.(v.cat === 'immo'
+      ? { cat: v.cat, sub: '', deal: v.deal, kind: v.kind }
+      : { cat: v.cat, sub: v.sub, deal: '', kind: '' });
+    router.back();
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView ref={scroll} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
+        <View style={s.pickBlock}>
+          <Text style={[s.pickHead, al]}>{t('pick1')}</Text>
+          <View style={[s.grid, row]}>
+            {CATEGORIES.map((c) => {
+              const on = v.cat === c.id;
+              return (
+                <Pressable key={c.id} onPress={() => chooseCat(c.id)}
+                  style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
+                  <CatArt cat={c.id} size={52} />
+                  <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {!!v.cat && (
+          <View key={v.cat} onLayout={onSubLayout} collapsable={false} style={[s.pickBlock, s.pickBlockTint]}>
+            <Text style={[s.pickHead, al]}>{t('pick2')}</Text>
+            {v.cat === 'immo' ? (
+              <>
+                <Label rtl={rtl}>{t('deal')}</Label>
+                <View style={[s.chips, row]}>
+                  <Chip on={v.deal === 'sale'} label={t('sale')}
+                    onPress={() => setV((p) => ({ ...p, deal: 'sale', kind: KINDS.sale.includes(p.kind) ? p.kind : '' }))} />
+                  <Chip on={v.deal === 'rent'} label={t('rent')}
+                    onPress={() => setV((p) => ({ ...p, deal: 'rent', kind: KINDS.rent.includes(p.kind) ? p.kind : '' }))} />
+                </View>
+                {!!v.deal && (
+                  <>
+                    <Label rtl={rtl}>{t('kind')}</Label>
+                    <View style={[s.chips, row]}>
+                      {KINDS[v.deal].map((k) => (
+                        <Chip key={k} on={v.kind === k} label={KIND_L[k][L]} onPress={() => setV((p) => ({ ...p, kind: k }))} />
+                      ))}
+                    </View>
+                  </>
+                )}
+              </>
+            ) : (
+              <View style={[s.grid, row]}>
+                {subsOf(v.cat).map((x) => {
+                  const on = v.sub === x.id;
+                  return (
+                    <Pressable key={x.id} onPress={() => setV((p) => ({ ...p, sub: x.id }))}
+                      style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                      <SubArt cat={v.cat} sub={x.id} size={52} />
+                      <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+
+      <View style={s.foot}>
+        <Pressable style={[s.btnMain, !complete && { opacity: 0.5 }]} disabled={!complete} onPress={confirm}>
+          <Text style={s.btnMainTxt}>{t('pickOk')}</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
+  sep: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
+  catRow: { alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, padding: 10 },
+  catRowTxt: { fontSize: 16, fontWeight: '700', color: colors.text },
+  pickBlock: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 10, gap: 8 },
+  pickBlockTint: { backgroundColor: '#EEF5F0', borderColor: '#CFE3D6' },
+  pickHead: { fontSize: 15, fontWeight: '800', color: colors.primaryDark },
   detBox: { backgroundColor: '#EEF5F0', borderRadius: 12, padding: 12, gap: 8, marginBottom: 12 },
   checkRow: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingVertical: 12, paddingHorizontal: 14, marginVertical: 4 },
   checkTxt: { flex: 1, fontSize: 16, color: colors.text, fontWeight: '600' },

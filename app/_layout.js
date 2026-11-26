@@ -50,6 +50,7 @@ function Nav() {
         <Stack.Screen name="vus" options={{ title: '' }} />
         <Stack.Screen name="boutiques" options={{ title: '' }} />
         <Stack.Screen name="about" options={{ title: '' }} />
+        <Stack.Screen name="choisir-categorie" options={{ title: '' }} />
       </Stack>
     </View>
   );
