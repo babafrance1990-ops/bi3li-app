@@ -580,7 +580,6 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         if (!(+digits(d.price) > 0)) e.price = t('ePrice');
         if (d.punit !== 'old' && d.punit !== 'new') e.punit = t('eUnit');
       }
-      if (!d.wa && !d.call) e.contact = t('eContact');
     }
     return e;
   }
@@ -776,9 +775,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const reqMissing = [];
   if (Object.keys(collect(1)).length) reqMissing.push(t('catL'));
   if (reqErr.price || reqErr.punit) reqMissing.push(t('price'));
-  if (reqErr.contact) reqMissing.push(t('contactN'));
   const reqLine = reqMissing.length
-    ? t('reqCount', { n: 3 - reqMissing.length, m: 3 }) + ' · ' + t('reqMiss', { x: reqMissing.join(', ') })
+    ? t('reqCount', { n: 2 - reqMissing.length, m: 2 }) + ' · ' + t('reqMiss', { x: reqMissing.join(', ') })
     : t('reqDone');
   const previewAd = {
     id: 'preview', status: 'online', title: d.title.trim() || autoTitle(), punit: 'new', hidep: d.hidep,
