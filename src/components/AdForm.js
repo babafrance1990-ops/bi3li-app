@@ -3,7 +3,7 @@
 // Les photos partent au serveur dès qu'elles sont ajoutées : à « Publier », il ne reste presque que le texte à envoyer.
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
+  ActivityIndicator, Alert, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +25,9 @@ import VoiceRecorder from './VoiceRecorder';
 import { HOOD_AR, NKC, WILAYAS } from '../places';
 
 // Listes des villes et des quartiers de Nouakchott (listes déroulantes, comme sur le site)
-const CITY_OPTS = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
+const TOP_CITIES = ['Nouakchott', 'Nouadhibou', 'Rosso', 'Kaédi', 'Kiffa', 'Atar', 'Zouérate', 'Aleg', 'Sélibaby', 'Néma', 'Boghé', 'Tidjikja', 'Akjoujt', 'Kankossa', 'Boutilimit'];
+const CITY_ALL = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
+const CITY_OPTS = [...TOP_CITIES.map((v) => CITY_ALL.find((o) => o.v === v)).filter(Boolean), ...CITY_ALL.filter((o) => !TOP_CITIES.includes(o.v))];
 const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h, ar: HOOD_AR[h] || h })));
 import { colors, radius } from '../theme';
 import { setCatCallback, takeCatCallback } from '../catPick';
@@ -46,7 +48,7 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
-    addPhS: 'Ajouter photos', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
+    addPhS: 'Ajouter photos', cancelL: 'Annuler', contactN: 'Contact', optSuffix: ' (facultatif)', reqCount: '{n} sur {m} obligatoires', reqMiss: 'Il manque : {x}', reqDone: 'Tous les champs obligatoires sont remplis', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
     moreOpt: 'Titre, vidéo et message vocal (facultatif)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
@@ -91,7 +93,7 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
-    addPhS: 'إضافة صور', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
+    addPhS: 'إضافة صور', cancelL: 'إلغاء', contactN: 'التواصل', optSuffix: ' (اختياري)', reqCount: '{n} من {m} إلزامية', reqMiss: 'ينقص: {x}', reqDone: 'كل الحقول الإلزامية مملوءة', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
     moreOpt: 'العنوان، فيديو ورسالة صوتية (اختياري)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
@@ -611,6 +613,15 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     Keyboard.dismiss();
   }
 
+  // Photos : une feuille « Galerie / Appareil photo » s'ouvre au clic
+  function askPhotos() {
+    Alert.alert(t('addPhS'), undefined, [
+      { text: t('gallery'), onPress: () => addPhotos('library') },
+      { text: t('camera'), onPress: () => addPhotos('camera') },
+      { text: t('cancelL'), style: 'cancel' },
+    ]);
+  }
+
   // Une seule page : la catégorie s'ouvre sur sa propre page ; le choix revient ici
   function openCat() {
     setCatCallback((c) => { update(c); setErrors((e) => ({ ...e, cat: undefined, deal: undefined, kind: undefined })); });
@@ -760,6 +771,15 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   const step = d.step;
   const pu = +digits(d.price);
+  // Compteur : les champs obligatoires qui manquent encore
+  const reqErr = collect(3);
+  const reqMissing = [];
+  if (Object.keys(collect(1)).length) reqMissing.push(t('catL'));
+  if (reqErr.price || reqErr.punit) reqMissing.push(t('price'));
+  if (reqErr.contact) reqMissing.push(t('contactN'));
+  const reqLine = reqMissing.length
+    ? t('reqCount', { n: 3 - reqMissing.length, m: 3 }) + ' · ' + t('reqMiss', { x: reqMissing.join(', ') })
+    : t('reqDone');
   const previewAd = {
     id: 'preview', status: 'online', title: d.title.trim() || autoTitle(), punit: 'new', hidep: d.hidep,
     price: pu, city: d.city, hood: d.hood, photos: d.photos.map((p) => p.uri || p.url).filter(Boolean),
@@ -776,7 +796,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       {/* En-tête : étape + barre de progression */}
       <View style={s.head}>
         <View style={[row, { justifyContent: 'space-between', alignItems: 'center' }]}>
-          <Text style={s.stepOf}>{editing ? t('editTitle') + (ONE_SCREEN ? '' : ' · ') : ''}{ONE_SCREEN ? '' : t('stepOf', { n: step })}</Text>
+          <Text style={s.stepOf}>{editing ? t('editTitle') + (ONE_SCREEN ? '' : ' · ') : ''}{ONE_SCREEN ? reqLine : t('stepOf', { n: step })}</Text>
           {restored && !editing && (
             <Pressable onPress={() => { clearDraft(); setD(newDraft({ city: d.city, hood: d.hood })); setRestored(false); setErrors({}); }}>
               <Text style={s.restart}>{t('restored')} · {t('restart')}</Text>
@@ -862,13 +882,14 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         {/* ---------- Une seule page : photos, présentation, détails, prix, lieu, contact ---------- */}
         {ONE_SCREEN && (
           <>
+            <View style={s.card}>
             <View style={[row, s.secRow]}>
               <Text style={[s.secT, al]}>{t('photos')}</Text>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
             </View>
             <View style={s.dash}>
               {d.photos.length === 0 ? (
-                <Pressable style={s.addPh} onPress={() => addPhotos('library')}>
+                <Pressable style={s.addPh} onPress={askPhotos}>
                   <Ionicons name="add" size={22} color={colors.primary} />
                   <Text style={s.addPhTxt}>{t('addPhS')}</Text>
                 </Pressable>
@@ -884,7 +905,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                     </Pressable>
                   ))}
                   {d.photos.length < MAX_PHOTOS && (
-                    <Pressable style={s.tileAdd} onPress={() => addPhotos('library')}>
+                    <Pressable style={s.tileAdd} onPress={askPhotos}>
                       <Ionicons name="add" size={26} color={colors.primary} />
                     </Pressable>
                   )}
@@ -894,12 +915,18 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Err errors={errors} rtl={rtl} k="photos" />
             {d.photos.some((p) => p.status === 'err') && <Text style={[s.err, al]}>{t('photoErr')}</Text>}
 
+            </View>
+
+            <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
             <Label rtl={rtl}>{t('descOpt')}</Label>
             <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => { curF.current = 'desc'; }} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
               placeholder={t('descPh')} multiline maxLength={3000} />
 
+            </View>
+
+            <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('secDet')}</Text>
             <Pressable onPress={openCat} style={[s.catRow, row]}>
               {d.cat && <CatArt cat={d.cat} size={34} />}
@@ -918,6 +945,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               <Field rtl={rtl} style={CF} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
             )}
 
+            </View>
+
+            <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('price')}</Text>
             <View style={[s.priceBox, row]}>
               <Field rtl={rtl} ref={(r) => { fref.current.price = r; }} onFocus={() => { curF.current = 'price'; }} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
@@ -934,6 +964,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               <Tick rtl={rtl} on={d.deliv} label={t('deliv')} onPress={() => update({ deliv: !d.deliv })} />
             </View>
             {d.deliv && <Field rtl={rtl} style={CF} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
+
+            </View>
 
             <Text style={[s.secT, s.secGap, al]}>{t('secLoc')}</Text>
             <View style={[row, { gap: 8 }]}>
@@ -982,7 +1014,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </Fold>
 
             {d.cat === 'anim' && (
-              <Fold title={t('animInfo')} rtl={rtl}
+              <Fold title={t('animInfo') + t('optSuffix')} rtl={rtl}
                 open={detOpen}
                 onToggle={() => setDetOpen((v) => !v)}>
                 <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
@@ -1017,7 +1049,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               </Fold>
             )}
             {detailFields(d).length > 0 && (
-              <Fold title={detailTitle(d, lang === 'ar')} rtl={rtl}
+              <Fold title={detailTitle(d, lang === 'ar') + t('optSuffix')} rtl={rtl}
                 open={detOpen}
                 onToggle={() => setDetOpen((v) => !v)}>
                 {detailFields(d).map((f) => (
@@ -1339,6 +1371,7 @@ const s = StyleSheet.create({
   priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 64 },
   priceIn: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', padding: 0, fontSize: 26, fontWeight: '800', color: colors.text, writingDirection: 'ltr', textAlign: 'right' },
   priceUnit: { fontSize: 14, fontWeight: '700', color: colors.muted },
+  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: '#E6DFCF', borderRadius: 14, padding: 12, gap: 8 },
   secRow: { justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   secT: { fontSize: 17, fontWeight: '800', color: colors.text },
   secGap: { marginTop: 10 },
