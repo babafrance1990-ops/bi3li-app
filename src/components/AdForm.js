@@ -685,7 +685,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     };
     if (d.sub && SUB_KEY[d.cat]) ad[SUB_KEY[d.cat]] = d.sub; // sous-catégorie : même champ que sur le site
     Object.assign(ad, detailAdObject(d));
-    if (d.cat === 'anim') ad.anim = { species: d.sub, count: +digits(d.count) || 1, sex: d.sex, age: d.age, breed: d.breed.trim(), tabaski: !!d.tabaski, delivery: !!d.deliv };
+    if (d.cat === 'anim') ad.anim = { species: d.sub, count: +digits(d.count) || 1, sex: d.sex, age: d.age, breed: d.breed.trim(), tabaski: !!d.tabaski && d.sub !== 'volaille' && d.sub !== 'autre', delivery: !!d.deliv };
     // Copie du formulaire pour pouvoir modifier l'annonce plus tard sur le site (sans la vidéo ni le vocal, trop lourds)
     const { photos, step, voice: _v, voiceUri, video: _vid, videoUri, ...rest } = d;
     ad._d = { ...rest, price: digits(d.price), eq: [], pub: 'owner', stype: 'part' };
