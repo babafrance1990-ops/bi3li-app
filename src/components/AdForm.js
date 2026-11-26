@@ -22,11 +22,11 @@ import { notify } from '../notify';
 import { MAX_PHOTOS, pickPhotos, uploadPhoto } from '../photos';
 import { pickVideo, uploadVideo, voiceDataUrl } from '../media';
 import VoiceRecorder from './VoiceRecorder';
-import { NKC, WILAYAS } from '../places';
+import { HOOD_AR, NKC, WILAYAS } from '../places';
 
 // Listes des villes et des quartiers de Nouakchott (listes déroulantes, comme sur le site)
 const CITY_OPTS = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
-const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h + ' (' + w.fr.replace('Nouakchott-', '') + ')', ar: h + ' (' + w.ar.replace('نواكشوط ', '') + ')' })));
+const HOOD_OPTS = NKC.flatMap((w) => w.h.map((h) => ({ v: h, fr: h + ' (' + w.fr.replace('Nouakchott-', '') + ')', ar: (HOOD_AR[h] || h) + ' (' + w.ar.replace('نواكشوط ', '') + ')' })));
 import { colors, radius } from '../theme';
 import { setCatCallback, takeCatCallback } from '../catPick';
 
@@ -70,7 +70,7 @@ const D = {
     title: 'Titre (facultatif)', titleHelp: 'Laissez vide : un titre sera écrit automatiquement.', desc: 'Description',
     descPh: 'État, couleur, quartier, raison de la vente…',
     price: 'Prix', unit: 'Monnaie', unitNew: 'Nouvelle ouguiya (MRU)', unitOld: 'Ancienne ouguiya',
-    eqNew: '10 MRO = 1 MRU · soit {v} MRU nouvelles', eqOld: '1 MRU = 10 MRO · soit {v} MRO anciennes', nego: 'Prix à discuter', hidep: 'Masquer le prix sur l’annonce',
+    eqNew: '= {v} MRU (nouvelles ouguiyas)', eqOld: '= {v} MRO (anciennes ouguiyas)', nego: 'Prix à discuter', hidep: 'Masquer le prix sur l’annonce',
     city: 'Ville', hood: 'Quartier (facultatif)', hoodNkc: 'Moughataa (facultatif)', near: 'Repère (facultatif)', nearPh: 'ex. près de la mosquée…',
     deliv: 'Livraison possible', delivNote: 'Précisions sur la livraison (facultatif)',
     contactAt: 'Les acheteurs vous contacteront au', wa: 'WhatsApp', call: 'Appels',
@@ -117,7 +117,7 @@ const D = {
     title: 'العنوان (اختياري)', titleHelp: 'اتركه فارغاً: سنكتب عنواناً تلقائياً.', desc: 'الوصف',
     descPh: 'الحالة، اللون، الحي، سبب البيع…',
     price: 'السعر', unit: 'العملة', unitNew: 'الأوقية الجديدة', unitOld: 'الأوقية القديمة',
-    eqNew: '10 أوقية قديمة = 1 جديدة · أي {v} أوقية جديدة', eqOld: '1 أوقية جديدة = 10 قديمة · أي {v} أوقية قديمة', nego: 'السعر قابل للنقاش', hidep: 'إخفاء السعر على البطاقة',
+    eqNew: '= {v} أوقية جديدة', eqOld: '= {v} أوقية قديمة', nego: 'السعر قابل للنقاش', hidep: 'إخفاء السعر على البطاقة',
     city: 'المدينة', hood: 'الحي (اختياري)', hoodNkc: 'المقاطعة (اختياري)', near: 'معلم قريب (اختياري)', nearPh: 'مثلاً قرب المسجد…',
     deliv: 'التوصيل ممكن', delivNote: 'تفاصيل التوصيل (اختياري)',
     contactAt: 'سيتصل بك المشترون على الرقم', wa: 'واتساب', call: 'اتصال',
@@ -150,6 +150,7 @@ const KIND_L = {
 };
 
 const digits = (v) => String(v || '').replace(/\D/g, '');
+const ltr = (x) => '\u2066' + x + '\u2069'; // nombre lu de gauche à droite dans une phrase en arabe
 const fmtN = (n) => Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
 let photoKey = 0;
 
@@ -917,8 +918,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
             <Err errors={errors} rtl={rtl} k="punit" />
             <Err errors={errors} rtl={rtl} k="price" />
-            {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
-            {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
+            {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: ltr(fmtN(pu / 10)) })}</Text>}
+            {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: ltr(fmtN(pu * 10)) })}</Text>}
             <View style={[row, { gap: 8, flexWrap: 'wrap', marginTop: 4 }]}>
               <Tick rtl={rtl} on={d.hidep} label={t('hidep')} onPress={() => { update({ hidep: !d.hidep }); setErrors((e) => ({ ...e, price: undefined, punit: undefined })); }} />
               <Tick rtl={rtl} on={d.nego} label={t('nego')} onPress={() => update({ nego: !d.nego })} />
@@ -1098,8 +1099,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               <Chip on={d.punit === 'old'} label={t('unitOld')} onPress={() => update({ punit: 'old' })} />
             </View>
             <Err errors={errors} rtl={rtl} k="punit" />
-            {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
-            {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
+            {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: ltr(fmtN(pu / 10)) })}</Text>}
+            {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: ltr(fmtN(pu * 10)) })}</Text>}
             <Label rtl={rtl}>{t('price')}</Label>
             <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" style={{ fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
             <Err errors={errors} rtl={rtl} k="price" />

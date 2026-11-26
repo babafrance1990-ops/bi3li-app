@@ -9,3 +9,10 @@ WILAYAS.forEach((w) => w.cities.forEach(([fr, ar]) => { AR[fr] = ar; }));
 
 // Nom de la ville dans la langue de l'application
 export const cityName = (fr, lang) => (lang === 'ar' && AR[fr]) || fr || '';
+
+// Noms arabes des quartiers de Nouakchott (la valeur enregistrée reste en français, comme sur le site)
+export const HOOD_AR = {
+  'Tevragh Zeina': 'تفرغ زينة', Ksar: 'القصر', Sebkha: 'السبخة',
+  'Dar Naim': 'دار النعيم', Teyarett: 'تيارت', Toujounine: 'توجنين',
+  Arafat: 'عرفات', 'El Mina': 'الميناء', Riyadh: 'الرياض',
+};
