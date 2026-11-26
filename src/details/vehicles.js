@@ -82,11 +82,11 @@ export function vehicleFields(kind) {
     { k: 'vtype', label: LABEL.vtype, type: 'chips', opts: ch(L.vtype) },
     { k: 'color', label: LABEL.color, type: 'chips', opts: ch(L.color) },
     { k: 'seats', label: LABEL.seats, type: 'chips', opts: plain(SEATS) },
-    { k: 'doors', label: LABEL.doors, type: 'chips', opts: plain(['2', '3', '4', '5']) },
     { k: 'year', label: LABEL.year, type: 'num', len: 4, req: true, err: 'errYear' },
     { k: 'km', label: LABEL.km, type: 'num' },
     { k: 'fuel', label: LABEL.fuel, type: 'chips', opts: ch(L.fuel), req: true, err: 'errFuel' },
     { k: 'gear', label: LABEL.gear, type: 'chips', opts: ch(L.gear), req: true, err: 'errGear' },
+    { k: 'doors', label: LABEL.doors, type: 'chips', opts: plain(['2', '3', '4', '5']) },
     { k: 'cond', label: LABEL.cond, type: 'chips', opts: ch(L.cond), req: true, err: 'errCond' },
   ];
   const cond = { k: 'vcond', label: LABEL.cond, type: 'chips', opts: ch(L.cond), req: true, err: 'errCond' };
