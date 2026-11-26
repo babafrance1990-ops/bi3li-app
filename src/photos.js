@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { api } from './api';
 
-export const MAX_PHOTOS = 8;
+export const MAX_PHOTOS = 6; // limite du serveur (les photos au-delà de 6 ne sont pas gardées)
 const MAX_SIDE = 1280; // comme le site : photo allégée avant l'envoi (limite serveur 1,5 Mo)
 
 // Ouvre la galerie (plusieurs photos) ou l'appareil photo. Renvoie une liste d'images { uri, width, height }.
