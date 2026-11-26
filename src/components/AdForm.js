@@ -1072,7 +1072,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
             </>}
 
-            {d.cat === 'anim' && (detOpen || d.count !== '1' || d.sex || d.age || d.breed || d.tabaski) ? (
+            {d.cat === 'anim' && (detOpen || d.count !== '1' || d.sex || d.age || d.breed || d.tabaski || errors.count || (ONE_SCREEN && Object.keys(errors).length > 0)) ? (
               <View style={s.detBox}>
                 <Label rtl={rtl}>{t('animInfo')}</Label>
                 <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
@@ -1117,7 +1117,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               </Pressable>
               </>
             ) : null}
-            {detailFields(d).length > 0 && (detOpen || detailsOpenByDefault(d) || detailsFilled(d)) ? (
+            {detailFields(d).length > 0 && (detOpen || detailsFilled(d) || (ONE_SCREEN ? Object.keys(errors).length > 0 : detailsOpenByDefault(d))) ? (
               <View style={s.detBox}>
                 <Label rtl={rtl}>{detailTitle(d, lang === 'ar')}</Label>
                 {detailFields(d).map((f) => (
