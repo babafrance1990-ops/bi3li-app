@@ -33,6 +33,7 @@ import { setCatCallback, takeCatCallback } from '../catPick';
 // Formulaire sur une seule page (catégorie en haut, puis photos, texte, prix et contact, un seul bouton « Publier »).
 // Mettre false pour revenir à l'ancien formulaire en 3 étapes : tout le code des étapes est gardé.
 const ONE_SCREEN = true;
+const CF = { paddingVertical: 10 }; // champs plus bas (une seule page)
 import { MODELS, VEH_ERR } from '../details/vehicles';
 import { ELEC_ERR } from '../details/electronics';
 import { L3 } from '../details/labels3';
@@ -45,6 +46,7 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
+    addPhS: 'Ajouter photos', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
     moreOpt: 'Plus d’options (repère, livraison, vidéo, vocal)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
@@ -89,6 +91,7 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
+    addPhS: 'إضافة صور', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
     moreOpt: 'خيارات إضافية (المعلم، التوصيل، فيديو، صوت)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
@@ -742,30 +745,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       </View>
 
       <ScrollView ref={scroll} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
-        {/* ---------- Une seule page : la catégorie ouvre sa propre page ---------- */}
-        {ONE_SCREEN && (
-          <>
-            <Label rtl={rtl}>{t('catL')}</Label>
-            <Pressable onPress={openCat} style={[s.catRow, row]}>
-              {d.cat
-                ? <CatArt cat={d.cat} size={44} />
-                : <View style={s.allIcon}><Ionicons name="apps-outline" size={22} color={colors.muted} /></View>}
-              <View style={{ flex: 1 }}>
-                <Text style={[s.catRowTxt, al, !d.cat && { color: colors.muted, fontWeight: '600' }]}>
-                  {d.cat ? (CATEGORIES.find((c) => c.id === d.cat) || {})[lang] : t('catPh')}
-                </Text>
-                {!!catSub && <Text style={[s.help, al]}>{catSub}</Text>}
-              </View>
-              <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.primary} />
-            </Pressable>
-            <Err errors={errors} rtl={rtl} k="cat" />
-            <Err errors={errors} rtl={rtl} k="deal" />
-            <Err errors={errors} rtl={rtl} k="kind" />
-            {d.cat === 'immo' && !!d.kind && (
-              <Field rtl={rtl} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
-            )}
-          </>
-        )}
+        {/* ---------- Une seule page : la catégorie ouvre sa propre page (voir plus bas, « Détails de l'article ») ---------- */}
 
         {/* ---------- Étape 1 : catégorie et type (ancien formulaire en 3 étapes) ---------- */}
         {!ONE_SCREEN && step === 1 && (
@@ -831,49 +811,68 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         )}
 
         {/* ---------- Étape 2 : photos, titre, description ---------- */}
-        {/* ---------- Une seule page, version compacte : tout l'essentiel sans défiler ---------- */}
+        {/* ---------- Une seule page : photos, présentation, détails, prix, lieu, contact (version compacte) ---------- */}
         {ONE_SCREEN && (
           <>
-            <View style={[row, { justifyContent: 'space-between' }]}>
-              <Label rtl={rtl}>{t('photos')}</Label>
+            <View style={[row, s.secRow]}>
+              <Text style={[s.secT, al]}>{t('photos')}</Text>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[row, { gap: 8 }]}>
-              {d.photos.length < MAX_PHOTOS && (
-                <>
-                  <Pressable style={s.tile} onPress={() => addPhotos('library')}>
-                    <Ionicons name="images-outline" size={22} color={colors.primaryDark} />
-                    <Text style={s.tileTxt}>{t('gallery')}</Text>
-                  </Pressable>
-                  <Pressable style={s.tile} onPress={() => addPhotos('camera')}>
-                    <Ionicons name="camera-outline" size={22} color={colors.primaryDark} />
-                    <Text style={s.tileTxt}>{t('camera')}</Text>
-                  </Pressable>
-                </>
-              )}
-              {d.photos.map((p, i) => (
-                <Pressable key={p.key} style={s.thumbS} onPress={() => (p.status === 'err' ? startUpload(p) : makeMain(p.key))}>
-                  <Image source={p.uri || mediaUrl(p.url) || null} style={s.thumbImg} contentFit="cover" />
-                  {p.status === 'up' && <View style={s.thumbOver}><ActivityIndicator color="#fff" /></View>}
-                  {(p.status === 'err' || (p.status === 'todo' && !p.uri)) && <View style={[s.thumbOver, { backgroundColor: 'rgba(220,38,38,0.7)' }]}><Text style={s.thumbErr}>⚠︎ ↻</Text></View>}
-                  {i === 0 && <Text style={s.mainTag}>{t('main')}</Text>}
-                  <Pressable style={s.del} hitSlop={8} onPress={() => removePhoto(p.key)}><Text style={s.delTxt}>✕</Text></Pressable>
+            <View style={s.dash}>
+              {d.photos.length === 0 ? (
+                <Pressable style={s.addPh} onPress={() => addPhotos('library')}>
+                  <Ionicons name="add" size={22} color={colors.primary} />
+                  <Text style={s.addPhTxt}>{t('addPhS')}</Text>
                 </Pressable>
-              ))}
-            </ScrollView>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[row, { gap: 8 }]}>
+                  {d.photos.map((p, i) => (
+                    <Pressable key={p.key} style={s.thumbS} onPress={() => (p.status === 'err' ? startUpload(p) : makeMain(p.key))}>
+                      <Image source={p.uri || mediaUrl(p.url) || null} style={s.thumbImg} contentFit="cover" />
+                      {p.status === 'up' && <View style={s.thumbOver}><ActivityIndicator color="#fff" /></View>}
+                      {(p.status === 'err' || (p.status === 'todo' && !p.uri)) && <View style={[s.thumbOver, { backgroundColor: 'rgba(220,38,38,0.7)' }]}><Text style={s.thumbErr}>⚠︎ ↻</Text></View>}
+                      {i === 0 && <Text style={s.mainTag}>{t('main')}</Text>}
+                      <Pressable style={s.del} hitSlop={8} onPress={() => removePhoto(p.key)}><Text style={s.delTxt}>✕</Text></Pressable>
+                    </Pressable>
+                  ))}
+                  {d.photos.length < MAX_PHOTOS && (
+                    <Pressable style={s.tileAdd} onPress={() => addPhotos('library')}>
+                      <Ionicons name="add" size={26} color={colors.primary} />
+                    </Pressable>
+                  )}
+                </ScrollView>
+              )}
+            </View>
             <Err errors={errors} rtl={rtl} k="photos" />
+            {d.photos.some((p) => p.status === 'err') && <Text style={[s.err, al]}>{t('photoErr')}</Text>}
 
-            <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+            <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
+            <Field rtl={rtl} style={CF} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+            <Field rtl={rtl} style={[CF, { minHeight: 70, maxHeight: 110, textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+              placeholder={t('descPh')} multiline maxLength={3000} />
 
-            <Label rtl={rtl}>{t('desc')}</Label>
-            <Field rtl={rtl} value={d.desc} onChangeText={(v) => update({ desc: v })} placeholder={t('descPh')} multiline
-              style={{ minHeight: 80, maxHeight: 120, textAlignVertical: 'top' }} maxLength={3000} />
+            <Text style={[s.secT, s.secGap, al]}>{t('secDet')}</Text>
+            <Pressable onPress={openCat} style={[s.catRow, row]}>
+              {d.cat && <CatArt cat={d.cat} size={34} />}
+              <View style={{ flex: 1 }}>
+                <Text style={[s.catRowTxt, al, !d.cat && { color: colors.muted, fontWeight: '600' }]}>
+                  {(CATEGORIES.find((c) => c.id === d.cat) || {})[lang] || t('catL')}
+                </Text>
+                {!!catSub && <Text style={[s.help, al]}>{catSub}</Text>}
+              </View>
+              <Ionicons name={d.cat ? (rtl ? 'chevron-back' : 'chevron-forward') : 'add'} size={22} color={colors.primary} />
+            </Pressable>
+            <Err errors={errors} rtl={rtl} k="cat" />
+            <Err errors={errors} rtl={rtl} k="deal" />
+            <Err errors={errors} rtl={rtl} k="kind" />
+            {d.cat === 'immo' && !!d.kind && (
+              <Field rtl={rtl} style={CF} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
+            )}
 
-            <Label rtl={rtl}>{t('price')}</Label>
+            <Text style={[s.secT, s.secGap, al]}>{t('price')}</Text>
             <View style={[row, { gap: 8, alignItems: 'center' }]}>
-              <Field rtl={rtl} value={pu ? fmtN(pu).replace(/[⁦⁩]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad"
-                style={{ flex: 1, fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }} />
+              <Field rtl={rtl} style={[CF, { flex: 1, fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }]}
+                value={pu ? fmtN(pu).replace(/[⁦⁩]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
               <Chip on={d.punit === 'new'} label={t('unitNew')} onPress={() => update({ punit: 'new' })} />
               <Chip on={d.punit === 'old'} label={t('unitOld')} onPress={() => update({ punit: 'old' })} />
             </View>
@@ -886,24 +885,18 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               <Chip on={d.hidep} label={t('hidep')} onPress={() => { update({ hidep: !d.hidep }); setErrors((e) => ({ ...e, price: undefined, punit: undefined })); }} />
             </View>
 
+            <Text style={[s.secT, s.secGap, al]}>{t('secLoc')}</Text>
             <View style={[row, { gap: 8 }]}>
               <View style={{ flex: 1 }}>
-                <Label rtl={rtl}>{t('city')}</Label>
                 <PickSheet value={d.city} options={CITY_OPTS} placeholder={ar ? 'اختر المدينة' : 'Choisir la ville'} title={t('city')} rtl={rtl} ar={ar}
                   onPick={(c) => update({ city: c, hood: c === d.city ? d.hood : '' })} />
               </View>
               <View style={{ flex: 1 }}>
                 {d.city === 'Nouakchott' ? (
-                  <>
-                    <Label rtl={rtl}>{t('hoodNkc')}</Label>
-                    <PickSheet value={d.hood} options={HOOD_OPTS} placeholder={ar ? 'اختر (اختياري)' : 'Choisir (facultatif)'} title={t('hoodNkc')} rtl={rtl} ar={ar}
-                      onPick={(h) => update({ hood: h })} />
-                  </>
+                  <PickSheet value={d.hood} options={HOOD_OPTS} placeholder={ar ? 'المقاطعة' : 'Quartier'} title={t('hoodNkc')} rtl={rtl} ar={ar}
+                    onPick={(h) => update({ hood: h })} />
                 ) : (
-                  <>
-                    <Label rtl={rtl}>{t('hood')}</Label>
-                    <Field rtl={rtl} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
-                  </>
+                  <Field rtl={rtl} style={CF} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
                 )}
               </View>
             </View>
@@ -917,9 +910,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             {(moreOpen || d.near || d.deliv || d.videoUri || d.video || d.voiceUri || d.voice) ? (
               <>
-                <Field rtl={rtl} value={d.near} onChangeText={(v) => update({ near: v })} placeholder={t('nearPh')} maxLength={60} />
+                <Field rtl={rtl} style={CF} value={d.near} onChangeText={(v) => update({ near: v })} placeholder={t('nearPh')} maxLength={60} />
                 <Toggle rtl={rtl} label={t('deliv')} value={d.deliv} onChange={(v) => update({ deliv: v })} />
-                {d.deliv && <Field rtl={rtl} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
+                {d.deliv && <Field rtl={rtl} style={CF} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
                 <Label rtl={rtl}>{t('vidL')}</Label>
                 {d.videoUri || d.video ? (
                   <View style={[s.mediaRow, row]}>
@@ -1267,9 +1260,16 @@ export function CatPickScreen() {
 
 const s = StyleSheet.create({
   sep: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
+  secRow: { justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  secT: { fontSize: 17, fontWeight: '800', color: colors.text },
+  secGap: { marginTop: 10 },
+  dash: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primary, borderRadius: 14, padding: 8, backgroundColor: '#F7FBF8' },
+  addPh: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 12, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.white },
+  addPhTxt: { color: colors.primaryDark, fontWeight: '700', fontSize: 16 },
+  tileAdd: { width: 76, height: 76, borderRadius: radius.m, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   tile: { width: 84, height: 84, borderRadius: radius.m, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center', gap: 4 },
   tileTxt: { fontSize: 11, fontWeight: '700', color: colors.primaryDark },
-  thumbS: { width: 84, height: 84, borderRadius: radius.m, overflow: 'hidden', backgroundColor: colors.border },
+  thumbS: { width: 76, height: 76, borderRadius: radius.m, overflow: 'hidden', backgroundColor: colors.border },
   catRow: { alignItems: 'center', gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, padding: 10 },
   catRowTxt: { fontSize: 16, fontWeight: '700', color: colors.text },
   pickBlock: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 10, gap: 8 },
