@@ -14,7 +14,7 @@ export const CATEGORIES = [
   { id: 'beaute', fr: 'Beauté & santé', ar: 'صحة وجمال', c: '#C2185B', icon: '💄' },
   { id: 'fam', fr: 'Bébé & enfants', ar: 'الأطفال والرضّع', c: '#B4235A', icon: '🍼' },
   { id: 'job', fr: 'Emploi', ar: 'وظائف', c: '#3D5A80', icon: '💼' },
-  { id: 'covoit', fr: 'Covoiturage', ar: 'نقل مشترك', c: '#0E7490', icon: '🚐' },
+  { id: 'covoit', fr: 'Transport entre villes', ar: 'نقل بين المدن', c: '#0E7490', icon: '🚐' },
   { id: 'autre', fr: 'Autres', ar: 'أخرى', c: '#56625A', icon: '📦' },
 ];
 

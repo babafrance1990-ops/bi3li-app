@@ -14,7 +14,7 @@ import { invalidateAds } from '../store';
 import { useAuth } from '../auth';
 import { CATEGORIES, catById } from '../categories';
 import { SUB_KEY, subsOf } from '../subcategories';
-import { CatArt, SubArt } from './Art';
+import { CatArt, KindArt, SubArt } from './Art';
 import AdCard from './AdCard';
 import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
 import { useLang } from '../i18n';
@@ -366,6 +366,7 @@ function adToDraft(a) {
   const d = { ...base, ...pick, step: 1 };
   d.cat = a.cat; d.title = a.title || ''; d.desc = a.desc || '';
   d.sub = (SUB_KEY[a.cat] && a[SUB_KEY[a.cat]]) || d0.sub || '';
+  if (a.cat === 'covoit') d.sub = (a.trip && a.trip.type) || ''; // type de trajet : choisi à l'étape catégorie
   d.punit = a.punit === 'old' ? 'old' : 'new';
   d.price = String(a.punit === 'old' ? a.priceOld || a.price * 10 : a.price || '');
   d.nego = !!a.nego; d.hidep = !!a.hidep; d.city = a.city || d.city; d.hood = a.hood || ''; d.near = a.near || '';
@@ -795,7 +796,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       {/* En-tête : étape + barre de progression */}
       <View style={s.head}>
         <View style={[row, { justifyContent: 'space-between', alignItems: 'center' }]}>
-          <Text style={s.stepOf}>{editing ? t('editTitle') + (ONE_SCREEN ? '' : ' · ') : ''}{ONE_SCREEN ? reqLine : t('stepOf', { n: step })}</Text>
+          <Text style={[s.stepOf, s.stepCenter, ONE_SCREEN && (reqMissing.length ? s.stepMissing : s.stepDone)]}>{editing ? t('editTitle') + (ONE_SCREEN ? '' : ' · ') : ''}{ONE_SCREEN ? reqLine : t('stepOf', { n: step })}</Text>
           {restored && !editing && (
             <Pressable onPress={() => { clearDraft(); setD(newDraft({ city: d.city, hood: d.hood })); setRestored(false); setErrors({}); }}>
               <Text style={s.restart}>{t('restored')} · {t('restart')}</Text>
@@ -1258,9 +1259,11 @@ export function CatPickScreen() {
     ? !!v.deal && KINDS[v.deal].includes(v.kind)
     : (!hasSub(v.cat) || !!v.sub));
 
+  // Choix automatique : la catégorie ouvre directement ses sous-catégories, avec la première sélectionnée (immobilier : vente)
   function chooseCat(id) {
     pendingSub.current = hasSub(id);
-    setV({ cat: id, sub: '', deal: '', kind: '' });
+    const first = id === 'immo' ? { deal: 'sale' } : { sub: subsOf(id)[0] ? subsOf(id)[0].id : '' };
+    setV({ cat: id, sub: '', deal: '', kind: '', ...first });
   }
   // Quand les sous-catégories apparaissent, la page descend jusqu'à elles
   const onSubLayout = (e) => {
@@ -1275,7 +1278,7 @@ export function CatPickScreen() {
     const give = takeCatCallback();
     give?.(v.cat === 'immo'
       ? { cat: v.cat, sub: '', deal: v.deal, kind: v.kind }
-      : { cat: v.cat, sub: v.sub, deal: '', kind: '' });
+      : { cat: v.cat, sub: v.sub, deal: '', kind: '', ctype: v.cat === 'covoit' ? v.sub : '' });
     router.back();
   }
 
@@ -1313,16 +1316,23 @@ export function CatPickScreen() {
                 {!!v.deal && (
                   <>
                     <Label rtl={rtl}>{t('kind')}</Label>
-                    <View style={[s.chips, row]}>
-                      {KINDS[v.deal].map((k) => (
-                        <Chip key={k} on={v.kind === k} label={KIND_L[k][L]} onPress={() => setV((p) => ({ ...p, kind: k }))} />
-                      ))}
+                    <View style={[s.frame, s.grid, row]}>
+                      {KINDS[v.deal].map((k) => {
+                        const on = v.kind === k;
+                        return (
+                          <Pressable key={k} onPress={() => setV((p) => ({ ...p, kind: k }))}
+                            style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
+                            <KindArt kind={k} size={52} />
+                            <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{KIND_L[k][L]}</Text>
+                          </Pressable>
+                        );
+                      })}
                     </View>
                   </>
                 )}
               </>
             ) : (
-              <View style={[s.grid, row]}>
+              <View style={[s.frame, s.grid, row]}>
                 {subsOf(v.cat).map((x) => {
                   const on = v.sub === x.id;
                   return (
@@ -1385,6 +1395,7 @@ const s = StyleSheet.create({
   catRowTxt: { fontSize: 16, fontWeight: '700', color: colors.text },
   pickBlock: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 10, gap: 8 },
   pickBlockTint: { backgroundColor: '#EEF5F0', borderColor: '#CFE3D6' },
+  frame: { borderWidth: 2, borderColor: colors.primary, borderRadius: radius.m, padding: 8, backgroundColor: colors.white },
   pickHead: { fontSize: 15, fontWeight: '800', color: colors.primaryDark },
   detBox: { backgroundColor: '#EEF5F0', borderRadius: 12, padding: 12, gap: 8, marginBottom: 12 },
   checkRow: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingVertical: 12, paddingHorizontal: 14, marginVertical: 4 },
@@ -1396,6 +1407,9 @@ const s = StyleSheet.create({
 
   head: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, backgroundColor: colors.white, borderBottomWidth: 1, borderColor: colors.border, gap: 8 },
   stepOf: { color: colors.muted, fontWeight: '700' },
+  stepCenter: { flex: 1, textAlign: 'center' },
+  stepMissing: { color: '#B42318' },
+  stepDone: { color: colors.primaryDark },
   restart: { color: colors.primaryDark, fontSize: 12, fontWeight: '600' },
   bar: { gap: 6 },
   barPart: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.border },

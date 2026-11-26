@@ -110,6 +110,10 @@ export const SUBS = {
     { id: 'babysit', fr: 'Baby-sitting', ar: 'رعاية الأطفال' },
     { id: 'aideDom', fr: 'Aide à domicile', ar: 'عمال المنازل' },
   ],
+  covoit: [
+    { id: 'offer', fr: 'Conducteur : je propose des places', ar: 'سائق: أعرض مقاعد' },
+    { id: 'demand', fr: 'Passager : je cherche un trajet', ar: 'راكب: أبحث عن رحلة' },
+  ],
   anim: [
     { id: 'mouton', fr: 'Mouton', ar: 'خروف' },
     { id: 'chevre', fr: 'Chèvre', ar: 'ماعز' },

@@ -113,7 +113,7 @@ function servFields(d) {
 const CITIES = WILAYAS.flatMap((w) => w.cities.map(([fr, ar]) => ({ v: fr, fr, ar })));
 
 function tripFields(d) {
-  const f = [{ k: 'ctype', label: lab('ctype'), type: 'chips', opts: opts(['offer', 'demand'], 'ct_'), req: true }];
+  const f = []; // conducteur / passager : choisi à l'étape catégorie (sous-catégories)
   if (!d.ctype) return f;
   const offer = d.ctype === 'offer';
   f.push({ k: 'cfrom', label: lab('cfrom'), type: 'chips', opts: CITIES, req: true });

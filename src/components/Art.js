@@ -1,6 +1,14 @@
 // Affiche le dessin d'une catégorie ou d'une sous-catégorie (mêmes dessins que sur le site)
 import { SvgXml } from 'react-native-svg';
 import { ART } from '../artwork';
+import { KIND_ART, KIND_BG } from '../kindArt';
+
+// Dessin d'un type de bien immobilier (mêmes illustrations que sur le site)
+export function KindArt({ kind, size = 52 }) {
+  const inner = KIND_ART[kind];
+  if (!inner) return null;
+  return <SvgXml xml={`<svg viewBox="0 0 64 64" width="${size}" height="${size}"><rect width="64" height="64" fill="${KIND_BG}"/>${inner}</svg>`} width={size} height={size} />;
+}
 
 export function CatArt({ cat, size = 56 }) {
   const inner = ART.cats[cat];
