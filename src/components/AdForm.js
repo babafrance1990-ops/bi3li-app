@@ -3,7 +3,7 @@
 // Les photos partent au serveur dès qu'elles sont ajoutées : à « Publier », il ne reste presque que le texte à envoyer.
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
+  ActivityIndicator, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,7 +46,7 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
-    addPhS: 'Ajouter photos', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
+    addPhS: 'Ajouter photos', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
     moreOpt: 'Vidéo et message vocal (facultatif)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
@@ -70,7 +70,7 @@ const D = {
     title: 'Titre (facultatif)', titleHelp: 'Laissez vide : un titre sera écrit automatiquement.', desc: 'Description',
     descPh: 'État, couleur, quartier, raison de la vente…',
     price: 'Prix', unit: 'Monnaie', unitNew: 'Nouvelle ouguiya (MRU)', unitOld: 'Ancienne ouguiya',
-    eqNew: '= {v} MRU (nouvelle ouguiya)', eqOld: '= {v} anciennes ouguiyas', nego: 'Prix à discuter', hidep: 'Masquer le prix sur l’annonce',
+    eqNew: '10 MRO = 1 MRU · soit {v} MRU nouvelles', eqOld: '1 MRU = 10 MRO · soit {v} MRO anciennes', nego: 'Prix à discuter', hidep: 'Masquer le prix sur l’annonce',
     city: 'Ville', hood: 'Quartier (facultatif)', hoodNkc: 'Moughataa (facultatif)', near: 'Repère (facultatif)', nearPh: 'ex. près de la mosquée…',
     deliv: 'Livraison possible', delivNote: 'Précisions sur la livraison (facultatif)',
     contactAt: 'Les acheteurs vous contacteront au', wa: 'WhatsApp', call: 'Appels',
@@ -91,7 +91,7 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
-    addPhS: 'إضافة صور', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
+    addPhS: 'إضافة صور', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
     moreOpt: 'فيديو ورسالة صوتية (اختياري)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
@@ -117,7 +117,7 @@ const D = {
     title: 'العنوان (اختياري)', titleHelp: 'اتركه فارغاً: سنكتب عنواناً تلقائياً.', desc: 'الوصف',
     descPh: 'الحالة، اللون، الحي، سبب البيع…',
     price: 'السعر', unit: 'العملة', unitNew: 'الأوقية الجديدة', unitOld: 'الأوقية القديمة',
-    eqNew: '= {v} أوقية جديدة', eqOld: '= {v} أوقية قديمة', nego: 'السعر قابل للنقاش', hidep: 'إخفاء السعر على البطاقة',
+    eqNew: '10 أوقية قديمة = 1 جديدة · أي {v} أوقية جديدة', eqOld: '1 أوقية جديدة = 10 قديمة · أي {v} أوقية قديمة', nego: 'السعر قابل للنقاش', hidep: 'إخفاء السعر على البطاقة',
     city: 'المدينة', hood: 'الحي (اختياري)', hoodNkc: 'المقاطعة (اختياري)', near: 'معلم قريب (اختياري)', nearPh: 'مثلاً قرب المسجد…',
     deliv: 'التوصيل ممكن', delivNote: 'تفاصيل التوصيل (اختياري)',
     contactAt: 'سيتصل بك المشترون على الرقم', wa: 'واتساب', call: 'اتصال',
@@ -321,8 +321,9 @@ const VehField = ({ f, d, update, lang, rtl, errors }) => {
 
 const Err = ({ errors, k, rtl }) => (errors[k] ? <Text style={[s.err, alignOf(rtl)]}>{errors[k]}</Text> : null);
 const Label = ({ children, rtl }) => <Text style={[s.label, alignOf(rtl)]}>{children}</Text>;
-const Chip = ({ on, label, onPress, color }) => (
-  <Pressable onPress={onPress} style={[s.chip, on && { backgroundColor: color || colors.primary, borderColor: color || colors.primary }]}>
+const Chip = ({ on, label, onPress, color, icon }) => (
+  <Pressable onPress={onPress} style={[s.chip, s.chipRow, on && { backgroundColor: color || colors.primary, borderColor: color || colors.primary }]}>
+    {!!icon && <Ionicons name={icon} size={18} color={on ? '#fff' : (color || colors.primaryDark)} />}
     <Text style={[s.chipTxt, on && { color: '#fff' }]}>{label}</Text>
   </Pressable>
 );
@@ -413,6 +414,13 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const [errors, setErrors] = useState({});
   const [detOpen, setDetOpen] = useState(false); // détails de catégorie (fin de l'étape 3, comme sur le site)
   const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
+  const [descH, setDescH] = useState(64);          // hauteur de la description : elle grandit avec le texte
+  const [kbOpen, setKbOpen] = useState(false);     // clavier ouvert
+  useEffect(() => {
+    const a = Keyboard.addListener('keyboardDidShow', () => setKbOpen(true));
+    const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
+    return () => { a.remove(); b.remove(); };
+  }, []);
   const [busy, setBusy] = useState('');     // texte du bouton pendant la publication
   const [done, setDone] = useState(null);   // annonce publiée
   const pending = useRef({});               // envois de photos en cours (clé → promesse)
@@ -459,11 +467,14 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   }
 
   useEffect(() => {
-    if (editing) { setD(adToDraft(editAd)); return; }
+    if (editing) { const dd = adToDraft(editAd); setD(dd); setDetOpen(detailsFilled(dd)); setMoreOpen(!!(dd.video || dd.voice)); return; }
     if (admin) { setD({ ...newDraft(), wa: true, call: true }); return; }
     loadDraft().then(({ draft, restored: r }) => {
       draft.photos = draft.photos.map((p) => ({ ...p, key: p.key || 'p' + ++photoKey }));
       if (!draft.city && user?.city) draft.city = user.city; // ville du compte par défaut
+      if (!draft.cat && !draft.photos.length) draft.nego = true; // « prix à discuter » coché par défaut
+      setDetOpen(detailsFilled(draft));
+      setMoreOpen(!!(draft.video || draft.voice || draft.videoUri || draft.voiceUri));
       setD(draft);
       setRestored(r && (draft.cat || draft.photos.length > 0));
       draft.photos.filter((p) => p.status === 'todo').forEach((p) => setTimeout(() => startUpload(p), 0));
@@ -659,7 +670,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   // ---------- Publication ----------
   async function publish() {
     if (busy) return;
-    if (ONE_SCREEN ? !checkAll() : !check(3)) { if (ONE_SCREEN) notify(t('eFix')); return; }
+    if (ONE_SCREEN ? !checkAll() : !check(3)) { if (ONE_SCREEN) { setDetOpen(true); notify(t('eFix')); } return; }
     try {
       // 1) photos : on relance celles qui ont échoué, puis on attend celles en cours
       d.photos.filter((p) => p.status === 'err' || p.status === 'todo').forEach((p) => startUpload(p));
@@ -868,7 +879,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Label rtl={rtl}>{t('title')}</Label>
             <Field rtl={rtl} style={[CF, { minHeight: 50 }]} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
             <Label rtl={rtl}>{t('desc')}</Label>
-            <Field rtl={rtl} style={[CF, { minHeight: 130, maxHeight: 200, textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+            <Field rtl={rtl} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+              onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
               placeholder={t('descPh')} multiline maxLength={3000} />
 
             <Text style={[s.secT, s.secGap, al]}>{t('secDet')}</Text>
@@ -898,8 +910,11 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                 <Text style={[s.segTxt, d.punit === 'old' && s.segTxtOn]}>{t('unitOld')}</Text>
               </Pressable>
             </View>
-            <Field rtl={rtl} style={[CF, { minHeight: 64, fontSize: 26, fontWeight: '800', writingDirection: 'ltr', textAlign: 'right' }]}
-              value={pu ? fmtN(pu).replace(/[⁦⁩]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
+            <View style={[s.priceBox, row]}>
+              <Field rtl={rtl} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
+                onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
+              <Text style={s.priceUnit}>{t(d.punit === 'old' ? 'sufOld' : 'sufNew')}</Text>
+            </View>
             <Err errors={errors} rtl={rtl} k="punit" />
             <Err errors={errors} rtl={rtl} k="price" />
             {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
@@ -929,12 +944,13 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             <Label rtl={rtl}>{t('contactAt')} <Text style={{ color: colors.primaryDark }}>{user.phone}</Text></Label>
             <View style={[s.chips, row]}>
-              <Chip on={d.wa} label={t('wa')} color="#25D366" onPress={() => update({ wa: !d.wa })} />
-              <Chip on={d.call} label={t('call')} onPress={() => update({ call: !d.call })} />
+              <Chip on={d.wa} label={t('wa')} icon="logo-whatsapp" color="#25D366" onPress={() => update({ wa: !d.wa })} />
+              <Chip on={d.call} label={t('call')} icon="call-outline" onPress={() => update({ call: !d.call })} />
+              <Chip on={d.msg} label={t('msgApp')} icon="chatbubble-ellipses-outline" onPress={() => update({ msg: !d.msg })} />
             </View>
             <Err errors={errors} rtl={rtl} k="contact" />
 
-            <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen || !!(d.videoUri || d.video || d.voiceUri || d.voice)} onToggle={() => setMoreOpen((v) => !v)}>
+            <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen} onToggle={() => setMoreOpen((v) => !v)}>
               <View style={[row, { gap: 8 }]}>
                 {d.videoUri || d.video ? (
                   <View style={[s.mediaRow, row, { flex: 1 }]}>
@@ -955,7 +971,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             {d.cat === 'anim' && (
               <Fold title={t('animInfo')} rtl={rtl}
-                open={detOpen || d.count !== '1' || !!(d.sex || d.age || d.breed || d.tabaski) || !!errors.count || Object.keys(errors).length > 0}
+                open={detOpen}
                 onToggle={() => setDetOpen((v) => !v)}>
                 <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
                 <Label rtl={rtl}>{t('count')}</Label>
@@ -990,7 +1006,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             )}
             {detailFields(d).length > 0 && (
               <Fold title={detailTitle(d, lang === 'ar')} rtl={rtl}
-                open={detOpen || detailsFilled(d) || Object.keys(errors).length > 0}
+                open={detOpen}
                 onToggle={() => setDetOpen((v) => !v)}>
                 {detailFields(d).map((f) => (
                   <VehField key={f.k} f={f} d={d} update={update} lang={lang} rtl={rtl} errors={errors} />
@@ -1131,7 +1147,12 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         )}
       </ScrollView>
 
-      {/* Boutons du bas */}
+      {/* Boutons du bas (clavier ouvert : un bouton « Terminé » à la place, pour le fermer) */}
+      {ONE_SCREEN && kbOpen ? (
+        <View style={s.kbBar}>
+          <Pressable hitSlop={12} onPress={() => Keyboard.dismiss()}><Text style={s.kbDone}>{t('kbDone')}</Text></Pressable>
+        </View>
+      ) : (
       <View style={[s.foot, row]}>
         {!ONE_SCREEN && step > 1 && (
           <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => go(step - 1)} disabled={!!busy}>
@@ -1145,6 +1166,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             : <Text style={s.btnMainTxt}>{!ONE_SCREEN && step < 3 ? t('next') : editing ? t('save') : t('publish')}</Text>}
         </Pressable>
       </View>
+      )}
 
     </KeyboardAvoidingView>
   );
@@ -1274,6 +1296,12 @@ const s = StyleSheet.create({
   segOn: { borderColor: colors.primary, backgroundColor: colors.primary + '18' },
   segTxt: { fontSize: 15, fontWeight: '700', color: colors.text },
   segTxtOn: { color: colors.primary, fontWeight: '800' },
+  chipRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  kbBar: { alignItems: 'flex-end', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#F3F3F3', borderTopWidth: 1, borderColor: colors.border },
+  kbDone: { color: colors.primary, fontSize: 17, fontWeight: '800' },
+  priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 64 },
+  priceIn: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', padding: 0, fontSize: 26, fontWeight: '800', color: colors.text, writingDirection: 'ltr', textAlign: 'right' },
+  priceUnit: { fontSize: 14, fontWeight: '700', color: colors.muted },
   secRow: { justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   secT: { fontSize: 17, fontWeight: '800', color: colors.text },
   secGap: { marginTop: 10 },
