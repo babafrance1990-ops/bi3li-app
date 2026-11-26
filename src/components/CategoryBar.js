@@ -9,6 +9,14 @@ import { colors } from '../theme';
 export default function CategoryBar({ value, onChange, grid = false }) {
   const { lang, t, rtl } = useLang();
   const [all, setAll] = useState(false);
+  // Position de défilement de la grille, pour la barre qui montre qu'il y a d'autres catégories
+  const [bar, setBar] = useState({ view: 0, content: 0, x: 0, track: 0 });
+  const thumbW = bar.content > 0 ? Math.max(30, bar.track * Math.min(1, bar.view / bar.content)) : 0;
+  const room = Math.max(1, bar.track - thumbW);
+  const max = Math.max(1, bar.content - bar.view);
+  const prog = Math.min(1, Math.max(0, bar.x / max));
+  // Liste inversée en arabe : on part de la droite
+  const thumbLeft = rtl ? (1 - prog) * room : prog * room;
   const items = [{ id: null, fr: t('all'), ar: t('all'), icon: '🗂️', c: colors.primary }, ...CATEGORIES];
 
   const pick = (id) => { onChange(id); setAll(false); };
@@ -41,13 +49,17 @@ export default function CategoryBar({ value, onChange, grid = false }) {
   for (let i = 0; i < items.length; i += 2) columns.push(items.slice(i, i + 2));
 
   return (
-    <View>
+    <View style={s.frame}>
       <FlatList
         horizontal
         inverted={rtl}
         data={columns}
         keyExtractor={(col) => String(col[0].id)}
         showsHorizontalScrollIndicator={false}
+        onScroll={(e) => setBar((b) => ({ ...b, x: e.nativeEvent.contentOffset.x }))}
+        scrollEventThrottle={16}
+        onLayout={(e) => setBar((b) => ({ ...b, view: e.nativeEvent.layout.width }))}
+        onContentSizeChange={(w) => setBar((b) => ({ ...b, content: w }))}
         contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 6 }}
         renderItem={({ item: col }) => (
           <View style={s.column}>
@@ -61,6 +73,13 @@ export default function CategoryBar({ value, onChange, grid = false }) {
           </Pressable>
         }
       />
+
+      {/* Barre sous la grille : la partie claire montre ce qui est visible, le reste se trouve en glissant */}
+      <View style={s.track} onLayout={(e) => setBar((b) => ({ ...b, track: e.nativeEvent.layout.width }))}>
+        {bar.content > bar.view && bar.track > 0 && (
+          <View style={[s.thumb, { width: thumbW, left: thumbLeft }]} />
+        )}
+      </View>
 
       <Modal visible={all} animationType="slide" transparent onRequestClose={() => setAll(false)}>
         <Pressable style={s.backdrop} onPress={() => setAll(false)} />
@@ -87,6 +106,9 @@ export default function CategoryBar({ value, onChange, grid = false }) {
 }
 
 const s = StyleSheet.create({
+  frame: { marginHorizontal: 8, marginTop: 8, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, paddingBottom: 8, overflow: 'hidden' },
+  track: { height: 4, marginHorizontal: 16, marginTop: 2, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' },
+  thumb: { position: 'absolute', top: 0, bottom: 0, borderRadius: 2, backgroundColor: colors.primary },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white, maxWidth: 200 },
   column: { marginHorizontal: 4, justifyContent: 'center' },
   icon: { fontSize: 16 },
