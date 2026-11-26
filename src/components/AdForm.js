@@ -47,7 +47,7 @@ const D = {
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
     addPhS: 'Ajouter photos', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
-    moreOpt: 'Plus d’options (repère, livraison, vidéo, vocal)',
+    moreOpt: 'Vidéo et message vocal (facultatif)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
     st3: 'Prix et lieu', st3sub: 'Vérifiez votre annonce, puis publiez.',
@@ -92,7 +92,7 @@ const D = {
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
     addPhS: 'إضافة صور', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
-    moreOpt: 'خيارات إضافية (المعلم، التوصيل، فيديو، صوت)',
+    moreOpt: 'فيديو ورسالة صوتية (اختياري)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
     st1: 'ماذا تبيع؟', st1sub: 'اختر الفئة ثم النوع.',
@@ -333,6 +333,24 @@ const Toggle = ({ label, icon, iconColor = colors.whatsapp, value, onChange, rtl
     <Ionicons name={value ? 'checkbox' : 'square-outline'} size={26} color={value ? colors.primary : colors.muted} />
     {!!icon && <Ionicons name={icon} size={22} color={iconColor} />}
     <Text style={[s.checkTxt, alignOf(rtl)]}>{label}</Text>
+  </Pressable>
+);
+
+// Bloc repliable encadré : un en-tête cliquable, le contenu s'ouvre dessous
+const Fold = ({ title, open, onToggle, rtl, children }) => (
+  <View style={s.fold}>
+    <Pressable onPress={onToggle} style={[s.foldHead, rowOf(rtl)]}>
+      <Text style={[s.foldTitle, alignOf(rtl)]}>{title}</Text>
+      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.primaryDark} />
+    </Pressable>
+    {open && <View style={s.foldBody}>{children}</View>}
+  </View>
+);
+// Case à cocher en pastille (masquer le prix, négociable, livraison)
+const Tick = ({ on, label, onPress, rtl }) => (
+  <Pressable onPress={onPress} style={[s.tick, on && s.tickOn, rowOf(rtl)]}>
+    <Ionicons name={on ? 'checkbox' : 'square-outline'} size={20} color={on ? colors.primary : colors.muted} />
+    <Text style={s.tickTxt}>{label}</Text>
   </Pressable>
 );
 
@@ -811,7 +829,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         )}
 
         {/* ---------- Étape 2 : photos, titre, description ---------- */}
-        {/* ---------- Une seule page : photos, présentation, détails, prix, lieu, contact (version compacte) ---------- */}
+        {/* ---------- Une seule page : photos, présentation, détails, prix, lieu, contact ---------- */}
         {ONE_SCREEN && (
           <>
             <View style={[row, s.secRow]}>
@@ -847,8 +865,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             {d.photos.some((p) => p.status === 'err') && <Text style={[s.err, al]}>{t('photoErr')}</Text>}
 
             <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
-            <Field rtl={rtl} style={CF} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
-            <Field rtl={rtl} style={[CF, { minHeight: 70, maxHeight: 110, textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+            <Label rtl={rtl}>{t('title')}</Label>
+            <Field rtl={rtl} style={[CF, { minHeight: 50 }]} value={d.title} onChangeText={(v) => update({ title: v })} placeholder={autoTitle() || t('title')} maxLength={70} />
+            <Label rtl={rtl}>{t('desc')}</Label>
+            <Field rtl={rtl} style={[CF, { minHeight: 130, maxHeight: 200, textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               placeholder={t('descPh')} multiline maxLength={3000} />
 
             <Text style={[s.secT, s.secGap, al]}>{t('secDet')}</Text>
@@ -870,20 +890,26 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             )}
 
             <Text style={[s.secT, s.secGap, al]}>{t('price')}</Text>
-            <View style={[row, { gap: 8, alignItems: 'center' }]}>
-              <Field rtl={rtl} style={[CF, { flex: 1, fontSize: 20, fontWeight: '700', writingDirection: 'ltr', textAlign: 'right' }]}
-                value={pu ? fmtN(pu).replace(/[⁦⁩]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
-              <Chip on={d.punit === 'new'} label={t('unitNew')} onPress={() => update({ punit: 'new' })} />
-              <Chip on={d.punit === 'old'} label={t('unitOld')} onPress={() => update({ punit: 'old' })} />
+            <View style={[row, s.segRow]}>
+              <Pressable style={[s.segBtn, d.punit === 'new' && s.segOn]} onPress={() => update({ punit: 'new' })}>
+                <Text style={[s.segTxt, d.punit === 'new' && s.segTxtOn]}>{t('unitNew')}</Text>
+              </Pressable>
+              <Pressable style={[s.segBtn, d.punit === 'old' && s.segOn]} onPress={() => update({ punit: 'old' })}>
+                <Text style={[s.segTxt, d.punit === 'old' && s.segTxtOn]}>{t('unitOld')}</Text>
+              </Pressable>
             </View>
+            <Field rtl={rtl} style={[CF, { minHeight: 64, fontSize: 26, fontWeight: '800', writingDirection: 'ltr', textAlign: 'right' }]}
+              value={pu ? fmtN(pu).replace(/[⁦⁩]/g, '') : ''} onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
             <Err errors={errors} rtl={rtl} k="punit" />
             <Err errors={errors} rtl={rtl} k="price" />
             {pu > 0 && d.punit === 'old' && <Text style={[s.help, al]}>{t('eqNew', { v: fmtN(pu / 10) })}</Text>}
             {pu > 0 && d.punit === 'new' && <Text style={[s.help, al]}>{t('eqOld', { v: fmtN(pu * 10) })}</Text>}
-            <View style={[s.chips, row]}>
-              <Chip on={d.nego} label={t('nego')} onPress={() => update({ nego: !d.nego })} />
-              <Chip on={d.hidep} label={t('hidep')} onPress={() => { update({ hidep: !d.hidep }); setErrors((e) => ({ ...e, price: undefined, punit: undefined })); }} />
+            <View style={[row, { gap: 8, flexWrap: 'wrap', marginTop: 4 }]}>
+              <Tick rtl={rtl} on={d.hidep} label={t('hidep')} onPress={() => { update({ hidep: !d.hidep }); setErrors((e) => ({ ...e, price: undefined, punit: undefined })); }} />
+              <Tick rtl={rtl} on={d.nego} label={t('nego')} onPress={() => update({ nego: !d.nego })} />
+              <Tick rtl={rtl} on={d.deliv} label={t('deliv')} onPress={() => update({ deliv: !d.deliv })} />
             </View>
+            {d.deliv && <Field rtl={rtl} style={CF} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
 
             <Text style={[s.secT, s.secGap, al]}>{t('secLoc')}</Text>
             <View style={[row, { gap: 8 }]}>
@@ -908,32 +934,68 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
             <Err errors={errors} rtl={rtl} k="contact" />
 
-            {(moreOpen || d.near || d.deliv || d.videoUri || d.video || d.voiceUri || d.voice) ? (
-              <>
-                <Field rtl={rtl} style={CF} value={d.near} onChangeText={(v) => update({ near: v })} placeholder={t('nearPh')} maxLength={60} />
-                <Toggle rtl={rtl} label={t('deliv')} value={d.deliv} onChange={(v) => update({ deliv: v })} />
-                {d.deliv && <Field rtl={rtl} style={CF} value={d.delivNote} onChangeText={(v) => update({ delivNote: v })} placeholder={t('delivNote')} maxLength={80} />}
-                <Label rtl={rtl}>{t('vidL')}</Label>
+            <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen || !!(d.videoUri || d.video || d.voiceUri || d.voice)} onToggle={() => setMoreOpen((v) => !v)}>
+              <View style={[row, { gap: 8 }]}>
                 {d.videoUri || d.video ? (
-                  <View style={[s.mediaRow, row]}>
+                  <View style={[s.mediaRow, row, { flex: 1 }]}>
                     <Text style={s.mediaOk}>🎬 {t('vidOk')}</Text>
                     <Pressable hitSlop={8} onPress={() => update({ videoUri: '', video: '' })}><Text style={s.linkDanger}>{t('vidDel')}</Text></Pressable>
                   </View>
                 ) : (
-                  <View style={[row, { gap: 8 }]}>
+                  <>
                     <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('camera')}><Text style={s.btnLightTxt}>{t('vidCam')}</Text></Pressable>
                     <Pressable style={[s.btnLight, { flex: 1 }]} onPress={() => addVideo('library')}><Text style={s.btnLightTxt}>{t('vidGal')}</Text></Pressable>
-                  </View>
+                  </>
                 )}
-                <Label rtl={rtl}>{t('voiceL')}</Label>
-                <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice} savedData={d.voice} savedId={editAd ? editAd.id : 'nouvelle'}
-                  onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
-                  onRemove={() => update({ voiceUri: '', voice: '' })} />
-              </>
-            ) : (
-              <Pressable onPress={() => setMoreOpen(true)} style={s.moreBtn}>
-                <Text style={s.moreTxt}>+ {t('moreOpt')}</Text>
-              </Pressable>
+              </View>
+              <VoiceRecorder t={t} rtl={rtl} uri={d.voiceUri} saved={!!d.voice} savedData={d.voice} savedId={editAd ? editAd.id : 'nouvelle'}
+                onRecorded={(uri) => update({ voiceUri: uri, voice: '' })}
+                onRemove={() => update({ voiceUri: '', voice: '' })} />
+            </Fold>
+
+            {d.cat === 'anim' && (
+              <Fold title={t('animInfo')} rtl={rtl}
+                open={detOpen || d.count !== '1' || !!(d.sex || d.age || d.breed || d.tabaski) || !!errors.count || Object.keys(errors).length > 0}
+                onToggle={() => setDetOpen((v) => !v)}>
+                <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
+                <Label rtl={rtl}>{t('count')}</Label>
+                <Field rtl={rtl} style={CF} value={d.count} keyboardType="number-pad" maxLength={4} placeholder="1"
+                  onChangeText={(v) => update({ count: digits(v).slice(0, 4) })} />
+                <Err errors={errors} rtl={rtl} k="count" />
+                <Label rtl={rtl}>{t('sex')}</Label>
+                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+                  {['m', 'f', 'mix'].map((x) => (
+                    <Pressable key={x} onPress={() => update({ sex: d.sex === x ? '' : x })} style={[s.chip, d.sex === x && s.chipOn]}>
+                      <Text style={[s.chipTxt, d.sex === x && s.chipTxtOn]}>{t('sx_' + x)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Label rtl={rtl}>{t('age')}</Label>
+                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
+                  {['0', '1', '2', '4'].map((x) => (
+                    <Pressable key={x} onPress={() => update({ age: d.age === x ? '' : x })} style={[s.chip, d.age === x && s.chipOn]}>
+                      <Text style={[s.chipTxt, d.age === x && s.chipTxtOn]}>{t('ag_' + x)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Label rtl={rtl}>{t('breed')}</Label>
+                <Field rtl={rtl} style={CF} value={d.breed} maxLength={30} placeholder={t('breedPh')} onChangeText={(v) => update({ breed: v })} />
+                {d.sub !== 'volaille' && d.sub !== 'autre' && (
+                  <Pressable onPress={() => update({ tabaski: !d.tabaski })} style={[row, { alignItems: 'center', gap: 8 }]}>
+                    <Text style={s.chipTxt}>{d.tabaski ? '☑' : '☐'}</Text>
+                    <Text style={s.chipTxt}>{t('tabaski')}</Text>
+                  </Pressable>
+                )}
+              </Fold>
+            )}
+            {detailFields(d).length > 0 && (
+              <Fold title={detailTitle(d, lang === 'ar')} rtl={rtl}
+                open={detOpen || detailsFilled(d) || Object.keys(errors).length > 0}
+                onToggle={() => setDetOpen((v) => !v)}>
+                {detailFields(d).map((f) => (
+                  <VehField key={f.k} f={f} d={d} update={update} lang={lang} rtl={rtl} errors={errors} />
+                ))}
+              </Fold>
             )}
           </>
         )}
@@ -1065,66 +1127,6 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
             </>}
 
-            {d.cat === 'anim' && (detOpen || d.count !== '1' || d.sex || d.age || d.breed || d.tabaski || errors.count || (ONE_SCREEN && Object.keys(errors).length > 0)) ? (
-              <View style={s.detBox}>
-                <Label rtl={rtl}>{t('animInfo')}</Label>
-                <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
-                <View style={[row, { gap: 8 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Label rtl={rtl}>{t('count')}</Label>
-                    <Field rtl={rtl} value={d.count} keyboardType="number-pad" maxLength={4} placeholder="1"
-                      onChangeText={(v) => update({ count: digits(v).slice(0, 4) })} />
-                    <Err errors={errors} rtl={rtl} k="count" />
-                  </View>
-                </View>
-                <Label rtl={rtl}>{t('sex')}</Label>
-                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
-                  {['m', 'f', 'mix'].map((x) => (
-                    <Pressable key={x} onPress={() => update({ sex: d.sex === x ? '' : x })} style={[s.chip, d.sex === x && s.chipOn]}>
-                      <Text style={[s.chipTxt, d.sex === x && s.chipTxtOn]}>{t('sx_' + x)}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-                <Label rtl={rtl}>{t('age')}</Label>
-                <View style={[row, { flexWrap: 'wrap', gap: 8 }]}>
-                  {['0', '1', '2', '4'].map((x) => (
-                    <Pressable key={x} onPress={() => update({ age: d.age === x ? '' : x })} style={[s.chip, d.age === x && s.chipOn]}>
-                      <Text style={[s.chipTxt, d.age === x && s.chipTxtOn]}>{t('ag_' + x)}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-                <Label rtl={rtl}>{t('breed')}</Label>
-                <Field rtl={rtl} value={d.breed} maxLength={30} placeholder={t('breedPh')} onChangeText={(v) => update({ breed: v })} />
-                {d.sub !== 'volaille' && d.sub !== 'autre' && (
-                  <Pressable onPress={() => update({ tabaski: !d.tabaski })} style={[row, { alignItems: 'center', gap: 8 }]}>
-                    <Text style={s.chipTxt}>{d.tabaski ? '☑' : '☐'}</Text>
-                    <Text style={s.chipTxt}>{t('tabaski')}</Text>
-                  </Pressable>
-                )}
-              </View>
-            ) : d.cat === 'anim' ? (
-              <>
-              <Text style={[s.help, al, { marginTop: 10 }]}>{t('detHelp')}</Text>
-              <Pressable onPress={() => setDetOpen(true)} style={s.moreBtn}>
-                <Text style={s.moreTxt}>+ {t('addDet')}</Text>
-              </Pressable>
-              </>
-            ) : null}
-            {detailFields(d).length > 0 && (detOpen || detailsFilled(d) || (ONE_SCREEN ? Object.keys(errors).length > 0 : detailsOpenByDefault(d))) ? (
-              <View style={s.detBox}>
-                <Label rtl={rtl}>{detailTitle(d, lang === 'ar')}</Label>
-                {detailFields(d).map((f) => (
-                  <VehField key={f.k} f={f} d={d} update={update} lang={lang} rtl={rtl} errors={errors} />
-                ))}
-              </View>
-            ) : detailFields(d).length > 0 ? (
-              <>
-                <Text style={[s.help, al, { marginTop: 10 }]}>{t(d.cat === 'auto' ? 'detHelpVeh' : 'detHelpElec')}</Text>
-                <Pressable onPress={() => setDetOpen(true)} style={s.moreBtn}>
-                  <Text style={s.moreTxt}>+ {t('addDet')}</Text>
-                </Pressable>
-              </>
-            ) : null}
           </>
         )}
       </ScrollView>
@@ -1260,6 +1262,18 @@ export function CatPickScreen() {
 
 const s = StyleSheet.create({
   sep: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
+  fold: { borderWidth: 1, borderColor: '#CFE3D6', borderRadius: 14, backgroundColor: colors.white, marginTop: 10, overflow: 'hidden' },
+  foldHead: { alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 12, backgroundColor: '#EEF5F0' },
+  foldTitle: { flex: 1, fontSize: 15, fontWeight: '800', color: colors.primaryDark },
+  foldBody: { padding: 12, gap: 8 },
+  tick: { alignItems: 'center', gap: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: colors.white },
+  tickOn: { borderColor: colors.primary, backgroundColor: colors.primary + '12' },
+  tickTxt: { fontSize: 14, fontWeight: '600', color: colors.text },
+  segRow: { gap: 8 },
+  segBtn: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white, alignItems: 'center' },
+  segOn: { borderColor: colors.primary, backgroundColor: colors.primary + '18' },
+  segTxt: { fontSize: 15, fontWeight: '700', color: colors.text },
+  segTxtOn: { color: colors.primary, fontWeight: '800' },
   secRow: { justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   secT: { fontSize: 17, fontWeight: '800', color: colors.text },
   secGap: { marginTop: 10 },
