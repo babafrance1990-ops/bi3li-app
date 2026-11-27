@@ -1392,7 +1392,7 @@ const s = StyleSheet.create({
   priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 64 },
   priceIn: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', padding: 0, fontSize: 26, fontWeight: '800', color: colors.text, writingDirection: 'ltr', textAlign: 'right' },
   priceUnit: { fontSize: 14, fontWeight: '700', color: colors.muted },
-  card: { backgroundColor: colors.white, borderWidth: 0.5, borderColor: '#E0A526', borderRadius: radius.l, padding: 12, gap: 8 },
+  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0A526', borderRadius: radius.l, padding: 12, gap: 8 },
   secRow: { justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   secT: { fontSize: 17, fontWeight: '800', color: colors.text },
   secGap: { marginTop: 10 },
