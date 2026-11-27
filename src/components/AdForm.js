@@ -73,7 +73,7 @@ const D = {
     title: 'Titre (facultatif)', titleHelp: 'Laissez vide : un titre sera écrit automatiquement.', desc: 'Description',
     descPh: 'État, couleur, quartier, raison de la vente…',
     price: 'Prix', unit: 'Monnaie', unitNew: 'Nouvelle ouguiya (MRU)', unitOld: 'Ancienne ouguiya',
-    eqNew: '= {v} MRU (nouvelles ouguiyas)', eqOld: '= {v} MRO (anciennes ouguiyas)', nego: 'Prix à discuter', hidep: 'Masquer le prix sur l’annonce',
+    eqNew: '= {v} MRU (nouvelles ouguiyas)', eqOld: '= {v} MRO (anciennes ouguiyas)', nego: 'Prix à discuter', hidep: 'Masquer le prix à l’acheteur',
     city: 'Ville', hood: 'Quartier (facultatif)', hoodNkc: 'Moughataa (facultatif)', near: 'Repère (facultatif)', nearPh: 'ex. près de la mosquée…',
     deliv: 'Livraison possible', delivNote: 'Précisions sur la livraison (facultatif)',
     contactAt: 'Les acheteurs vous contacteront au', wa: 'WhatsApp', call: 'Appels',
@@ -120,7 +120,7 @@ const D = {
     title: 'العنوان (اختياري)', titleHelp: 'اتركه فارغاً: سنكتب عنواناً تلقائياً.', desc: 'الوصف',
     descPh: 'الحالة، اللون، الحي، سبب البيع…',
     price: 'السعر', unit: 'العملة', unitNew: 'الأوقية الجديدة', unitOld: 'الأوقية القديمة',
-    eqNew: '= {v} أوقية جديدة', eqOld: '= {v} أوقية قديمة', nego: 'السعر قابل للنقاش', hidep: 'إخفاء السعر على البطاقة',
+    eqNew: '= {v} أوقية جديدة', eqOld: '= {v} أوقية قديمة', nego: 'السعر قابل للنقاش', hidep: 'إخفاء السعر عن المشتري',
     city: 'المدينة', hood: 'الحي (اختياري)', hoodNkc: 'المقاطعة (اختياري)', near: 'معلم قريب (اختياري)', nearPh: 'مثلاً قرب المسجد…',
     deliv: 'التوصيل ممكن', delivNote: 'تفاصيل التوصيل (اختياري)',
     contactAt: 'سيتصل بك المشترون على الرقم', wa: 'واتساب', call: 'اتصال',
@@ -420,8 +420,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const [triedPub, setTriedPub] = useState(false); // bordure rouge sur les obligatoires seulement après un essai de publication
   const fref = useRef({});                          // champs de saisie (pour Précédent / Suivant)
   const curF = useRef(null);                        // champ en cours de saisie
+  const kbTop = useRef(0);                          // haut du clavier (coordonnées écran)
+  const offY = useRef(0);                           // position de défilement de la page
   useEffect(() => {
-    const a = Keyboard.addListener('keyboardDidShow', () => setKbOpen(true));
+    const a = Keyboard.addListener('keyboardDidShow', (e) => { setKbOpen(true); kbTop.current = e.endCoordinates.screenY; revealField(); });
     const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
     return () => { a.remove(); b.remove(); };
   }, []);
@@ -609,6 +611,17 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     }
     Keyboard.dismiss();
   }
+
+  // Le champ en cours de saisie remonte au-dessus du clavier s'il est caché
+  function revealField() {
+    const r = fref.current[curF.current];
+    if (!r || !r.measureInWindow || !kbTop.current) return;
+    r.measureInWindow((x, y, w, h) => {
+      const over = y + h - (kbTop.current - 20);
+      if (over > 0) scroll.current?.scrollTo({ y: offY.current + over, animated: true });
+    });
+  }
+  function focusedOn(k) { curF.current = k; setTimeout(revealField, 350); }
 
   // Photos : une feuille « Galerie / Appareil photo » s'ouvre au clic
   function askPhotos() {
@@ -825,7 +838,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         </View>}
       </View>
 
-      <ScrollView ref={scroll} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scroll} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" scrollEventThrottle={16} onScroll={(e) => { offY.current = e.nativeEvent.contentOffset.y; }}>
         {/* ---------- Une seule page : la catégorie ouvre sa propre page (voir plus bas, « Détails de l'article ») ---------- */}
 
         {/* ---------- Étape 1 : catégorie et type (ancien formulaire en 3 étapes) ---------- */}
@@ -950,10 +963,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             )}
 
             <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
+            <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => focusedOn('title')}
               value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
             <Label rtl={rtl}>{t('descOpt')}</Label>
-            <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => { curF.current = 'desc'; }} style={[CF, { height: Math.max(44, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+            <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => focusedOn('desc')} style={[CF, { height: Math.max(44, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
               placeholder={descEx} multiline maxLength={3000} />
 
@@ -962,7 +975,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('price')}{t('reqSuffix')}</Text>
             <View style={[s.priceBox, row, triedPub && (reqErr.price || reqErr.punit) && s.reqBad]}>
-              <Field rtl={rtl} ref={(r) => { fref.current.price = r; }} onFocus={() => { curF.current = 'price'; }} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
+              <Field rtl={rtl} ref={(r) => { fref.current.price = r; }} onFocus={() => focusedOn('price')} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
                 onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
               <Text style={s.priceUnit}>{t(d.punit === 'old' ? 'sufOld' : 'sufNew')}</Text>
             </View>
@@ -990,7 +1003,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                   <PickSheet value={d.hood} options={HOOD_OPTS} placeholder={ar ? 'المقاطعة' : 'Quartier'} title={t('hoodNkc')} rtl={rtl} ar={ar}
                     onPick={(h) => update({ hood: h })} />
                 ) : (
-                  <Field rtl={rtl} style={CF} ref={(r) => { fref.current.hood = r; }} onFocus={() => { curF.current = 'hood'; }} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
+                  <Field rtl={rtl} style={CF} ref={(r) => { fref.current.hood = r; }} onFocus={() => focusedOn('hood')} value={d.hood} onChangeText={(v) => update({ hood: v })} placeholder={t('hood')} maxLength={40} />
                 )}
               </View>
             </View>
@@ -1203,11 +1216,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       {/* Boutons du bas (clavier ouvert : un bouton « Terminé » à la place, pour le fermer) */}
       {ONE_SCREEN && kbOpen ? (
         <View style={s.kbBar}>
-          <View style={[row, s.kbRow]}>
-            <Pressable hitSlop={12} onPress={() => stepField(-1)}><Text style={s.kbNav}>{t('kbPrev')}</Text></Pressable>
-            <Pressable hitSlop={12} onPress={() => stepField(1)}><Text style={s.kbNav}>{t('kbNext')}</Text></Pressable>
-            <Pressable hitSlop={12} onPress={() => Keyboard.dismiss()}><Text style={s.kbDone}>{t('kbDone')}</Text></Pressable>
-          </View>
+          <Pressable hitSlop={12} onPress={() => Keyboard.dismiss()}><Text style={s.kbDone}>{t('kbDone')}</Text></Pressable>
         </View>
       ) : (
       <View style={[s.foot, row]}>
@@ -1238,6 +1247,11 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <AdCard preview ad={previewAd} />
           </View>
           {!!d.desc.trim() && <Text style={[s.sub, al, { alignSelf: 'stretch' }]}>{d.desc}</Text>}
+          <View style={[row, s.pvRow]}>
+            {d.wa && <View style={[s.pvBtn, { backgroundColor: colors.whatsapp }]}><Ionicons name="logo-whatsapp" size={18} color="#fff" /><Text style={s.pvTxtW}>{t('wa')}</Text></View>}
+            {d.call && <View style={[s.pvBtn, { backgroundColor: colors.primary }]}><Ionicons name="call-outline" size={18} color="#fff" /><Text style={s.pvTxtW}>{lang === 'ar' ? 'اتصال' : 'Appeler'}</Text></View>}
+            <View style={[s.pvBtn, s.pvLight]}><Ionicons name="chatbubble-outline" size={18} color={colors.primaryDark} /><Text style={s.pvTxtD}>{lang === 'ar' ? 'رسالة' : 'Message'}</Text></View>
+          </View>
         </ScrollView>
         <View style={s.foot}>
           <Pressable style={s.btnMain} onPress={() => setPreviewOpen(false)}><Text style={s.btnMainTxt}>{t('back')}</Text></Pressable>
@@ -1384,6 +1398,11 @@ const s = StyleSheet.create({
   chipRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   kbBar: { alignItems: 'flex-end', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#F3F3F3', borderTopWidth: 1, borderColor: colors.border },
   kbDone: { color: colors.primary, fontSize: 17, fontWeight: '800' },
+  pvRow: { alignSelf: 'stretch', gap: 8, flexWrap: 'wrap' },
+  pvBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexGrow: 1, minWidth: 100, height: 44, borderRadius: 12 },
+  pvLight: { backgroundColor: '#EEF5F0', borderWidth: 1, borderColor: colors.primary },
+  pvTxtW: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  pvTxtD: { color: colors.primaryDark, fontWeight: '800', fontSize: 15 },
   kbNav: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
   kbRow: { width: '100%', justifyContent: 'space-between', alignItems: 'center' },
   priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.primary, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 56 },
