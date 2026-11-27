@@ -1,6 +1,6 @@
 // Fiche annonce : galerie qui défile, prix, lieu, description, vendeur, boutons WhatsApp / Appeler / Message
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, FlatList, Linking, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, FlatList, Linking, Modal, PanResponder, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -96,6 +96,7 @@ export default function Annonce() {
   const phone = String(ad.phone || '').replace(/\D/g, '');
   const cat = catById(ad.cat);
   const link = 'https://bi3li.net/?annonce=' + ad.id; // même lien que le site (aperçu WhatsApp)
+  const cardHead = ad.tauto ? (adSubInfo(ad, lang, t) || ad.title) : ad.title;
   const align = rtl ? { textAlign: 'right', writingDirection: 'rtl' } : null;
 
   const whatsapp = () => {
@@ -138,6 +139,10 @@ export default function Annonce() {
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
         {/* Favori : bouton seul sur la photo (séparé de l'accueil dans l'en-tête) */}
         <FavButton adId={ad.id} size={20} style={[s.favOver, rtl ? { left: 12 } : { right: 12 }]} />
+        <Pressable onPress={() => Share.share({ message: [cardHead, priceText(ad, lang), link].filter(Boolean).join('\n') }).catch(() => {})} hitSlop={8}
+          style={({ pressed }) => [s.shareOver, rtl ? { left: 62 } : { right: 62 }, pressed && { opacity: 0.7 }]}>
+          <Text style={s.shareTxt}>📤</Text>
+        </Pressable>
         {photos.length > 0 ? (
           <View>
             <FlatList
@@ -277,6 +282,8 @@ export default function Annonce() {
 
 const s = StyleSheet.create({
   favOver: { position: 'absolute', top: 12, zIndex: 10, elevation: 10 },
+  shareOver: { position: 'absolute', top: 12, zIndex: 10, elevation: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
+  shareTxt: { fontSize: 18 },
   noPhoto: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   counter: { position: 'absolute', bottom: 10, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10 },
   box: { padding: 16, gap: 6 },
