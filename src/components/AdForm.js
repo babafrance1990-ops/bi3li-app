@@ -16,6 +16,7 @@ import { CATEGORIES, catById } from '../categories';
 import { SUB_KEY, subsOf } from '../subcategories';
 import { CatArt, KindArt, SubArt } from './Art';
 import { KIND_L } from '../kindArt';
+import { hintsFor } from '../hints';
 import AdCard from './AdCard';
 import { clearDraft, loadDraft, newDraft, saveDraft, saveLast } from '../draft';
 import { useLang } from '../i18n';
@@ -916,11 +917,13 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Label rtl={rtl}>{t('title') + t('optSuffix')}</Label>
             <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
               value={d.title} onChangeText={(v) => update({ title: v })} placeholder={t('titlePh')} maxLength={70} />
+            <Text style={[s.help, al]}>{hintsFor(d.cat, lang).title}</Text>
             </View>
 
             <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
             <Label rtl={rtl}>{t('descOpt')}</Label>
+            <Text style={[s.help, al]}>{hintsFor(d.cat, lang).desc}</Text>
             <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => { curF.current = 'desc'; }} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
               placeholder={t('descPh')} multiline maxLength={3000} />
