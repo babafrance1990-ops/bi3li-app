@@ -1441,7 +1441,7 @@ const s = StyleSheet.create({
   help: { fontSize: 13, color: colors.muted },
   err: { color: colors.danger, fontWeight: '600' },
   count: { color: colors.muted, marginTop: 8 },
-  input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.m, padding: 13, fontSize: 16, backgroundColor: colors.white, color: colors.text },
+  input: { borderWidth: 2, borderColor: colors.primary, borderRadius: radius.m, padding: 13, fontSize: 16, backgroundColor: colors.white, color: colors.text },
   chips: { flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
   chipTxt: { fontSize: 14, fontWeight: '600', color: colors.text },
