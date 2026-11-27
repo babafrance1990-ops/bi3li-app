@@ -622,7 +622,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       scroll.current?.scrollTo({ y: Math.max(0, offY.current + y - 120), animated: true });
     }, () => {});
   }
-  function focusedOn(k) { curF.current = k; setTimeout(revealField, 150); setTimeout(revealField, 450); }
+  function focusedOn(k) { curF.current = k; [150, 450, 800].forEach((ms) => setTimeout(revealField, ms)); }
 
   // Photos : une feuille « Galerie / Appareil photo » s'ouvre au clic
   function askPhotos() {
@@ -968,7 +968,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
             <Label rtl={rtl}>{t('descOpt')}</Label>
             <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => focusedOn('desc')} style={[CF, { height: Math.max(44, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
-              onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
+              onContentSizeChange={(e) => { setDescH(e.nativeEvent.contentSize.height + 22); setTimeout(revealField, 60); }}
               placeholder={descEx} multiline maxLength={3000} />
 
             </View>
