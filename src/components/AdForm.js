@@ -614,20 +614,13 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // Le champ en cours de saisie remonte au-dessus du clavier s'il est caché
   function revealField() {
+    // Le champ en cours remonte à 120 px du haut de la zone visible : il reste au-dessus du clavier
     const input = fref.current[curF.current];
-    if (!input) return;
-    // Méthode native de la page : fait défiler jusqu'au champ, au-dessus du clavier
-    const handle = findNodeHandle(input);
-    const resp = scroll.current?.getScrollResponder?.();
-    if (handle && resp?.scrollResponderScrollNativeHandleToKeyboard) {
-      resp.scrollResponderScrollNativeHandleToKeyboard(handle, 140, true);
-      return;
-    }
-    if (!input.measureInWindow || !kbTop.current) return;
-    input.measureInWindow((x, y, w, h) => {
-      const over = y + h - (kbTop.current - 20);
-      if (over > 0) scroll.current?.scrollTo({ y: offY.current + over, animated: true });
-    });
+    const host = scroll.current ? findNodeHandle(scroll.current) : null;
+    if (!input || !host || !input.measureLayout) return;
+    input.measureLayout(host, (x, y) => {
+      scroll.current?.scrollTo({ y: Math.max(0, offY.current + y - 120), animated: true });
+    }, () => {});
   }
   function focusedOn(k) { curF.current = k; setTimeout(revealField, 150); setTimeout(revealField, 450); }
 
