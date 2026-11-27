@@ -1,6 +1,6 @@
 // Carte d'annonce (2 par ligne sur l'accueil)
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { adCache, mediaUrl, priceText } from '../api';
@@ -37,6 +37,12 @@ export default function AdCard({ ad, preview }) {
   const cond = adCondLabel(ad, lang);
   const cardTitle = adCardTitle(ad);
 
+  // Partage natif (WhatsApp, SMS, etc.) avec le même lien que le site
+  function share() {
+    const head = cardTitle || sub;
+    Share.share({ message: [head, priceText(ad, lang), 'https://bi3li.net/?annonce=' + ad.id].filter(Boolean).join('\n') }).catch(() => {});
+  }
+
   function open() {
     if (preview) return; // aperçu dans le formulaire de dépôt
     adCache.set(ad.id, ad);
@@ -65,6 +71,11 @@ export default function AdCard({ ad, preview }) {
           </View>
         )}
         {!preview && <FavButton adId={ad.id} size={18} style={s.fav} />}
+        {!preview && (
+          <Pressable onPress={share} hitSlop={8} style={({ pressed }) => [s.share, pressed && { opacity: 0.7 }]}>
+            <Text style={s.shareTxt}>📤</Text>
+          </Pressable>
+        )}
       </View>
       <View style={s.body}>
         {!!sub && <Text style={[s.sub, rtl && s.rtl]} numberOfLines={1}>{sub}</Text>}
@@ -84,6 +95,8 @@ const s = StyleSheet.create({
   bigIcon: { fontSize: 44, opacity: 0.55 },
   voiceBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)' },
   fav: { position: 'absolute', top: 6, right: 6 },
+  share: { position: 'absolute', top: 50, right: 6, width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
+  shareTxt: { fontSize: 16 },
   playWrap: { position: 'absolute', top: '50%', left: '50%', width: 52, height: 52, marginLeft: -26, marginTop: -26 },
   play: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   playTxt: { color: '#fff', fontSize: 20, marginLeft: 3 },
