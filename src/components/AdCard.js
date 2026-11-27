@@ -11,7 +11,7 @@ import { useLang } from '../i18n';
 import { cityName } from '../places';
 import FavButton from './FavButton';
 import { colors, radius } from '../theme';
-import { adCondLabel, adFacts, adSubInfo } from '../adInfo';
+import { adCardTitle, adCondLabel, adFacts, adSubInfo } from '../adInfo';
 
 // Type du message vocal (ex. audio/webm) : affiché si le téléphone ne le lit pas
 const voiceMime = (d) => (/^data:([^;,]*)/.exec(d || '') || [])[1] || '';
@@ -35,6 +35,7 @@ export default function AdCard({ ad, preview }) {
   const sub = adSubInfo(ad, lang, t);
   const facts = adFacts(ad, lang).join(' · ');
   const cond = adCondLabel(ad, lang);
+  const cardTitle = adCardTitle(ad);
 
   function open() {
     if (preview) return; // aperçu dans le formulaire de dépôt
@@ -67,7 +68,7 @@ export default function AdCard({ ad, preview }) {
       </View>
       <View style={s.body}>
         {!!sub && <Text style={[s.sub, rtl && s.rtl]} numberOfLines={1}>{sub}</Text>}
-        {!!ad.title && !ad.tauto && <Text style={[s.title, rtl && s.rtl]} numberOfLines={1}>{ad.title}</Text>}
+        {!!cardTitle && <Text style={[s.title, rtl && s.rtl]} numberOfLines={1}>{cardTitle}</Text>}
         <Text style={[s.price, rtl && s.rtl]} numberOfLines={1}>{priceText(ad, lang)}</Text>
         {!!facts && <Text style={[s.facts, rtl && s.rtl]} numberOfLines={1}>{facts}</Text>}
         {!!place && <Text style={[s.place, rtl && s.rtl]} numberOfLines={1}>📍 {place}</Text>}

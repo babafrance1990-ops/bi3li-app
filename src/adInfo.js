@@ -45,3 +45,13 @@ export function adCondLabel(ad, lang) {
   if (p && LBL['pc_' + p]) return pick(LBL['pc_' + p], lang);
   return '';
 }
+
+// Ligne titre de la carte : le titre saisi, sinon le début de la description
+// (ignoré si court, ou si elle contient un numéro de téléphone)
+export function adCardTitle(ad) {
+  if (ad.title && !ad.tauto) return ad.title;
+  const first = (ad.desc || '').trim().split('\n')[0].trim();
+  if (first.length < 10) return '';
+  if (/\d[\d\s.+-]{6,}\d/.test(first)) return '';
+  return first.length > 60 ? first.slice(0, 57) + '…' : first;
+}
