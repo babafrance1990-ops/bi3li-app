@@ -781,7 +781,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const titleEx = (() => {
     const sub = (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang];
     const name = sub || (catById(d.cat) || {})[lang] || '';
-    return name ? (lang === 'ar' ? 'مثال: ' : 'Ex. ') + name : t('titlePh');
+    return name ? (lang === 'ar' ? 'مثال: ' : 'Ex. ') + name : '';
   })();
   const previewAd = {
     ...(SUB_KEY[d.cat] ? { [SUB_KEY[d.cat]]: d.sub } : {}), ...detailAdObject(d),
@@ -923,7 +923,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
-            <Label rtl={rtl}>{t('title') + t('optSuffix')}</Label>
+            <Label rtl={rtl}>{t('title')}</Label>
             <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
               value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
             <Label rtl={rtl}>{t('descOpt')}</Label>
