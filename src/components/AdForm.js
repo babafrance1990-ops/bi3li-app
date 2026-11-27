@@ -417,6 +417,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const [descH, setDescH] = useState(64);          // hauteur de la description : elle grandit avec le texte
   const [kbOpen, setKbOpen] = useState(false);     // clavier ouvert
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [triedPub, setTriedPub] = useState(false); // bordure rouge sur les obligatoires seulement après un essai de publication
   const fref = useRef({});                          // champs de saisie (pour Précédent / Suivant)
   const curF = useRef(null);                        // champ en cours de saisie
   useEffect(() => {
@@ -693,7 +694,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   // ---------- Publication ----------
   async function publish() {
     if (busy) return;
-    if (ONE_SCREEN ? !checkAll() : !check(3)) { if (ONE_SCREEN) { setDetOpen(true); notify(t('eFix')); } return; }
+    if (ONE_SCREEN ? !checkAll() : !check(3)) { if (ONE_SCREEN) { setTriedPub(true); setDetOpen(true); notify(t('eFix')); } return; }
     try {
       // 1) photos : on relance celles qui ont échoué, puis on attend celles en cours
       d.photos.filter((p) => p.status === 'err' || p.status === 'todo').forEach((p) => startUpload(p));
@@ -896,10 +897,10 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
           <>
             <View style={s.card}>
             <View style={[row, s.secRow]}>
-              <Text style={[s.secT, al]}>{t('photos')}</Text>
+              <Text style={[s.secT, al]}>{t('photos')}{t('reqSuffix')}</Text>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
             </View>
-            <View style={s.dash}>
+            <View style={[s.dash, triedPub && d.photos.length === 0 && s.reqBad]}>
               {d.photos.length === 0 ? (
                 <Pressable style={s.addPh} onPress={askPhotos}>
                   <Ionicons name="add" size={22} color={colors.primary} />
@@ -943,11 +944,11 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             <View style={s.card}>
             <Text style={[s.secT, s.secGap, al]}>{t('secDet')}</Text>
-            <Pressable onPress={openCat} style={[s.catRow, row]}>
+            <Pressable onPress={openCat} style={[s.catRow, row, triedPub && !d.cat && s.reqBad]}>
               {d.cat && <CatArt cat={d.cat} size={34} />}
               <View style={{ flex: 1 }}>
                 <Text style={[s.catRowTxt, al, !d.cat && { color: colors.muted, fontWeight: '600' }]}>
-                  {(CATEGORIES.find((c) => c.id === d.cat) || {})[lang] || t('catL')}
+                  {(CATEGORIES.find((c) => c.id === d.cat) || {})[lang] || (t('catL') + t('reqSuffix'))}
                 </Text>
                 {!!catSub && <Text style={[s.help, al]}>{catSub}</Text>}
               </View>
@@ -963,8 +964,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
 
             <View style={s.card}>
-            <Text style={[s.secT, s.secGap, al]}>{t('price')}</Text>
-            <View style={[s.priceBox, row]}>
+            <Text style={[s.secT, s.secGap, al]}>{t('price')}{t('reqSuffix')}</Text>
+            <View style={[s.priceBox, row, triedPub && (reqErr.price || reqErr.punit) && s.reqBad]}>
               <Field rtl={rtl} ref={(r) => { fref.current.price = r; }} onFocus={() => { curF.current = 'price'; }} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
                 onChangeText={(v) => update({ price: digits(v).slice(0, 12) })} placeholder="0" keyboardType="number-pad" />
               <Text style={s.priceUnit}>{t(d.punit === 'old' ? 'sufOld' : 'sufNew')}</Text>
@@ -1468,6 +1469,7 @@ const s = StyleSheet.create({
   okBtnTxt: { fontSize: 17, fontWeight: '800' },
   pickBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 14 },
   pickBtnOn: { borderColor: colors.primary },
+  reqBad: { borderColor: '#B42318' },
   pickTxt: { fontSize: 16, color: colors.text, fontWeight: '600', flex: 1 },
   pickArrow: { fontSize: 16, color: colors.primary, marginLeft: 8 },
   sheetBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
