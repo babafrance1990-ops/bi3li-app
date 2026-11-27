@@ -13,7 +13,7 @@ const T = {
     errWeak: 'الرقم السري سهل جداً (مثل 1234). اختر رقماً آخر', errName: 'اكتب اسمك', errBlocked: 'هذا الحساب موقوف',
     call: 'اتصال', whatsapp: 'واتساب', message: 'رسالة', soon: 'قريباً في التطبيق', seller: 'البائع',
     verifiedNum: 'رقم مؤكَّد ✓', notVerified: 'رقم غير مؤكَّد', loginToSee: 'سجّل الدخول لرؤية رسائلك', lang: 'Français',
-    description: 'الوصف', sold: 'تم البيع',
+    description: 'الوصف', sold: 'تم البيع', sale: 'بيع', rent: 'كراء',
     videoTag: 'فيديو', voiceTag: 'رسالة صوتية', playVid: 'تشغيل الفيديو', listenVoice: 'استمع إلى الرسالة',
   },
   fr: {
@@ -27,7 +27,7 @@ const T = {
     errWeak: 'Code trop simple (ex. 1234). Choisissez-en un autre', errName: 'Tapez votre nom', errBlocked: 'Ce compte est bloqué',
     call: 'Appeler', whatsapp: 'WhatsApp', message: 'Message', soon: "Bientôt dans l'application", seller: 'Vendeur',
     verifiedNum: 'Numéro vérifié ✓', notVerified: 'Numéro non vérifié', loginToSee: 'Connectez-vous pour voir vos messages', lang: 'العربية',
-    description: 'Description', sold: 'Vendu',
+    description: 'Description', sold: 'Vendu', sale: 'Vente', rent: 'Location',
     videoTag: 'Vidéo', voiceTag: 'Message vocal', playVid: 'Lire la vidéo', listenVoice: 'Écouter le message',
   },
 };

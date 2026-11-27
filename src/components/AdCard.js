@@ -67,7 +67,7 @@ export default function AdCard({ ad, preview }) {
       </View>
       <View style={s.body}>
         {!!sub && <Text style={[s.sub, rtl && s.rtl]} numberOfLines={1}>{sub}</Text>}
-        {!!ad.title && <Text style={[s.title, rtl && s.rtl]} numberOfLines={1}>{ad.title}</Text>}
+        {!!ad.title && !ad.tauto && <Text style={[s.title, rtl && s.rtl]} numberOfLines={1}>{ad.title}</Text>}
         <Text style={[s.price, rtl && s.rtl]} numberOfLines={1}>{priceText(ad, lang)}</Text>
         {!!facts && <Text style={[s.facts, rtl && s.rtl]} numberOfLines={1}>{facts}</Text>}
         {!!place && <Text style={[s.place, rtl && s.rtl]} numberOfLines={1}>📍 {place}</Text>}

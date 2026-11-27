@@ -671,6 +671,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
       punit: d.punit === 'old' ? 'old' : 'new',
       priceOld: d.punit === 'old' ? p : undefined,
       title: (d.title.trim() || autoTitle()).slice(0, 70),
+      tauto: !d.title.trim(), // titre écrit automatiquement : les cartes et la fiche ne l'affichent pas comme un titre
       cat: d.cat,
       price: d.punit === 'old' ? Math.round(p / 10) : p,
       city: d.city, hood: d.hood.trim(), near: d.near.trim(),
@@ -778,7 +779,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     : t('reqDone');
   const previewAd = {
     ...(SUB_KEY[d.cat] ? { [SUB_KEY[d.cat]]: d.sub } : {}), ...detailAdObject(d),
-    id: 'preview', status: 'online', cat: d.cat, title: d.title.trim() || autoTitle(), punit: 'new', hidep: d.hidep,
+    id: 'preview', status: 'online', cat: d.cat, title: d.title.trim() || autoTitle(), tauto: !d.title.trim(), punit: 'new', hidep: d.hidep,
     price: pu, city: d.city, hood: d.hood, photos: d.photos.map((p) => p.uri || p.url).filter(Boolean),
   };
   // Ligne « sous-catégorie » sous la catégorie choisie (formulaire sur une page)

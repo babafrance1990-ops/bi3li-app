@@ -18,6 +18,7 @@ import { getAllAds } from '../../src/store';
 import { useLang } from '../../src/i18n';
 import { colors, radius } from '../../src/theme';
 import { AdVideo, AdVoice } from '../../src/components/AdMedia';
+import { adSubInfo } from '../../src/adInfo';
 
 const W = Dimensions.get('window').width;
 const H = Dimensions.get('window').height;
@@ -169,7 +170,7 @@ export default function Annonce() {
 
         <View style={s.box}>
           {ad.status === 'sold' && <Text style={s.sold}>{t('sold')}</Text>}
-          <Text style={[s.title, align]}>{ad.title}</Text>
+          {ad.tauto ? <Text style={[s.title, align]}>{adSubInfo(ad, lang, t) || ad.title}</Text> : <Text style={[s.title, align]}>{ad.title}</Text>}
           <Text style={[s.price, align]}>{priceText(ad, lang)}</Text>
           <Text style={[s.muted, align]}>📍 {[ad.hood, cityName(ad.city, lang)].filter(Boolean).join(' · ')}  ·  {new Date(ad.t).toLocaleDateString(lang === 'ar' ? 'ar' : 'fr-FR')}</Text>
 
