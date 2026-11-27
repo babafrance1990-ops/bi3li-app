@@ -778,14 +778,19 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
     ? t('reqCount', { n: 3 - reqMissing.length, m: 3 }) + ' · ' + t('reqMiss', { x: reqMissing.join(', ') })
     : t('reqDone');
   // Exemples affichés dans les champs titre et description (texte indicatif, pas une aide)
-  // Titre : pour une voiture, « voiture corolla » ; sinon la sous-catégorie choisie (sinon la catégorie)
+  // Titre : vide sans catégorie ; pour la sous-catégorie Voiture, « voiture corolla » ; sinon la sous-catégorie choisie
   const titleEx = (() => {
-    if (d.cat === 'auto') return lang === 'ar' ? 'مثال: سيارة كورولا' : 'Ex. : voiture corolla';
+    if (!d.cat) return '';
+    if (d.cat === 'auto' && d.sub === 'car') return lang === 'ar' ? 'مثال: سيارة كورولا' : 'Ex. : voiture corolla';
     const sub = (subsOf(d.cat).find((x) => x.id === d.sub) || {})[lang];
     const name = sub || (catById(d.cat) || {})[lang] || '';
     return name ? (lang === 'ar' ? 'مثال: ' : 'Ex. : ') + name : '';
   })();
-  const descEx = lang === 'ar' ? 'مثال: حالة ممتازة، 2008، 144 ألف كم، سبب البيع…' : 'Ex. : très bon état, 2008, 144 000 km, raison de la vente…';
+  // Description : vide sans catégorie ; exemple détaillé uniquement pour la sous-catégorie Voiture
+  const descEx = (() => {
+    if (!d.cat || !(d.cat === 'auto' && d.sub === 'car')) return '';
+    return lang === 'ar' ? 'مثال: حالة ممتازة، 2008، 144 ألف كم، سبب البيع…' : 'Ex. : très bon état, 2008, 144 000 km, raison de la vente…';
+  })();
   const previewAd = {
     ...(SUB_KEY[d.cat] ? { [SUB_KEY[d.cat]]: d.sub } : {}), ...detailAdObject(d),
     id: 'preview', status: 'online', cat: d.cat, title: d.title.trim() || autoTitle(), tauto: !d.title.trim(), punit: 'new', hidep: d.hidep,
