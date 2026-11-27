@@ -861,7 +861,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                   <Pressable key={c.id} onPress={() => { pendingSub.current = hasSub(c.id); update({ cat: c.id, sub: '' }); setErrors({}); }}
                     style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
                     <CatArt cat={c.id} size={52} />
-                    <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
+                    <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={3}>{c[lang]}</Text>
                   </Pressable>
                 );
               })}
@@ -894,14 +894,14 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
                   <View style={[s.grid, row]}>
                     <Pressable onPress={() => pickSub('')} style={[s.cat, s.subCat, !d.sub && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                       <View style={s.allIcon}><Ionicons name="grid-outline" size={30} color={colors.primaryDark} /></View>
-                      <Text style={[s.catTxt, !d.sub && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{lang === 'ar' ? 'الكل' : 'Tous'}</Text>
+                      <Text style={[s.catTxt, !d.sub && { color: colors.primary, fontWeight: '800' }]} numberOfLines={3}>{lang === 'ar' ? 'الكل' : 'Tous'}</Text>
                     </Pressable>
                     {subsOf(d.cat).map((x) => {
                       const on = d.sub === x.id;
                       return (
                         <Pressable key={x.id} onPress={() => pickSub(x.id)} style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                           <SubArt cat={d.cat} sub={x.id} size={52} />
-                          <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
+                          <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={3}>{x[lang]}</Text>
                         </Pressable>
                       );
                     })}
@@ -1325,7 +1325,7 @@ export function CatPickScreen() {
                 <Pressable key={c.id} onPress={() => chooseCat(c.id)}
                   style={[s.cat, on && { borderColor: c.c, backgroundColor: c.c + '18' }]}>
                   <CatArt cat={c.id} size={52} />
-                  <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={2}>{c[lang]}</Text>
+                  <Text style={[s.catTxt, on && { color: c.c, fontWeight: '800' }]} numberOfLines={3}>{c[lang]}</Text>
                 </Pressable>
               );
             })}
@@ -1354,7 +1354,7 @@ export function CatPickScreen() {
                           <Pressable key={k} onPress={() => setV((p) => ({ ...p, kind: k }))}
                             style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                             <KindArt kind={k} size={52} />
-                            <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{KIND_L[k][L]}</Text>
+                            <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={3}>{KIND_L[k][L]}</Text>
                           </Pressable>
                         );
                       })}
@@ -1370,7 +1370,7 @@ export function CatPickScreen() {
                     <Pressable key={x.id} onPress={() => setV((p) => ({ ...p, sub: x.id }))}
                       style={[s.cat, s.subCat, on && { borderColor: colors.primary, backgroundColor: colors.primary + '18' }]}>
                       <SubArt cat={v.cat} sub={x.id} size={52} />
-                      <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={2}>{x[lang]}</Text>
+                      <Text style={[s.catTxt, on && { color: colors.primary, fontWeight: '800' }]} numberOfLines={3}>{x[lang]}</Text>
                     </Pressable>
                   );
                 })}
@@ -1455,7 +1455,7 @@ const s = StyleSheet.create({
   grid: { flexWrap: 'wrap', gap: 8 },
   cat: { width: '31.5%', aspectRatio: 1.1, borderWidth: 1, borderColor: colors.primary, borderRadius: radius.m, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', padding: 6, gap: 4 },
   catTxt: { fontSize: 12, textAlign: 'center', color: colors.text, fontWeight: '600' },
-  subCat: { width: '23%', aspectRatio: 0.8, padding: 4 },
+  subCat: { width: '23%', aspectRatio: 0.7, padding: 4 },
   allIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   backRow: { alignItems: 'center', gap: 6, paddingVertical: 4 },
   backTxt: { color: colors.primary, fontWeight: '700', fontSize: 15 },
