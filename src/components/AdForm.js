@@ -913,6 +913,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Err errors={errors} rtl={rtl} k="photos" />
             {d.photos.some((p) => p.status === 'err') && <Text style={[s.err, al]}>{t('photoErr')}</Text>}
 
+            <Label rtl={rtl}>{t('title') + t('optSuffix')}</Label>
+            <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
+              value={d.title} onChangeText={(v) => update({ title: v })} placeholder={t('titlePh')} maxLength={70} />
             </View>
 
             <View style={s.card}>
@@ -990,9 +993,6 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Err errors={errors} rtl={rtl} k="contact" />
 
             <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen} onToggle={() => setMoreOpen((v) => !v)}>
-              <Label rtl={rtl}>{t('title')}</Label>
-              <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
-                value={d.title} onChangeText={(v) => update({ title: v })} placeholder={t('titlePh')} maxLength={70} />
               <View style={[row, { gap: 8 }]}>
                 {d.videoUri || d.video ? (
                   <View style={[s.mediaRow, row, { flex: 1 }]}>
