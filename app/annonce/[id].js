@@ -10,6 +10,7 @@ import { notify } from '../../src/notify';
 import { rememberSeen } from '../../src/seen';
 import { useAuth } from '../../src/auth';
 import { Ionicons } from '@expo/vector-icons';
+import { SvgXml } from 'react-native-svg';
 import BackButton from '../../src/components/BackButton';
 import HomeButton from '../../src/components/HomeButton';
 import FavButton from '../../src/components/FavButton';
@@ -140,8 +141,9 @@ export default function Annonce() {
         {/* Favori : bouton seul sur la photo (séparé de l'accueil dans l'en-tête) */}
         <FavButton adId={ad.id} size={20} style={[s.favOver, rtl ? { left: 12 } : { right: 12 }]} />
         <Pressable onPress={() => Share.share({ message: [cardHead, priceText(ad, lang), link].filter(Boolean).join('\n') }).catch(() => {})} hitSlop={8}
-          style={({ pressed }) => [s.shareOver, rtl ? { left: 62 } : { right: 62 }, pressed && { opacity: 0.7 }]}>
-          <Text style={s.shareTxt}>📤</Text>
+          accessibilityLabel="Partager l'annonce"
+          style={({ pressed }) => [s.shareOver, rtl ? { left: 56 } : { right: 56 }, pressed && { opacity: 0.7 }]}>
+          <SvgXml xml={SHARE_SVG} width={20} height={20} />
         </Pressable>
         {photos.length > 0 ? (
           <View>
@@ -280,10 +282,12 @@ export default function Annonce() {
   );
 }
 
+// Icône de partage en contour (même trait et même couleur que le cœur)
+const SHARE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+
 const s = StyleSheet.create({
   favOver: { position: 'absolute', top: 12, zIndex: 10, elevation: 10 },
-  shareOver: { position: 'absolute', top: 12, zIndex: 10, elevation: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
-  shareTxt: { fontSize: 18 },
+  shareOver: { position: 'absolute', top: 12, zIndex: 10, elevation: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
   noPhoto: { backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center' },
   counter: { position: 'absolute', bottom: 10, alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 10 },
   box: { padding: 16, gap: 6 },
