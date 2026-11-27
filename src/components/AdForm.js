@@ -4,7 +4,7 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput, View,
+  ScrollView, StyleSheet, Text, TextInput, View, findNodeHandle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -614,14 +614,22 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // Le champ en cours de saisie remonte au-dessus du clavier s'il est caché
   function revealField() {
-    const r = fref.current[curF.current];
-    if (!r || !r.measureInWindow || !kbTop.current) return;
-    r.measureInWindow((x, y, w, h) => {
+    const input = fref.current[curF.current];
+    if (!input) return;
+    // Méthode native de la page : fait défiler jusqu'au champ, au-dessus du clavier
+    const handle = findNodeHandle(input);
+    const resp = scroll.current?.getScrollResponder?.();
+    if (handle && resp?.scrollResponderScrollNativeHandleToKeyboard) {
+      resp.scrollResponderScrollNativeHandleToKeyboard(handle, 140, true);
+      return;
+    }
+    if (!input.measureInWindow || !kbTop.current) return;
+    input.measureInWindow((x, y, w, h) => {
       const over = y + h - (kbTop.current - 20);
       if (over > 0) scroll.current?.scrollTo({ y: offY.current + over, animated: true });
     });
   }
-  function focusedOn(k) { curF.current = k; setTimeout(revealField, 350); }
+  function focusedOn(k) { curF.current = k; setTimeout(revealField, 150); setTimeout(revealField, 450); }
 
   // Photos : une feuille « Galerie / Appareil photo » s'ouvre au clic
   function askPhotos() {
