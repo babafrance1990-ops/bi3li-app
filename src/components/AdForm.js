@@ -414,7 +414,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const [errors, setErrors] = useState({});
   const [detOpen, setDetOpen] = useState(false); // détails de catégorie (fin de l'étape 3, comme sur le site)
   const [moreOpen, setMoreOpen] = useState(false); // vidéo et message vocal repliés à l'étape 2
-  const [descH, setDescH] = useState(64);          // hauteur de la description : elle grandit avec le texte
+  const [descH, setDescH] = useState(44);          // hauteur de la description : elle grandit avec le texte
   const [kbOpen, setKbOpen] = useState(false);     // clavier ouvert
   const [previewOpen, setPreviewOpen] = useState(false);
   const [triedPub, setTriedPub] = useState(false); // bordure rouge sur les obligatoires seulement après un essai de publication
@@ -931,19 +931,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
 
             <View style={s.card}>
-            <Text style={[s.secT, s.secGap, al]}>{t('secPres')}</Text>
-            <Label rtl={rtl}>{t('title')}</Label>
-            <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
-              value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
-            <Label rtl={rtl}>{t('descOpt')}</Label>
-            <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => { curF.current = 'desc'; }} style={[CF, { height: Math.max(64, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
-              onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
-              placeholder={descEx} multiline maxLength={3000} />
-
-            </View>
-
-            <View style={s.card}>
-            <Text style={[s.secT, s.secGap, al]}>{t('secDet')}</Text>
+            <Text style={[s.secT, al]}>{t('secPres')}</Text>
             <Pressable onPress={openCat} style={[s.catRow, row, triedPub && !d.cat && s.reqBad]}>
               {d.cat && <CatArt cat={d.cat} size={34} />}
               <View style={{ flex: 1 }}>
@@ -960,6 +948,14 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             {d.cat === 'immo' && !!d.kind && (
               <Field rtl={rtl} style={CF} value={d.surface} onChangeText={(v) => update({ surface: digits(v) })} placeholder={t('surface')} keyboardType="number-pad" />
             )}
+
+            <Label rtl={rtl}>{t('title')}</Label>
+            <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => { curF.current = 'title'; }}
+              value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
+            <Label rtl={rtl}>{t('descOpt')}</Label>
+            <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => { curF.current = 'desc'; }} style={[CF, { height: Math.max(44, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
+              onContentSizeChange={(e) => setDescH(e.nativeEvent.contentSize.height + 22)}
+              placeholder={descEx} multiline maxLength={3000} />
 
             </View>
 
@@ -1390,15 +1386,15 @@ const s = StyleSheet.create({
   kbDone: { color: colors.primary, fontSize: 17, fontWeight: '800' },
   kbNav: { color: colors.primaryDark, fontSize: 16, fontWeight: '700' },
   kbRow: { width: '100%', justifyContent: 'space-between', alignItems: 'center' },
-  priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.primary, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 64 },
+  priceBox: { alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.primary, borderRadius: radius.m, backgroundColor: colors.white, paddingHorizontal: 14, minHeight: 56 },
   priceIn: { flex: 1, borderWidth: 0, backgroundColor: 'transparent', padding: 0, fontSize: 26, fontWeight: '800', color: colors.text, writingDirection: 'ltr', textAlign: 'right' },
   priceUnit: { fontSize: 14, fontWeight: '700', color: colors.muted },
-  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0A526', borderRadius: radius.l, padding: 12, gap: 8 },
+  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: '#E0A526', borderRadius: radius.l, padding: 10, gap: 6 },
   secRow: { justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   secT: { fontSize: 17, fontWeight: '800', color: colors.text },
-  secGap: { marginTop: 10 },
+  secGap: { marginTop: 6 },
   dash: { borderWidth: 1, borderStyle: 'dashed', borderColor: '#E0A526', borderRadius: 14, padding: 8, backgroundColor: '#F7FBF8' },
-  addPh: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 12, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.white },
+  addPh: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 46, borderRadius: 12, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.white },
   addPhTxt: { color: colors.primaryDark, fontWeight: '700', fontSize: 16 },
   tileAdd: { width: 76, height: 76, borderRadius: radius.m, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   tile: { width: 84, height: 84, borderRadius: radius.m, backgroundColor: '#EEF5F0', alignItems: 'center', justifyContent: 'center', gap: 4 },
