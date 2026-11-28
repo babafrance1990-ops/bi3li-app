@@ -422,6 +422,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const curF = useRef(null);                        // champ en cours de saisie
   const kbTop = useRef(0);                          // haut du clavier (coordonnées écran)
   const offY = useRef(0);                           // position de défilement de la page
+  const descWrap = useRef(null);                    // bloc de la description (mesuré pour le défilement)
   useEffect(() => {
     const a = Keyboard.addListener('keyboardDidShow', (e) => { setKbOpen(true); kbTop.current = e.endCoordinates.screenY; revealField(); });
     const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
@@ -615,7 +616,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   // Le champ en cours de saisie remonte au-dessus du clavier s'il est caché
   function revealField() {
     // Le champ en cours remonte à 120 px du haut de la zone visible : il reste au-dessus du clavier
-    const input = fref.current[curF.current];
+    const input = curF.current === 'desc' && descWrap.current ? descWrap.current : fref.current[curF.current];
     const host = scroll.current ? findNodeHandle(scroll.current) : null;
     if (!input || !host || !input.measureLayout) return;
     input.measureLayout(host, (x, y) => {
@@ -966,10 +967,12 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Label rtl={rtl}>{t('title')}</Label>
             <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => focusedOn('title')}
               value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
+            <View ref={descWrap} collapsable={false}>
             <Label rtl={rtl}>{t('descOpt')}</Label>
             <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => focusedOn('desc')} style={[CF, { height: Math.max(44, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => { setDescH(e.nativeEvent.contentSize.height + 22); setTimeout(revealField, 60); }}
               placeholder={descEx} multiline maxLength={3000} />
+            </View>
 
             </View>
 
