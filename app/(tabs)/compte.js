@@ -1,5 +1,5 @@
 // Mon compte : identité, puis les accès regroupés par thème (annonces, activité, découvrir, aide), déconnexion
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { mediaUrl } from '../../src/api';
@@ -34,7 +34,7 @@ export default function Compte() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-    <View style={[s.wrap, !user && { justifyContent: 'center' }]}>
+    <ScrollView contentContainerStyle={[s.wrap, { paddingBottom: 60 }, !user && { justifyContent: 'center', flexGrow: 1 }]}>
       {!ready ? null : user ? (
         <View style={s.card}>
           {user.avatar ? <Image source={mediaUrl(user.avatar)} style={[s.avatar, { alignSelf: rtl ? 'flex-end' : 'flex-start' }]} /> : null}
@@ -92,7 +92,7 @@ export default function Compte() {
           <Text style={[s.itemTxt, { color: colors.danger, textAlign: 'center', flex: 1 }]}>{t('logout')}</Text>
         </Pressable>
       )}
-    </View>
+    </ScrollView>
     </View>
   );
 }
