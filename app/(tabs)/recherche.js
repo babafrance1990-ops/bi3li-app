@@ -122,7 +122,7 @@ export default function Recherche() {
 
   const header = (
     <View>
-      <CategoryBar value={cat} onChange={setCat} />
+      <CategoryBar grid value={cat} onChange={setCat} />
       {searching ? (
         <Pressable style={[s.alertBtn, alertSaved && s.alertOn]} onPress={saveAlert}>
           <Text style={[s.alertTxt, alertSaved && { color: '#fff' }]}>{alertSaved ? t('alertOn') : t('alert')}</Text>
