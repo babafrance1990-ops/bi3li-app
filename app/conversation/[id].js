@@ -163,7 +163,7 @@ export default function Conversation() {
       {showQuick && (
         <FlatList
           horizontal inverted={rtl} data={quick} keyExtractor={(q) => q} showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 8, gap: 8 }}
+          style={{ flexGrow: 0, flexShrink: 0, height: 62 }} contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 8, paddingBottom: 8, gap: 8 }}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
             <Pressable style={s.quick} onPress={() => setTxt(item)}><Text style={s.quickTxt} numberOfLines={1}>{item}</Text></Pressable>
