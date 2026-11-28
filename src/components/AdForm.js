@@ -49,7 +49,7 @@ const D = {
     stepOf: 'Étape {n} sur 3', next: 'Suivant', prev: 'Retour', publish: 'Publier',
     catL: 'Catégorie', catPh: 'Choisir la catégorie', pick1: '1 · Catégorie', pick2: '2 · Type',
     pickOk: 'Valider le choix', eFix: 'Complétez les champs marqués en rouge.',
-    addPhS: 'Ajouter photos', ePhotoAny: 'Ajoutez au moins une photo.', cancelL: 'Annuler', contactN: 'Contact', optSuffix: ' (facultatif)', reqSuffix: ' (obligatoire)', reqCount: '{n} sur {m} obligatoires', reqMiss: 'Il manque : {x}', reqDone: 'Tous les champs obligatoires sont remplis', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
+    addPhS: 'Ajouter photos', ePhotoAny: 'Ajoutez au moins une photo ou une vidéo.', cancelL: 'Annuler', contactN: 'Contact', optSuffix: ' (facultatif)', reqSuffix: ' (obligatoire)', reqCount: '{n} sur {m} obligatoires', reqMiss: 'Il manque : {x}', reqDone: 'Tous les champs obligatoires sont remplis', previewT: 'Aperçu de l’annonce', previewBtn: 'Aperçu', kbPrev: 'Précédent', kbNext: 'Suivant', descOpt: 'Description (facultatif)', sufNew: 'MRU', sufOld: 'MRO', kbDone: 'Terminé', msgApp: 'Messagerie', secPres: 'Présentation de l’article', secDet: 'Détails de l’article', secLoc: 'Lieu',
     moreOpt: 'Vidéo et message vocal (facultatif)',
     st1: 'Que vendez-vous ?', st1sub: 'Choisissez la catégorie, puis le type.',
     st2: 'Photos et description', st2sub: 'Ajoutez de vraies photos : elles attirent plus d’acheteurs.',
@@ -94,7 +94,7 @@ const D = {
   },
   ar: {
     stepOf: 'الخطوة {n} من 3', next: 'التالي', prev: 'رجوع', publish: 'نشر',
-    addPhS: 'إضافة صور', ePhotoAny: 'أضف صورة واحدة على الأقل.', cancelL: 'إلغاء', contactN: 'التواصل', optSuffix: ' (اختياري)', reqSuffix: ' (إلزامي)', reqCount: '{n} من {m} إلزامية', reqMiss: 'ينقص: {x}', reqDone: 'كل الحقول الإلزامية مملوءة', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
+    addPhS: 'إضافة صور', ePhotoAny: 'أضف صورة أو فيديو على الأقل.', cancelL: 'إلغاء', contactN: 'التواصل', optSuffix: ' (اختياري)', reqSuffix: ' (إلزامي)', reqCount: '{n} من {m} إلزامية', reqMiss: 'ينقص: {x}', reqDone: 'كل الحقول الإلزامية مملوءة', previewT: 'معاينة الإعلان', previewBtn: 'معاينة', kbPrev: 'السابق', kbNext: 'التالي', descOpt: 'الوصف (اختياري)', sufNew: 'أوقية جديدة', sufOld: 'أوقية قديمة', kbDone: 'تم', msgApp: 'الرسائل', secPres: 'عرض المنتج', secDet: 'تفاصيل المنتج', secLoc: 'المكان',
     moreOpt: 'فيديو ورسالة صوتية (اختياري)',
     catL: 'الفئة', catPh: 'اختر الفئة', pick1: '1 · الفئة', pick2: '2 · النوع',
     pickOk: 'تأكيد الاختيار', eFix: 'أكمل الحقول المعلّمة باللون الأحمر.',
@@ -576,7 +576,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
         else if (!d.kind || !KINDS[d.deal].includes(d.kind)) e.kind = t('eKind');
       }
     }
-    if (step === 2 && d.photos.length === 0) e.photos = d.cat === 'immo' ? t('ePhotoImmo') : t('ePhotoAny');
+    if (step === 2 && (d.photos.length === 0 && !d.videoUri && !d.video)) e.photos = d.cat === 'immo' ? t('ePhotoImmo') : t('ePhotoAny');
     if (step === 3 && d.cat === 'anim' && !(+digits(d.count) > 0)) e.count = t('errCount');
     if (step === 3) Object.assign(e, detailErrors(d, lang === 'ar'));
     if (step === 3) {
@@ -796,7 +796,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const reqMissing = [];
   if (Object.keys(collect(1)).length) reqMissing.push(t('catL'));
   if (reqErr.price || reqErr.punit) reqMissing.push(t('price'));
-  if (d.photos.length === 0) reqMissing.push(t('photos'));
+  if (d.photos.length === 0 && !d.videoUri && !d.video) reqMissing.push(t('photos'));
   const reqLine = reqMissing.length
     ? t('reqCount', { n: 3 - reqMissing.length, m: 3 }) + ' · ' + t('reqMiss', { x: reqMissing.join(', ') })
     : t('reqDone');
@@ -922,7 +922,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
               <Text style={[s.secT, al]}>{t('photos')}{t('reqSuffix')}</Text>
               <Text style={s.count}>{t('photosN', { n: d.photos.length })}</Text>
             </View>
-            <View style={[s.dash, triedPub && d.photos.length === 0 && s.reqBad]}>
+            <View style={[s.dash, triedPub && (d.photos.length === 0 && !d.videoUri && !d.video) && s.reqBad]}>
               {d.photos.length === 0 ? (
                 <Pressable style={s.addPh} onPress={askPhotos}>
                   <Ionicons name="add" size={22} color={colors.primary} />
