@@ -510,17 +510,26 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // ---------- Modification enregistrée ----------
   if (done && editing) {
+    const link = 'https://bi3li.net/?annonce=' + done.id;
+    // Mêmes boutons que après une publication : WhatsApp, voir, retour
     return (
-      <View style={s.center}>
+      <ScrollView contentContainerStyle={s.center}>
         <Text style={{ fontSize: 56 }}>✅</Text>
         <Text style={s.okT}>{t('savedT')}</Text>
-        <Pressable style={s.btnMain} onPress={() => { adCache.set(done.id, done); router.replace('/annonce/' + done.id); }}>
-          <Text style={s.btnMainTxt}>{t('see')}</Text>
+        <Pressable style={[s.okBtn, { backgroundColor: '#25D366' }]}
+          onPress={() => Linking.openURL('https://wa.me/?text=' + encodeURIComponent(done.title + '\n' + priceText(done, lang) + '\n' + link))}>
+          <Ionicons name="logo-whatsapp" size={24} color="#fff" />
+          <Text style={[s.okBtnTxt, { color: '#fff' }]}>{t('share')}</Text>
         </Pressable>
-        <Pressable style={s.btnLight} onPress={() => router.back()}>
-          <Text style={s.btnLightTxt}>{t('back')}</Text>
+        <Pressable style={[s.okBtn, { backgroundColor: colors.primary }]} onPress={() => { adCache.set(done.id, done); router.replace('/annonce/' + done.id); }}>
+          <Ionicons name="eye-outline" size={22} color="#fff" />
+          <Text style={[s.okBtnTxt, { color: '#fff' }]}>{t('see')}</Text>
         </Pressable>
-      </View>
+        <Pressable style={[s.okBtn, { backgroundColor: '#F0B93A' }]} onPress={() => router.back()}>
+          <Ionicons name="arrow-back-outline" size={22} color={colors.primaryDark} />
+          <Text style={[s.okBtnTxt, { color: colors.primaryDark }]}>{t('back')}</Text>
+        </Pressable>
+      </ScrollView>
     );
   }
 
