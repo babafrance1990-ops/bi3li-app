@@ -423,6 +423,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const kbTop = useRef(0);                          // haut du clavier (coordonnées écran)
   const offY = useRef(0);                           // position de défilement de la page
   const descWrap = useRef(null);                    // bloc de la description (mesuré pour le défilement)
+  const pos = useRef({ pres: 0, desc: 0, price: 0 }); // positions dans la page (onLayout), pour remonter le champ
   useEffect(() => {
     const a = Keyboard.addListener('keyboardDidShow', (e) => { setKbOpen(true); kbTop.current = e.endCoordinates.screenY; revealField(); });
     const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
@@ -615,6 +616,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
   // Le champ en cours de saisie remonte au-dessus du clavier s'il est caché
   function revealField() {
+    // Position connue par onLayout (plus fiable que la mesure native sur ce champ)
+    if (curF.current === 'desc') { scroll.current?.scrollTo({ y: Math.max(0, pos.current.pres + pos.current.desc - 120), animated: true }); return; }
+    if (curF.current === 'price') { scroll.current?.scrollTo({ y: Math.max(0, pos.current.price - 120), animated: true }); return; }
     // Le champ en cours remonte à 120 px du haut de la zone visible : il reste au-dessus du clavier
     const input = curF.current === 'desc' && descWrap.current ? descWrap.current : fref.current[curF.current];
     const host = scroll.current ? findNodeHandle(scroll.current) : null;
@@ -945,7 +949,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             </View>
 
-            <View style={s.card}>
+            <View style={s.card} onLayout={(e) => { pos.current.pres = e.nativeEvent.layout.y; }}>
             <Text style={[s.secT, al]}>{t('secPres')}</Text>
             <Pressable onPress={openCat} style={[s.catRow, row, triedPub && !d.cat && s.reqBad]}>
               {d.cat && <CatArt cat={d.cat} size={34} />}
@@ -967,7 +971,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             <Label rtl={rtl}>{t('title')}</Label>
             <Field rtl={rtl} style={CF} ref={(r) => { fref.current.title = r; }} onFocus={() => focusedOn('title')}
               value={d.title} onChangeText={(v) => update({ title: v })} placeholder={titleEx} maxLength={70} />
-            <View ref={descWrap} collapsable={false}>
+            <View ref={descWrap} collapsable={false} onLayout={(e) => { pos.current.desc = e.nativeEvent.layout.y; }}>
             <Label rtl={rtl}>{t('descOpt')}</Label>
             <Field rtl={rtl} ref={(r) => { fref.current.desc = r; }} onFocus={() => focusedOn('desc')} style={[CF, { height: Math.max(44, descH), textAlignVertical: 'top' }]} value={d.desc} onChangeText={(v) => update({ desc: v })}
               onContentSizeChange={(e) => { setDescH(e.nativeEvent.contentSize.height + 22); setTimeout(revealField, 60); }}
@@ -976,7 +980,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             </View>
 
-            <View style={s.card}>
+            <View style={s.card} onLayout={(e) => { pos.current.price = e.nativeEvent.layout.y; }}>
             <Text style={[s.secT, s.secGap, al]}>{t('price')}{t('reqSuffix')}</Text>
             <View style={[s.priceBox, row, triedPub && (reqErr.price || reqErr.punit) && s.reqBad]}>
               <Field rtl={rtl} ref={(r) => { fref.current.price = r; }} onFocus={() => focusedOn('price')} style={s.priceIn} value={pu ? fmtN(pu).replace(/[\u2066\u2069]/g, '') : ''}
