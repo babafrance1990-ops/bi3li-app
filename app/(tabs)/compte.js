@@ -34,7 +34,7 @@ export default function Compte() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-    <ScrollView contentContainerStyle={[s.wrap, { paddingBottom: 60 }, !user && { justifyContent: 'center', flexGrow: 1 }]}>
+    <ScrollView contentContainerStyle={[s.wrap, { flex: 0, paddingBottom: 60 }, !user && { justifyContent: 'center', flexGrow: 1 }]}>
       {!ready ? null : user ? (
         <View style={s.card}>
           {user.avatar ? <Image source={mediaUrl(user.avatar)} style={[s.avatar, { alignSelf: rtl ? 'flex-end' : 'flex-start' }]} /> : null}
