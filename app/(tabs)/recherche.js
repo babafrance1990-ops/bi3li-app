@@ -67,11 +67,13 @@ export default function Recherche() {
   // Ouverte depuis la barre de l'accueil : le clavier s'ouvre tout de suite (pas quand on touche l'onglet)
   const { focus } = useLocalSearchParams();
   const inputRef = useRef(null);
-  useEffect(() => {
+  // Plusieurs essais : sur Android, l'onglet n'est pas encore affiché au premier essai et le clavier ne s'ouvre pas
+  useFocusEffect(useCallback(() => {
     if (!focus) return;
-    const id = setTimeout(() => { inputRef.current?.focus(); router.setParams({ focus: undefined }); }, 350);
-    return () => clearTimeout(id);
-  }, [focus]);
+    const ids = [300, 700, 1200].map((ms) => setTimeout(() => inputRef.current?.focus(), ms));
+    const clr = setTimeout(() => router.setParams({ focus: undefined }), 1500);
+    return () => { ids.forEach(clearTimeout); clearTimeout(clr); };
+  }, [focus]));
 
   function type(v) {
     setQ(v);
