@@ -425,7 +425,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const descWrap = useRef(null);                    // bloc de la description (mesuré pour le défilement)
   const pos = useRef({ pres: 0, desc: 0, price: 0 }); // positions dans la page (onLayout), pour remonter le champ
   useEffect(() => {
-    const a = Keyboard.addListener('keyboardDidShow', (e) => { setKbOpen(true); kbTop.current = e.endCoordinates.screenY; revealField(); });
+    const a = Keyboard.addListener('keyboardDidShow', (e) => { setKbOpen(true); kbTop.current = e.endCoordinates.screenY; [0, 150, 350, 600].forEach((ms) => setTimeout(revealField, ms)); });
     const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
     return () => { a.remove(); b.remove(); };
   }, []);
