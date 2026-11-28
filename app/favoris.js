@@ -13,7 +13,7 @@ const T = {
   ar: { title: 'المفضلة', empty: 'لا توجد إعلانات مفضلة بعد.', tip: 'اضغط ♡ على أي إعلان لحفظه هنا.', go: 'تصفح الإعلانات', gone: 'إعلانات حذفها البائع: {n}' },
 };
 
-export default function Favoris() {
+export default function Favoris({ embedded = false } = {}) {
   const { user } = useAuth();
   const { lang } = useLang();
   const t = (k, v = {}) => Object.entries(v).reduce((x, [a, b]) => x.replace('{' + a + '}', b), T[lang][k] ?? k);
@@ -30,7 +30,7 @@ export default function Favoris() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: t('title') + (favs.length ? ' (' + list.length + ')' : '') }} />
+      {!embedded && <Stack.Screen options={{ title: t('title') + (favs.length ? ' (' + list.length + ')' : '') }} />}
       {!ads ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> : (
         <FlatList
           data={list}

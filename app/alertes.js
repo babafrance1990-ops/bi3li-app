@@ -34,7 +34,7 @@ const KIND_L = {
   land: ['Terrain', 'قطعة أرضية'], building: ['Immeuble', 'عمارة'], farm: ['Ferme', 'مزرعة'],
 };
 
-export default function Alertes() {
+export default function Alertes({ embedded = false } = {}) {
   const { user, saveSearches } = useAuth();
   const { lang, rtl } = useLang();
   const t = (k, v = {}) => Object.entries(v).reduce((x, [a, b]) => x.replace('{' + a + '}', b), T[lang][k] ?? k);
@@ -77,7 +77,7 @@ export default function Alertes() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack.Screen options={{ title: t('title') }} />
+      {!embedded && <Stack.Screen options={{ title: t('title') }} />}
       {!ads ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> : (
         <FlatList
           data={list}
