@@ -337,8 +337,8 @@ const Toggle = ({ label, icon, iconColor = colors.whatsapp, value, onChange, rtl
 );
 
 // Bloc repliable encadré : un en-tête cliquable, le contenu s'ouvre dessous
-const Fold = ({ title, open, onToggle, rtl, children }) => (
-  <View style={s.fold}>
+const Fold = ({ title, open, onToggle, rtl, children, onLayout }) => (
+  <View style={s.fold} onLayout={onLayout}>
     <Pressable onPress={onToggle} style={[s.foldHead, rowOf(rtl)]}>
       <Text style={[s.foldTitle, alignOf(rtl)]}>{title}</Text>
       <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.primaryDark} />
@@ -424,6 +424,9 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
   const offY = useRef(0);                           // position de défilement de la page
   const descWrap = useRef(null);                    // bloc de la description (mesuré pour le défilement)
   const pos = useRef({ pres: 0, desc: 0, price: 0 }); // positions dans la page (onLayout), pour remonter le champ
+  const foldY = useRef({ more: 0, anim: 0, det: 0 }); // position des blocs repliables (onLayout)
+  // Quand un bloc repliable s'ouvre, sa tête remonte en haut de l'écran pour voir le contenu
+  function revealFold(k) { setTimeout(() => scroll.current?.scrollTo({ y: Math.max(0, foldY.current[k] - 12), animated: true }), 50); }
   useEffect(() => {
     const a = Keyboard.addListener('keyboardDidShow', (e) => { setKbOpen(true); kbTop.current = e.endCoordinates.screenY; [0, 150, 350, 600].forEach((ms) => setTimeout(revealField, ms)); });
     const b = Keyboard.addListener('keyboardDidHide', () => setKbOpen(false));
@@ -1024,7 +1027,7 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             </View>
             <Err errors={errors} rtl={rtl} k="contact" />
 
-            <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen} onToggle={() => setMoreOpen((v) => !v)}>
+            <Fold title={t('moreOpt')} rtl={rtl} open={moreOpen} onLayout={(e) => { foldY.current.more = e.nativeEvent.layout.y; }} onToggle={() => { if (!moreOpen) revealFold('more'); setMoreOpen((v) => !v); }}>
               <View style={[row, { gap: 8 }]}>
                 {d.videoUri || d.video ? (
                   <View style={[s.mediaRow, row, { flex: 1 }]}>
@@ -1045,8 +1048,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
 
             {d.cat === 'anim' && (
               <Fold title={t('animInfo') + t('optSuffix')} rtl={rtl}
-                open={detOpen}
-                onToggle={() => setDetOpen((v) => !v)}>
+                open={detOpen} onLayout={(e) => { foldY.current.anim = e.nativeEvent.layout.y; }}
+                onToggle={() => { if (!detOpen) revealFold('anim'); setDetOpen((v) => !v); }}>
                 <Text style={[s.help, al]}>{t('species')} : {(subsOf('anim').find((x) => x.id === d.sub) || {})[lang] || '—'}</Text>
                 <Label rtl={rtl}>{t('count')}</Label>
                 <Field rtl={rtl} style={CF} value={d.count} keyboardType="number-pad" maxLength={4} placeholder="1"
@@ -1080,8 +1083,8 @@ export default function AdForm({ editAd = null, adminTarget = null }) {
             )}
             {detailFields(d).length > 0 && (
               <Fold title={detailTitle(d, lang === 'ar') + t('optSuffix')} rtl={rtl}
-                open={detOpen}
-                onToggle={() => setDetOpen((v) => !v)}>
+                open={detOpen} onLayout={(e) => { foldY.current.det = e.nativeEvent.layout.y; }}
+                onToggle={() => { if (!detOpen) revealFold('det'); setDetOpen((v) => !v); }}>
                 {detailFields(d).map((f) => (
                   <VehField key={f.k} f={f} d={d} update={update} lang={lang} rtl={rtl} errors={errors} />
                 ))}
