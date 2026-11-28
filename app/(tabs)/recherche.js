@@ -12,7 +12,7 @@ import FiltersSheet from '../../src/components/FiltersSheet';
 import { useLang } from '../../src/i18n';
 import { cityName } from '../../src/places';
 import { countFilters, EMPTY_FILTERS, norm, search, suggest } from '../../src/search';
-import { getAllAds } from '../../src/store';
+import { getAllAds, searchServer } from '../../src/store';
 import { colors, radius } from '../../src/theme';
 
 const T = {
@@ -87,7 +87,20 @@ export default function Recherche() {
   }
   function pick(v) { setQ(v); setQuery(v); remember(v); Keyboard.dismiss(); }
 
-  const results = useMemo(() => (ads ? search(ads, { q: query, cat, f }) : []), [ads, query, cat, f]);
+  const localResults = useMemo(() => (ads ? search(ads, { q: query, cat, f }) : []), [ads, query, cat, f]);
+  // Résultats du serveur (avec tous les filtres) ; à défaut, la recherche locale
+  const [serverRes, setServerRes] = useState(null);
+  const reqId = useRef(0);
+  useEffect(() => {
+    const id = ++reqId.current;
+    const p = {
+      q: query.trim(), cat: cat || '', city: f.city && !f.city.startsWith('w:') ? f.city : '', hood: f.city === 'Nouakchott' && f.hood && !f.hood.startsWith('w:') ? f.hood : '',
+      pmin: f.pmin || '', pmax: f.pmax || '', seller: f.seller || '', photo: f.photo ? 1 : '', nego: f.nego ? 1 : '',
+      date: f.date || '', sort: f.sort || '', brand: f.brand || '', yearMin: f.yearMin || '', deal: f.deal || '', kind: f.kind || '',
+    };
+    searchServer(p).then((list) => { if (id === reqId.current) setServerRes(list); });
+  }, [query, cat, f]);
+  const results = serverRes ?? localResults;
   const sugg = useMemo(() => suggest(ads, q), [ads, q]);
   const nf = countFilters(f);
   const current = toSaved({ q: query, cat, f });

@@ -70,6 +70,8 @@ export const api = {
   // Annonces : liste paginée → { ads, more } ; « before » = date de la dernière annonce reçue
   ads: ({ limit = 40, before } = {}) => request('/api/ads?limit=' + limit + (before ? '&before=' + before : '')),
   view: (id) => request('/api/ads/' + id + '/view', { method: 'POST' }),
+  // Recherche faite par le serveur : une page de résultats (paramètres déjà nettoyés)
+  searchAds: (params) => request('/api/ads/search?' + Object.entries(params).filter(([, v]) => v !== '' && v != null && v !== 0 && v !== false).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&')),
   contact: (id, kind) => request('/api/ads/' + id + '/contact', { method: 'POST', body: { kind } }), // wa | call | msg
 
   // Dépôt : photo envoyée dès l'ajout → { url: '/api/media/ID' } ; puis annonce → { ad }

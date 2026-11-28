@@ -25,5 +25,10 @@ export async function getAllAds({ force = false } = {}) {
   try { return await loading; } finally { loading = null; }
 }
 
+// Recherche serveur ; renvoie null si le serveur ne répond pas (l'appli cherche alors dans la liste locale)
+export async function searchServer(params) {
+  try { const r = await api.searchAds(params); return r.ads || []; } catch { return null; }
+}
+
 // À appeler après une publication, une modification ou une suppression : la prochaine lecture redemande la liste
 export function invalidateAds() { at = 0; }
